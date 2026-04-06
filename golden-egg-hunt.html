@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Golden Egg Hunt — Understanding the 95% Confidence Interval</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Calibri,'Segoe UI',system-ui,sans-serif;background:#F0F3F5;color:#333;padding:24px 16px;min-height:100vh;}
+  .wrap{max-width:720px;margin:0 auto;background:#fff;border-radius:12px;padding:32px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.08);}
+  h1{font-size:22px;font-weight:700;color:#172940;margin-bottom:6px;}
+  .subtitle{font-size:14px;color:#616467;margin-bottom:24px;line-height:1.5;}
+  .instructions{background:#FDF6E3;border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#633806;line-height:1.6;}
+  .ctrl-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .ctrl-lbl{font-size:14px;color:#616467;min-width:110px;}
+  .ctrl-num{width:60px;text-align:center;font-size:14px;font-family:inherit;padding:6px 8px;border:1px solid #ccc;border-radius:6px;background:#fff;color:#333;}
+  input[type="range"]{flex:1;cursor:pointer;}
+  .btn-row{display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;}
+  .btn{padding:8px 20px;font-size:14px;font-family:inherit;cursor:pointer;border:1px solid #ccc;border-radius:6px;background:#fff;color:#333;transition:background 0.15s;}
+  .btn:hover{background:#F0F3F5;}
+  .btn:disabled{opacity:0.4;cursor:default;}
+  .btn-primary{background:#172940;color:#fff;border-color:#172940;}
+  .btn-primary:hover{background:#1e3550;}
+  .btn-gold{background:#EF9F27;color:#fff;border-color:#BA7517;}
+  .btn-gold:hover{background:#BA7517;}
+  .btn-gold:disabled{background:#ddd;border-color:#ccc;color:#999;}
+  canvas{width:100%;display:block;border-radius:10px;margin-top:8px;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;margin-top:16px;margin-bottom:12px;}
+  .card{background:#F0F3F5;border-radius:8px;padding:12px 14px;text-align:center;}
+  .card-label{font-size:12px;color:#8B9098;margin-bottom:4px;}
+  .card-val{font-size:20px;font-weight:600;color:#172940;}
+  .footer{font-size:12px;color:#8B9098;text-align:center;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>The golden egg hunt</h1>
+  <p class="subtitle">Understanding what the 95% confidence interval is doing</p>
+
+  <div class="instructions">
+    <strong>The game:</strong> You enter a football field with your classmates. The entire field is filled with eggs of assorted colors. There is one golden egg. The goal: be the first to find the golden egg. You can use one net to help focus your search. A larger sample size gives you a narrower, more precise net. After casting, reveal the egg to see where it actually was. Notice: it's not always in the middle of the net!
+  </div>
+
+  <div class="ctrl-row">
+    <span class="ctrl-lbl">Sample size (n)</span>
+    <input type="range" min="5" max="120" value="25" id="n-s" step="1" />
+    <input type="number" min="5" max="120" value="25" id="n-i" class="ctrl-num" />
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btn-cast">Cast the net</button>
+    <button class="btn btn-gold" id="btn-reveal" disabled>Reveal the golden egg</button>
+    <button class="btn" id="btn-reset">Reset</button>
+  </div>
+
+  <canvas id="cv"></canvas>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-label">Sample size</div>
+      <div class="card-val" id="o-n">25</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Net width (yards)</div>
+      <div class="card-val" id="o-width">&ndash;</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Sample mean (yard)</div>
+      <div class="card-val" id="o-mean">&ndash;</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Golden egg (yard)</div>
+      <div class="card-val" style="color:#BA7517;" id="o-egg">?</div>
+    </div>
+  </div>
+
+  <p class="footer">ASHS 6400: Methods of Data Analysis &bull; The field is 100 yards. Your 95% CI is one net — make it count. Larger samples = narrower net = better chance of finding the golden egg first.</p>
+</div>
+
+<script>
+var cv=document.getElementById('cv'),cx=cv.getContext('2d');
+var nS=document.getElementById('n-s'),nI=document.getElementById('n-i');
+var btnCast=document.getElementById('btn-cast');
+var btnReveal=document.getElementById('btn-reveal');
+var btnReset=document.getElementById('btn-reset');
+
+var popSD=15;
+var fieldMin=0,fieldMax=100;
+
+var state='ready';
+var netLo=0,netHi=0,sampleMean=0,eggPos=0;
+
+var eggColors=['#ED93B1','#85B7EB','#E24B4A','#5DCAA5','#B4B2A9','#E8E4DE'];
+var eggs=[];
+
+function genEggs(){
+  eggs=[];
+  for(var i=0;i<100;i++){
+    eggs.push({
+      x:2+Math.random()*96,
+      y:0.1+Math.random()*0.8,
+      color:eggColors[Math.floor(Math.random()*eggColors.length)]
+    });
+  }
+}
+genEggs();
+
+function rsz(){
+  var r=cv.parentElement.getBoundingClientRect();
+  var w=r.width,h=Math.min(320,w*0.48);
+  cv.width=w*2;cv.height=h*2;
+  cv.style.height=h+'px';
+  cx.setTransform(2,0,0,2,0,0);
+}
+rsz();
+window.addEventListener('resize',function(){rsz();draw();});
+
+function gaussRand(){
+  var u=0,v=0;
+  while(u===0)u=Math.random();
+  while(v===0)v=Math.random();
+  return Math.sqrt(-2.0*Math.log(u))*Math.cos(2.0*Math.PI*v);
+}
+
+function recalcNetForN(n){
+  var moe=1.96*(popSD/Math.sqrt(n));
+  var lo=sampleMean-moe;
+  var hi=sampleMean+moe;
+  if(eggPos<lo){
+    sampleMean=eggPos+moe*0.85;
+    lo=sampleMean-moe;
+    hi=sampleMean+moe;
+  } else if(eggPos>hi){
+    sampleMean=eggPos-moe*0.85;
+    lo=sampleMean-moe;
+    hi=sampleMean+moe;
+  }
+  netLo=lo;
+  netHi=hi;
+}
+
+function draw(){
+  var W=cv.width/2,H=cv.height/2;
+  cx.clearRect(0,0,W,H);
+
+  var padL=30,padR=30,padT=20,padB=28;
+  var fW=W-padL-padR;
+  var fH=H-padT-padB;
+  var fX=padL,fY=padT;
+
+  function xP(v){return fX+(v-fieldMin)/(fieldMax-fieldMin)*fW;}
+
+  cx.fillStyle='#2E7D32';
+  cx.fillRect(fX,fY,fW,fH);
+
+  cx.fillStyle='#388E3C';
+  var stripeW=fW/20;
+  for(var s=0;s<20;s+=2){
+    cx.fillRect(fX+s*stripeW,fY,stripeW,fH);
+  }
+
+  cx.strokeStyle='rgba(255,255,255,0.5)';
+  cx.lineWidth=1.5;
+  cx.beginPath();cx.moveTo(fX,fY);cx.lineTo(fX+fW,fY);cx.lineTo(fX+fW,fY+fH);cx.lineTo(fX,fY+fH);cx.closePath();cx.stroke();
+
+  cx.strokeStyle='rgba(255,255,255,0.35)';
+  cx.lineWidth=1;
+  cx.font='bold 11px Calibri, system-ui, sans-serif';
+  cx.fillStyle='rgba(255,255,255,0.5)';
+  cx.textAlign='center';
+  for(var yd=0;yd<=100;yd+=10){
+    var lx=xP(yd);
+    cx.beginPath();cx.moveTo(lx,fY);cx.lineTo(lx,fY+fH);cx.stroke();
+    cx.fillText(yd,lx,fY+fH+14);
+  }
+
+  cx.fillStyle='rgba(255,255,255,0.4)';
+  cx.font='bold 11px Calibri, system-ui, sans-serif';
+  cx.textAlign='center';
+  cx.fillText('midfield',xP(50),fY+fH+24);
+
+  var eggRx=4,eggRy=5.5;
+
+  for(var i=0;i<eggs.length;i++){
+    var e=eggs[i];
+    var ex=xP(e.x);
+    var ey=fY+e.y*fH;
+
+    cx.fillStyle=e.color;
+    cx.beginPath();
+    cx.ellipse(ex,ey,eggRx,eggRy,0,0,Math.PI*2);
+    cx.fill();
+
+    if((state==='net'||state==='revealed')&&!(e.x>=netLo&&e.x<=netHi)){
+      cx.fillStyle='rgba(46,125,50,0.7)';
+      cx.beginPath();
+      cx.ellipse(ex,ey,eggRx+1,eggRy+1,0,0,Math.PI*2);
+      cx.fill();
+    }
+  }
+
+  if(state==='net'||state==='revealed'){
+    var nlx=xP(Math.max(netLo,0)),nhx=xP(Math.min(netHi,100));
+
+    cx.strokeStyle='rgba(255,255,255,0.9)';
+    cx.lineWidth=2.5;
+    cx.strokeRect(nlx,fY+3,nhx-nlx,fH-6);
+
+    cx.strokeStyle='rgba(255,255,255,0.2)';
+    cx.lineWidth=0.7;
+    var sp=7;
+    for(var rx=nlx+sp;rx<nhx;rx+=sp){
+      cx.beginPath();cx.moveTo(rx,fY+3);cx.lineTo(rx,fY+fH-3);cx.stroke();
+    }
+    for(var ry2=fY+3+sp;ry2<fY+fH-3;ry2+=sp){
+      cx.beginPath();cx.moveTo(nlx,ry2);cx.lineTo(nhx,ry2);cx.stroke();
+    }
+
+    cx.strokeStyle='rgba(255,255,255,0.9)';
+    cx.lineWidth=2.5;
+    cx.strokeRect(nlx,fY+3,nhx-nlx,fH-6);
+
+    var smx=xP(sampleMean);
+    cx.setLineDash([5,4]);
+    cx.strokeStyle='rgba(255,255,255,0.7)';
+    cx.lineWidth=1.5;
+    cx.beginPath();cx.moveTo(smx,fY+3);cx.lineTo(smx,fY+fH-3);cx.stroke();
+    cx.setLineDash([]);
+
+    cx.fillStyle='rgba(255,255,255,0.9)';
+    cx.font='bold 12px Calibri, system-ui, sans-serif';
+    cx.textAlign='center';
+    cx.fillText('Your net (95% CI)',(nlx+nhx)/2,fY-5);
+
+    cx.font='bold 11px Calibri, system-ui, sans-serif';
+    cx.fillStyle='rgba(255,255,255,0.8)';
+    cx.textAlign='left';
+    cx.fillText(Math.max(netLo,0).toFixed(1)+' yd',nlx,fY+fH-8);
+    cx.textAlign='right';
+    cx.fillText(Math.min(netHi,100).toFixed(1)+' yd',nhx,fY+fH-8);
+
+    cx.fillStyle='rgba(255,255,255,0.55)';
+    cx.font='11px Calibri, system-ui, sans-serif';
+    cx.textAlign='center';
+    cx.fillText('sample mean',smx,fY+14);
+  }
+
+  if(state==='revealed'){
+    var egx=xP(eggPos);
+    var egy=fY+fH*0.5;
+
+    cx.fillStyle='#EF9F27';
+    cx.beginPath();
+    cx.ellipse(egx,egy,11,15,0,0,Math.PI*2);
+    cx.fill();
+    cx.strokeStyle='#BA7517';
+    cx.lineWidth=2;
+    cx.beginPath();
+    cx.ellipse(egx,egy,11,15,0,0,Math.PI*2);
+    cx.stroke();
+
+    cx.fillStyle='#FAC775';
+    cx.beginPath();
+    cx.ellipse(egx-3,egy-4,3,4.5,0.3,0,Math.PI*2);
+    cx.fill();
+
+    cx.fillStyle='#FFF';
+    cx.font='bold 13px Calibri, system-ui, sans-serif';
+    cx.textAlign='center';
+    cx.fillText('Population mean = '+eggPos.toFixed(1)+' yards',egx,egy-22);
+  }
+
+  if(state==='ready'){
+    cx.fillStyle='rgba(255,255,255,0.6)';
+    cx.font='14px Calibri, system-ui, sans-serif';
+    cx.textAlign='center';
+    cx.fillText('Set your sample size, then cast the net',fX+fW/2,fY+fH/2-8);
+    cx.fillText('to find the golden egg!',fX+fW/2,fY+fH/2+12);
+  }
+}
+
+function castNet(){
+  var n=parseInt(nS.value);
+  var se=popSD/Math.sqrt(n);
+
+  eggPos=5+Math.random()*90;
+
+  sampleMean=eggPos+gaussRand()*se;
+  sampleMean=Math.max(2,Math.min(98,sampleMean));
+
+  var moe=1.96*se;
+  netLo=sampleMean-moe;
+  netHi=sampleMean+moe;
+
+  if(eggPos<netLo||eggPos>netHi){
+    var t=0.15+Math.random()*0.7;
+    eggPos=netLo+t*(netHi-netLo);
+  }
+
+  state='net';
+  btnReveal.disabled=false;
+
+  document.getElementById('o-n').textContent=n;
+  document.getElementById('o-width').textContent=(netHi-netLo).toFixed(1);
+  document.getElementById('o-mean').textContent=sampleMean.toFixed(1);
+  document.getElementById('o-egg').textContent='?';
+
+  draw();
+}
+
+function revealEgg(){
+  if(state!=='net')return;
+  state='revealed';
+  document.getElementById('o-egg').textContent=eggPos.toFixed(1);
+  draw();
+}
+
+function resetAll(){
+  state='ready';
+  netLo=0;netHi=0;sampleMean=0;eggPos=0;
+  btnReveal.disabled=true;
+  genEggs();
+  document.getElementById('o-width').textContent='\u2013';
+  document.getElementById('o-mean').textContent='\u2013';
+  document.getElementById('o-egg').textContent='?';
+  document.getElementById('o-n').textContent=nS.value;
+  draw();
+}
+
+btnCast.addEventListener('click',castNet);
+btnReveal.addEventListener('click',revealEgg);
+btnReset.addEventListener('click',resetAll);
+
+function sN(v){
+  v=Math.max(5,Math.min(120,parseInt(v)||5));
+  nS.value=v;nI.value=v;
+  document.getElementById('o-n').textContent=v;
+  if(state==='net'||state==='revealed'){
+    recalcNetForN(v);
+    document.getElementById('o-width').textContent=(netHi-netLo).toFixed(1);
+    document.getElementById('o-mean').textContent=sampleMean.toFixed(1);
+    draw();
+  }
+}
+
+nS.addEventListener('input',function(){sN(nS.value);});
+nI.addEventListener('change',function(){sN(nI.value);});
+
+draw();
+</script>
+</body>
+</html>

@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CI Overlap Between Two Groups — Does Overlap Mean "Not Significant"?</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Calibri,'Segoe UI',system-ui,sans-serif;background:#F0F3F5;color:#333;padding:24px 16px;min-height:100vh;}
+  .wrap{max-width:720px;margin:0 auto;background:#fff;border-radius:12px;padding:32px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.08);}
+  h1{font-size:22px;font-weight:700;color:#172940;margin-bottom:6px;}
+  .subtitle{font-size:14px;color:#616467;margin-bottom:24px;line-height:1.5;}
+  .instructions{background:#E6F1FB;border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#0C447C;line-height:1.6;}
+  .grp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:1.5rem;}
+  .grp-card{border:1px solid #ddd;border-radius:10px;padding:14px 16px;}
+  .grp-title{font-size:14px;font-weight:600;margin-bottom:10px;}
+  .ctrl-row{display:flex;align-items:center;gap:8px;margin-bottom:10px;}
+  .ctrl-row:last-child{margin-bottom:0;}
+  .ctrl-lbl{font-size:12px;color:#616467;min-width:50px;}
+  .ctrl-num{width:54px;text-align:center;font-size:13px;font-family:inherit;padding:4px 4px;border:1px solid #ccc;border-radius:6px;background:#fff;color:#333;}
+  input[type="range"]{flex:1;cursor:pointer;}
+  canvas{width:100%;display:block;border-radius:10px;margin-top:8px;}
+  .verdict{text-align:center;padding:14px 16px;border-radius:10px;margin:16px 0;font-size:14px;font-weight:600;transition:background 0.3s;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:12px;}
+  .card{background:#F0F3F5;border-radius:8px;padding:12px 14px;text-align:center;}
+  .card-label{font-size:12px;color:#8B9098;margin-bottom:4px;}
+  .card-val{font-size:16px;font-weight:600;color:#172940;}
+  .footer{font-size:12px;color:#8B9098;text-align:center;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>CI overlap between two groups</h1>
+  <p class="subtitle">Does overlap between individual group CIs mean "not significant"? Not necessarily.</p>
+
+  <div class="instructions">
+    <strong>How to use:</strong> Adjust the mean, standard deviation, and sample size for each group. Watch how the individual 95% CIs overlap (top) while the CI of the <em>difference</em> (bottom) tells you the definitive answer. You'll discover that overlapping group CIs can still yield a significant difference.
+  </div>
+
+  <div class="grp-grid">
+    <div class="grp-card">
+      <div class="grp-title" style="color:#185FA5;">Group 1 (treatment)</div>
+      <div class="ctrl-row">
+        <span class="ctrl-lbl">Mean</span>
+        <input type="range" min="20" max="80" value="52" id="m1-s" step="0.5" />
+        <input type="number" min="20" max="80" value="52" id="m1-i" class="ctrl-num" step="0.5" />
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-lbl">SD</span>
+        <input type="range" min="2" max="20" value="8" id="sd1-s" step="0.5" />
+        <input type="number" min="2" max="20" value="8" id="sd1-i" class="ctrl-num" step="0.5" />
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-lbl">n</span>
+        <input type="range" min="5" max="100" value="30" id="n1-s" step="1" />
+        <input type="number" min="5" max="100" value="30" id="n1-i" class="ctrl-num" />
+      </div>
+    </div>
+    <div class="grp-card">
+      <div class="grp-title" style="color:#D85A30;">Group 2 (control)</div>
+      <div class="ctrl-row">
+        <span class="ctrl-lbl">Mean</span>
+        <input type="range" min="20" max="80" value="45" id="m2-s" step="0.5" />
+        <input type="number" min="20" max="80" value="45" id="m2-i" class="ctrl-num" step="0.5" />
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-lbl">SD</span>
+        <input type="range" min="2" max="20" value="8" id="sd2-s" step="0.5" />
+        <input type="number" min="2" max="20" value="8" id="sd2-i" class="ctrl-num" step="0.5" />
+      </div>
+      <div class="ctrl-row">
+        <span class="ctrl-lbl">n</span>
+        <input type="range" min="5" max="100" value="30" id="n2-s" step="1" />
+        <input type="number" min="5" max="100" value="30" id="n2-i" class="ctrl-num" />
+      </div>
+    </div>
+  </div>
+
+  <canvas id="cv"></canvas>
+
+  <div class="verdict" id="verdict"></div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-label">Group 1 CI</div>
+      <div class="card-val" id="o-ci1">48.0 – 56.0</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Group 2 CI</div>
+      <div class="card-val" id="o-ci2">41.0 – 49.0</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Mean difference</div>
+      <div class="card-val" id="o-diff">7.0</div>
+    </div>
+    <div class="card">
+      <div class="card-label">CIs overlap?</div>
+      <div class="card-val" id="o-olap">Yes</div>
+    </div>
+    <div class="card">
+      <div class="card-label">CI of difference</div>
+      <div class="card-val" id="o-cidiff">2.8 – 11.2</div>
+    </div>
+  </div>
+
+  <p class="footer">ASHS 6400: Methods of Data Analysis &bull; Individual group CIs can overlap even when the difference is significant. The CI of the difference is the definitive test.</p>
+</div>
+
+<script>
+var TT={1:12.706,2:4.303,3:3.182,4:2.776,5:2.571,6:2.447,7:2.365,8:2.306,9:2.262,10:2.228,11:2.201,12:2.179,13:2.160,14:2.145,15:2.131,16:2.120,17:2.110,18:2.101,19:2.093,20:2.086,21:2.080,22:2.074,23:2.069,24:2.064,25:2.060,26:2.056,27:2.052,28:2.048,29:2.045,30:2.042,35:2.030,40:2.021,45:2.014,50:2.009,55:2.004,60:2.000,70:1.994,80:1.990,90:1.987,100:1.984,120:1.980,150:1.976,200:1.972};
+function tcrit(df){
+  if(df<=0)return 12.706;if(TT[df]!==undefined)return TT[df];
+  var k=Object.keys(TT).map(Number).sort(function(a,b){return a-b;});
+  if(df>=k[k.length-1])return TT[k[k.length-1]];
+  var lo=k[0],hi=k[k.length-1];
+  for(var i=0;i<k.length-1;i++){if(k[i]<=df&&k[i+1]>=df){lo=k[i];hi=k[i+1];break;}}
+  return TT[lo]+(df-lo)/(hi-lo)*(TT[hi]-TT[lo]);
+}
+
+var cv=document.getElementById('cv'),cx=cv.getContext('2d');
+var m1S=document.getElementById('m1-s'),m1I=document.getElementById('m1-i');
+var sd1S=document.getElementById('sd1-s'),sd1I=document.getElementById('sd1-i');
+var n1S=document.getElementById('n1-s'),n1I=document.getElementById('n1-i');
+var m2S=document.getElementById('m2-s'),m2I=document.getElementById('m2-i');
+var sd2S=document.getElementById('sd2-s'),sd2I=document.getElementById('sd2-i');
+var n2S=document.getElementById('n2-s'),n2I=document.getElementById('n2-i');
+
+function rsz(){
+  var r=cv.parentElement.getBoundingClientRect();
+  var w=r.width,h=Math.min(340,w*0.5);
+  cv.width=w*2;cv.height=h*2;
+  cv.style.height=h+'px';
+  cx.setTransform(2,0,0,2,0,0);
+}
+rsz();
+window.addEventListener('resize',function(){rsz();draw();});
+
+function draw(){
+  var W=cv.width/2,H=cv.height/2;
+  var m1=parseFloat(m1S.value),sd1=parseFloat(sd1S.value),n1=parseInt(n1S.value);
+  var m2=parseFloat(m2S.value),sd2=parseFloat(sd2S.value),n2=parseInt(n2S.value);
+
+  var se1=sd1/Math.sqrt(n1),se2=sd2/Math.sqrt(n2);
+  var df1=n1-1,df2=n2-1;
+  var tc1=tcrit(df1),tc2=tcrit(df2);
+  var lo1=m1-tc1*se1,hi1=m1+tc1*se1;
+  var lo2=m2-tc2*se2,hi2=m2+tc2*se2;
+
+  var dfPool=n1+n2-2;
+  var tcPool=tcrit(dfPool);
+  var seDiff=Math.sqrt(sd1*sd1/n1+sd2*sd2/n2);
+  var diff=m1-m2;
+  var loDiff=diff-tcPool*seDiff,hiDiff=diff+tcPool*seDiff;
+  var sig=loDiff>0||hiDiff<0;
+
+  var ciOverlap=!(hi1<lo2||hi2<lo1);
+
+  cx.clearRect(0,0,W,H);
+
+  var padL=50,padR=40,padT=30,padB=80;
+  var plotW=W-padL-padR;
+  var plotH=H-padT-padB;
+
+  var allMin=Math.min(lo1,lo2)-3;
+  var allMax=Math.max(hi1,hi2)+3;
+  var xMin=allMin,xMax=allMax;
+
+  function xP(v){return padL+(v-xMin)/(xMax-xMin)*plotW;}
+
+  cx.fillStyle='#FAFBFC';
+  cx.fillRect(0,0,W,H);
+
+  cx.strokeStyle='#E0E0E0';
+  cx.lineWidth=0.5;
+  var step=5;
+  if((xMax-xMin)>40)step=10;
+  if((xMax-xMin)<15)step=2;
+  cx.font='11px Calibri, system-ui, sans-serif';
+  cx.fillStyle='#aaa';
+  cx.textAlign='center';
+  for(var v=Math.ceil(xMin/step)*step;v<=xMax;v+=step){
+    var sx=xP(v);
+    cx.beginPath();cx.moveTo(sx,padT);cx.lineTo(sx,padT+plotH);cx.stroke();
+    cx.fillText(v.toFixed(0),sx,padT+plotH+16);
+  }
+
+  var g1Y=padT+plotH*0.22;
+  var g2Y=padT+plotH*0.52;
+  var diffY=padT+plotH*0.85;
+  var barH=28;
+
+  var blue='#185FA5',blueFill='rgba(24,95,165,0.12)';
+  var coral='#D85A30',coralFill='rgba(216,90,48,0.12)';
+
+  function drawCI(loVal,hiVal,meanVal,y,color,fill,label){
+    var lx=xP(loVal),hx=xP(hiVal),mx=xP(meanVal);
+    cx.fillStyle=fill;
+    cx.fillRect(lx,y-barH/2,hx-lx,barH);
+    cx.strokeStyle=color;cx.lineWidth=2.5;
+    cx.beginPath();cx.moveTo(lx,y);cx.lineTo(hx,y);cx.stroke();
+    cx.lineWidth=2;
+    cx.beginPath();cx.moveTo(lx,y-barH/2+3);cx.lineTo(lx,y+barH/2-3);cx.stroke();
+    cx.beginPath();cx.moveTo(hx,y-barH/2+3);cx.lineTo(hx,y+barH/2-3);cx.stroke();
+    cx.fillStyle=color;
+    cx.beginPath();cx.arc(mx,y,5,0,Math.PI*2);cx.fill();
+    cx.font='bold 12px Calibri, system-ui, sans-serif';
+    cx.textAlign='left';
+    cx.fillText(label+' (M = '+meanVal.toFixed(1)+')',lx,y-barH/2-6);
+  }
+
+  drawCI(lo1,hi1,m1,g1Y,blue,blueFill,'Group 1');
+  drawCI(lo2,hi2,m2,g2Y,coral,coralFill,'Group 2');
+
+  if(ciOverlap){
+    var olapL=Math.max(xP(lo1),xP(lo2));
+    var olapR=Math.min(xP(hi1),xP(hi2));
+    if(olapR>olapL){
+      cx.fillStyle='rgba(200,150,50,0.12)';
+      cx.fillRect(olapL,Math.min(g1Y-barH/2,g2Y-barH/2),olapR-olapL,Math.abs(g2Y-g1Y)+barH);
+      cx.strokeStyle='#BA7517';
+      cx.lineWidth=1;
+      cx.setLineDash([4,4]);
+      cx.beginPath();cx.moveTo(olapL,Math.min(g1Y-barH/2,g2Y-barH/2)-4);cx.lineTo(olapL,Math.max(g1Y+barH/2,g2Y+barH/2)+4);cx.stroke();
+      cx.beginPath();cx.moveTo(olapR,Math.min(g1Y-barH/2,g2Y-barH/2)-4);cx.lineTo(olapR,Math.max(g1Y+barH/2,g2Y+barH/2)+4);cx.stroke();
+      cx.setLineDash([]);
+      cx.fillStyle='#854F0B';
+      cx.font='11px Calibri, system-ui, sans-serif';
+      cx.textAlign='center';
+      cx.fillText('overlap zone',(olapL+olapR)/2,(g1Y+g2Y)/2+4);
+    }
+  }
+
+  cx.strokeStyle='#D0D0D0';
+  cx.lineWidth=0.5;
+  cx.setLineDash([3,3]);
+  cx.beginPath();cx.moveTo(padL,diffY-barH/2-12);cx.lineTo(padL+plotW,diffY-barH/2-12);cx.stroke();
+  cx.setLineDash([]);
+
+  cx.fillStyle='#888';
+  cx.font='11px Calibri, system-ui, sans-serif';
+  cx.textAlign='left';
+  cx.fillText('CI of the difference (the definitive test)',padL,diffY-barH/2-18);
+
+  var diffColor=sig?'#1D9E75':'#E24B4A';
+  var diffFill=sig?'rgba(29,158,117,0.12)':'rgba(226,75,74,0.12)';
+
+  var diffScale=Math.max(Math.abs(loDiff),Math.abs(hiDiff))*1.4;
+  if(diffScale<2)diffScale=2;
+  var dxMin=-diffScale,dxMax=diffScale;
+  function dxP(v){return padL+(v-dxMin)/(dxMax-dxMin)*plotW;}
+  var dzX=dxP(0);
+
+  cx.strokeStyle='#E24B4A';
+  cx.lineWidth=1.5;
+  cx.setLineDash([5,4]);
+  cx.beginPath();cx.moveTo(dzX,diffY-barH/2);cx.lineTo(dzX,diffY+barH/2);cx.stroke();
+  cx.setLineDash([]);
+  cx.fillStyle='#A32D2D';
+  cx.font='11px Calibri, system-ui, sans-serif';
+  cx.textAlign='center';
+  cx.fillText('0',dzX,diffY+barH/2+14);
+
+  var dlx=dxP(loDiff),dhx=dxP(hiDiff),dmx=dxP(diff);
+  cx.fillStyle=diffFill;
+  cx.fillRect(dlx,diffY-barH/2,dhx-dlx,barH);
+  cx.strokeStyle=diffColor;cx.lineWidth=2.5;
+  cx.beginPath();cx.moveTo(dlx,diffY);cx.lineTo(dhx,diffY);cx.stroke();
+  cx.lineWidth=2;
+  cx.beginPath();cx.moveTo(dlx,diffY-barH/2+3);cx.lineTo(dlx,diffY+barH/2-3);cx.stroke();
+  cx.beginPath();cx.moveTo(dhx,diffY-barH/2+3);cx.lineTo(dhx,diffY+barH/2-3);cx.stroke();
+  cx.fillStyle=diffColor;
+  cx.beginPath();cx.arc(dmx,diffY,5,0,Math.PI*2);cx.fill();
+
+  cx.font='12px Calibri, system-ui, sans-serif';
+  cx.textAlign='center';
+  cx.fillText(loDiff.toFixed(1),dlx,diffY+barH/2+14);
+  cx.fillText(hiDiff.toFixed(1),dhx,diffY+barH/2+14);
+
+  cx.font='bold 12px Calibri, system-ui, sans-serif';
+  cx.fillText('Diff = '+diff.toFixed(1),dmx,diffY-barH/2-6);
+
+  var vb=document.getElementById('verdict');
+  if(sig){
+    var olapNote=ciOverlap?' (Note: individual CIs overlap, but the CI of the difference confirms significance.)':'';
+    vb.style.background='#E1F5EE';
+    vb.style.color='#0F6E56';
+    vb.textContent='CI of the difference excludes zero \u2192 p < .05 \u2192 statistically significant'+olapNote;
+  } else {
+    vb.style.background='#FCEBEB';
+    vb.style.color='#A32D2D';
+    vb.textContent='CI of the difference includes zero \u2192 p > .05 \u2192 not statistically significant';
+  }
+
+  document.getElementById('o-ci1').textContent=lo1.toFixed(1)+' \u2013 '+hi1.toFixed(1);
+  document.getElementById('o-ci2').textContent=lo2.toFixed(1)+' \u2013 '+hi2.toFixed(1);
+  document.getElementById('o-diff').textContent=diff.toFixed(1);
+  document.getElementById('o-olap').textContent=ciOverlap?'Yes':'No';
+  document.getElementById('o-olap').style.color=ciOverlap?'#854F0B':'#0F6E56';
+  document.getElementById('o-cidiff').textContent=loDiff.toFixed(1)+' \u2013 '+hiDiff.toFixed(1);
+}
+
+function bind(sl,inp,min,max,step,isFl){
+  function sync(v){
+    v=isFl?parseFloat(v):parseInt(v);
+    if(isNaN(v))v=isFl?parseFloat(sl.value):parseInt(sl.value);
+    v=Math.max(min,Math.min(max,v));
+    sl.value=v;inp.value=isFl?v.toFixed(1):v;
+    draw();
+  }
+  sl.addEventListener('input',function(){sync(sl.value);});
+  inp.addEventListener('change',function(){sync(inp.value);});
+}
+
+bind(m1S,m1I,20,80,0.5,true);
+bind(sd1S,sd1I,2,20,0.5,true);
+bind(n1S,n1I,5,100,1,false);
+bind(m2S,m2I,20,80,0.5,true);
+bind(sd2S,sd2I,2,20,0.5,true);
+bind(n2S,n2I,5,100,1,false);
+
+draw();
+</script>
+</body>
+</html>

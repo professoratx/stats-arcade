@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The t-Test High Jump — How Degrees of Freedom Change the Bar</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Calibri, 'Segoe UI', system-ui, sans-serif;
+    background: #F0F3F5;
+    color: #333;
+    padding: 24px 16px;
+    min-height: 100vh;
+  }
+  .wrap {
+    max-width: 720px;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    padding: 32px 28px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  }
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #172940;
+    margin-bottom: 6px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #616467;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+  .ctrl-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .ctrl-label {
+    font-size: 14px;
+    color: #616467;
+    min-width: 120px;
+  }
+  .ctrl-num {
+    width: 64px;
+    text-align: center;
+    font-size: 14px;
+    font-family: inherit;
+    padding: 6px 8px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    background: #fff;
+    color: #333;
+  }
+  input[type="range"] {
+    flex: 1;
+    height: 6px;
+    cursor: pointer;
+  }
+  canvas {
+    width: 100%;
+    display: block;
+    border-radius: 10px;
+    margin-top: 8px;
+  }
+  .verdict {
+    text-align: center;
+    padding: 14px 16px;
+    border-radius: 10px;
+    margin: 16px 0;
+    font-size: 15px;
+    font-weight: 600;
+    transition: background 0.3s;
+  }
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .card {
+    background: #F0F3F5;
+    border-radius: 8px;
+    padding: 12px 16px;
+    text-align: center;
+  }
+  .card-label {
+    font-size: 12px;
+    color: #8B9098;
+    margin-bottom: 4px;
+  }
+  .card-val {
+    font-size: 20px;
+    font-weight: 600;
+    color: #172940;
+  }
+  .footer {
+    font-size: 12px;
+    color: #8B9098;
+    text-align: center;
+    margin-top: 8px;
+  }
+  .instructions {
+    background: #E6F1FB;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    font-size: 13px;
+    color: #0C447C;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>The t-Test High Jump</h1>
+  <p class="subtitle">How degrees of freedom change the bar you need to clear for statistical significance</p>
+
+  <div class="instructions">
+    <strong>How to use:</strong> The jumper represents your t-statistic — the result your data produced. The crossbar represents the t-critical value — the threshold you must exceed for significance. Use the sliders to change degrees of freedom (sample size) and your t-statistic, then watch the jumper attempt to clear the bar.
+  </div>
+
+  <div class="ctrl-row">
+    <span class="ctrl-label">Degrees of freedom</span>
+    <input type="range" min="1" max="120" value="30" id="df-s" step="1" />
+    <input type="number" min="1" max="120" value="30" id="df-i" class="ctrl-num" />
+  </div>
+  <div class="ctrl-row">
+    <span class="ctrl-label">Your t-statistic</span>
+    <input type="range" min="0" max="6" value="2.10" id="t-s" step="0.01" />
+    <input type="number" min="0" max="6" value="2.10" id="t-i" class="ctrl-num" step="0.01" />
+  </div>
+
+  <canvas id="sc"></canvas>
+
+  <div class="verdict" id="verd"></div>
+
+  <div class="cards">
+    <div class="card">
+      <div class="card-label">t-critical (bar height)</div>
+      <div class="card-val" id="o-tc">2.042</div>
+    </div>
+    <div class="card">
+      <div class="card-label">t-statistic (jump height)</div>
+      <div class="card-val" id="o-ts">2.100</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Sample size (n)</div>
+      <div class="card-val" id="o-n">31</div>
+    </div>
+    <div class="card">
+      <div class="card-label">Alpha (two-tailed)</div>
+      <div class="card-val">0.05</div>
+    </div>
+  </div>
+
+  <p class="footer">ASHS 6400: Methods of Data Analysis &bull; Two-tailed t-critical values, α = .05 &bull; df = n − 1 for a one-sample t-test</p>
+</div>
+
+<script>
+const TT={1:12.706,2:4.303,3:3.182,4:2.776,5:2.571,6:2.447,7:2.365,8:2.306,9:2.262,10:2.228,11:2.201,12:2.179,13:2.160,14:2.145,15:2.131,16:2.120,17:2.110,18:2.101,19:2.093,20:2.086,21:2.080,22:2.074,23:2.069,24:2.064,25:2.060,26:2.056,27:2.052,28:2.048,29:2.045,30:2.042,35:2.030,40:2.021,45:2.014,50:2.009,55:2.004,60:2.000,70:1.994,80:1.990,90:1.987,100:1.984,110:1.982,120:1.980};
+function tc(df){
+  if(df<=0)return 12.706;if(TT[df]!==undefined)return TT[df];
+  var k=Object.keys(TT).map(Number).sort(function(a,b){return a-b;});
+  if(df>=k[k.length-1])return TT[k[k.length-1]];
+  var lo=k[0],hi=k[k.length-1];
+  for(var i=0;i<k.length-1;i++){if(k[i]<=df&&k[i+1]>=df){lo=k[i];hi=k[i+1];break;}}
+  return TT[lo]+(df-lo)/(hi-lo)*(TT[hi]-TT[lo]);
+}
+
+var cv=document.getElementById('sc'),cx=cv.getContext('2d');
+var dfS=document.getElementById('df-s'),dfI=document.getElementById('df-i');
+var tS=document.getElementById('t-s'),tI=document.getElementById('t-i');
+var aP=1,anim=false,lt=0;
+
+function rsz(){
+  var r=cv.parentElement.getBoundingClientRect();
+  var w=r.width,h=Math.min(380,w*0.55);
+  cv.width=w*2;cv.height=h*2;
+  cv.style.height=h+'px';
+  cx.setTransform(2,0,0,2,0,0);
+}
+rsz();
+window.addEventListener('resize',function(){rsz();draw();});
+
+function draw(){
+  var W=cv.width/2,H=cv.height/2;
+  var df=parseInt(dfS.value);
+  var tSt=parseFloat(tS.value);
+  var tcv=tc(df);
+  var sig=tSt>=tcv;
+
+  cx.clearRect(0,0,W,H);
+
+  var gY=H-36;
+
+  cx.fillStyle='#E8F0F8';
+  cx.fillRect(0,0,W,gY);
+  cx.fillStyle='#D4C9B8';
+  cx.fillRect(0,gY,W,H-gY);
+
+  var trackEnd=W*0.38;
+  cx.fillStyle='#C4836A';
+  cx.fillRect(0,gY,trackEnd,H-gY);
+  cx.fillStyle='#B07060';
+  for(var i=0;i<5;i++){
+    cx.fillRect(W*0.06+i*W*0.06,gY+2,2,H-gY-4);
+  }
+
+  var maxT=5.0,bTop=50,bBot=gY-10;
+  function tY(t){return bBot-(Math.min(t,maxT)/maxT)*(bBot-bTop);}
+
+  var postX=W*0.46;
+  var postGap=50;
+  var pW=5;
+
+  var matX=postX-20;
+  var matW=W-matX;
+  var matH=16;
+  cx.fillStyle='#85B7EB';
+  cx.fillRect(matX,gY-matH,matW,matH);
+  cx.fillStyle='#378ADD';
+  cx.fillRect(matX,gY-matH,matW,4);
+
+  cx.fillStyle='#B0B0B0';
+  cx.fillRect(postX-pW/2,bTop-10,pW,gY-bTop+10-matH);
+  cx.fillRect(postX+postGap-pW/2,bTop-10,pW,gY-bTop+10-matH);
+
+  cx.strokeStyle='#ccc';cx.lineWidth=0.5;
+  cx.font='11px Calibri, system-ui, sans-serif';
+  cx.fillStyle='#999';cx.textAlign='right';
+  for(var t=0;t<=maxT;t+=1){
+    var y=tY(t);
+    cx.beginPath();cx.moveTo(postX-pW/2-12,y);cx.lineTo(postX-pW/2-2,y);cx.stroke();
+    cx.fillText(t.toFixed(0),postX-pW/2-15,y+4);
+  }
+
+  var barY=tY(tcv);
+  var bCol=sig?'#1D9E75':'#E24B4A';
+  cx.strokeStyle=bCol;cx.lineWidth=3.5;
+  cx.beginPath();cx.moveTo(postX,barY);cx.lineTo(postX+postGap,barY);cx.stroke();
+
+  cx.fillStyle='#ccc';
+  cx.beginPath();cx.arc(postX,barY,4.5,0,Math.PI*2);cx.fill();
+  cx.beginPath();cx.arc(postX+postGap,barY,4.5,0,Math.PI*2);cx.fill();
+
+  cx.fillStyle=bCol;
+  cx.font='bold 20px Calibri, system-ui, sans-serif';
+  cx.textAlign='right';
+  cx.fillText('t-crit = '+tcv.toFixed(3),postX-pW/2-18,barY+7);
+
+  var jCol='#185FA5';
+  var startX=W*0.15;
+  var barMidX=postX+postGap/2;
+  var peakY=tY(tSt);
+
+  var failLandY=gY-matH;
+  var successLandX=W*0.82;
+  var successLandY=gY-matH;
+
+  var jx,jy,angle;
+  var p=aP;
+
+  if(sig){
+    if(p<=0){jx=startX;jy=gY;angle=0;}
+    else if(p<0.3){
+      var f=p/0.3;
+      jx=startX+(barMidX-startX)*f;
+      jy=gY-(gY-peakY)*Math.sin(f*Math.PI/2);
+      angle=f*0.4;
+    } else if(p<0.5){
+      var f=(p-0.3)/0.2;
+      jx=barMidX+(successLandX-barMidX)*f*0.3;
+      jy=peakY;
+      angle=0.4+f*0.4;
+    } else {
+      var f=(p-0.5)/0.5;
+      jx=barMidX+(successLandX-barMidX)*(0.3+f*0.7);
+      jy=peakY+(successLandY-peakY)*Math.pow(f,1.4);
+      angle=0.8-f*0.8;
+    }
+  } else {
+    if(p<=0){jx=startX;jy=gY;angle=0;}
+    else if(p<0.35){
+      var f=p/0.35;
+      jx=startX+(barMidX-startX)*f;
+      jy=gY-(gY-peakY)*Math.sin(f*Math.PI/2);
+      angle=f*0.3;
+    } else if(p<0.55){
+      var f=(p-0.35)/0.2;
+      jx=barMidX;
+      jy=peakY;
+      angle=0.3-f*0.3;
+    } else {
+      var f=(p-0.55)/0.45;
+      jx=barMidX+f*10;
+      jy=peakY+(failLandY-peakY)*Math.pow(f,1.2);
+      angle=-f*0.2;
+    }
+  }
+
+  cx.save();
+  cx.translate(jx,jy);
+  cx.rotate(angle);
+
+  cx.strokeStyle=jCol;cx.lineWidth=2.5;cx.lineCap='round';cx.lineJoin='round';
+
+  var hR=7,tL=28,lL=22;
+
+  cx.beginPath();cx.arc(0,-tL-hR-2,hR,0,Math.PI*2);cx.stroke();
+  cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(0,0);cx.stroke();
+
+  if(p<=0){
+    cx.beginPath();cx.moveTo(0,0);cx.lineTo(-10,lL);cx.stroke();
+    cx.beginPath();cx.moveTo(0,0);cx.lineTo(8,lL);cx.stroke();
+    cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(-14,-tL+10);cx.stroke();
+    cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(12,-tL+14);cx.stroke();
+  } else if(p>=0.95 && sig){
+    cx.beginPath();cx.moveTo(0,0);cx.lineTo(-8,lL);cx.stroke();
+    cx.beginPath();cx.moveTo(0,0);cx.lineTo(8,lL);cx.stroke();
+    cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(-20,-tL-16);cx.stroke();
+    cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(20,-tL-16);cx.stroke();
+  } else if(p>=0.95 && !sig){
+    cx.beginPath();cx.moveTo(0,0);cx.lineTo(-5,lL);cx.stroke();
+    cx.beginPath();cx.moveTo(0,0);cx.lineTo(5,lL);cx.stroke();
+    cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(-14,-tL+14);cx.stroke();
+    cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(14,-tL+14);cx.stroke();
+  } else {
+    var spread=sig?12:8;
+    var armUp=sig?-10:8;
+    cx.beginPath();cx.moveTo(0,0);cx.lineTo(-spread,lL*0.7);cx.stroke();
+    cx.beginPath();cx.moveTo(0,0);cx.lineTo(spread,lL*0.7);cx.stroke();
+    cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(-16,-tL+armUp);cx.stroke();
+    cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(16,-tL+armUp);cx.stroke();
+  }
+
+  cx.restore();
+
+  if(p>=0.92 || p<=0.02){
+    cx.fillStyle=jCol;
+    cx.font='bold 12px Calibri, system-ui, sans-serif';
+    cx.textAlign='center';
+    cx.fillText('t = '+tSt.toFixed(2),jx,jy-48);
+  }
+
+  if(!anim && p<=0.02){
+    cx.fillStyle='#ccc';
+    cx.font='11px Calibri, system-ui, sans-serif';
+    cx.textAlign='center';
+    cx.fillText('bar moves with df',postX+postGap/2,barY-12);
+  }
+
+  var vb=document.getElementById('verd');
+  if(sig){
+    vb.style.background='#E1F5EE';
+    vb.style.color='#0F6E56';
+    vb.textContent='Cleared! t('+df+') = '+tSt.toFixed(2)+' exceeds t-crit = '+tcv.toFixed(3)+' \u2192 p < .05, statistically significant';
+  } else {
+    vb.style.background='#FCEBEB';
+    vb.style.color='#A32D2D';
+    vb.textContent='Knocked the bar! t('+df+') = '+tSt.toFixed(2)+' does not exceed t-crit = '+tcv.toFixed(3)+' \u2192 p > .05, not significant';
+  }
+
+  document.getElementById('o-tc').textContent=tcv.toFixed(3);
+  document.getElementById('o-ts').textContent=tSt.toFixed(2);
+  document.getElementById('o-n').textContent=(df+1).toString();
+}
+
+function animF(ts){
+  if(!lt)lt=ts;
+  aP+=(ts-lt)/1000*0.85;
+  lt=ts;
+  if(aP>=1){aP=1;anim=false;}
+  draw();
+  if(anim)requestAnimationFrame(animF);
+}
+function go(){aP=0;anim=true;lt=0;requestAnimationFrame(animF);}
+
+function sD(v){v=Math.max(1,Math.min(120,parseInt(v)||1));dfS.value=v;dfI.value=v;go();}
+function sT(v){v=Math.max(0,Math.min(6,parseFloat(v)||0));tS.value=v;tI.value=v.toFixed(2);go();}
+
+dfS.addEventListener('input',function(){sD(dfS.value);});
+dfI.addEventListener('change',function(){sD(dfI.value);});
+tS.addEventListener('input',function(){sT(tS.value);});
+tI.addEventListener('change',function(){sT(tI.value);});
+
+draw();
+</script>
+</body>
+</html>

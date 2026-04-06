@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The F-Test High Jump — More Groups, Different Bar</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Calibri,'Segoe UI',system-ui,sans-serif;background:#F0F3F5;color:#333;padding:24px 16px;min-height:100vh;}
+  .wrap{max-width:720px;margin:0 auto;background:#fff;border-radius:12px;padding:32px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.08);}
+  h1{font-size:22px;font-weight:700;color:#172940;margin-bottom:6px;}
+  .subtitle{font-size:14px;color:#616467;margin-bottom:24px;line-height:1.5;}
+  .instructions{background:#EEEDFE;border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#3C3489;line-height:1.6;}
+  .cr{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .cl{font-size:14px;color:#616467;min-width:140px;}
+  .cn{width:60px;text-align:center;font-size:14px;font-family:inherit;padding:6px 8px;border:1px solid #ccc;border-radius:6px;background:#fff;color:#333;}
+  input[type="range"]{flex:1;cursor:pointer;}
+  canvas{width:100%;display:block;border-radius:10px;margin-top:8px;}
+  .verdict{text-align:center;padding:14px 16px;border-radius:10px;margin:16px 0;font-size:15px;font-weight:600;transition:background 0.3s;}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:12px;margin-bottom:12px;}
+  .card{background:#F0F3F5;border-radius:8px;padding:12px 14px;text-align:center;}
+  .card-label{font-size:12px;color:#8B9098;margin-bottom:4px;}
+  .card-val{font-size:20px;font-weight:600;color:#172940;}
+  .footer{font-size:12px;color:#8B9098;text-align:center;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>The F-test high jump</h1>
+  <p class="subtitle">How the number of groups and sample size change the bar for ANOVA</p>
+  <div class="instructions"><strong>How to use:</strong> The purple jumper represents your F-statistic. The crossbar is F-critical — the threshold for significance. Adjust the number of groups, total participants, and your F-statistic to see when the jumper clears the bar. The small figures on the runway represent your groups.</div>
+
+  <div class="cr"><span class="cl">Number of groups</span><input type="range" min="2" max="6" value="3" id="k-s" step="1" /><input type="number" min="2" max="6" value="3" id="k-i" class="cn" /></div>
+  <div class="cr"><span class="cl">Total participants (N)</span><input type="range" min="6" max="200" value="30" id="n-s" step="1" /><input type="number" min="6" max="200" value="30" id="n-i" class="cn" /></div>
+  <div class="cr"><span class="cl">Your F-statistic</span><input type="range" min="0" max="8" value="3.50" id="f-s" step="0.01" /><input type="number" min="0" max="8" value="3.50" id="f-i" class="cn" step="0.01" /></div>
+
+  <canvas id="sc"></canvas>
+  <div class="verdict" id="verd"></div>
+  <div class="cards">
+    <div class="card"><div class="card-label">F-critical (bar)</div><div class="card-val" id="o-fc">3.354</div></div>
+    <div class="card"><div class="card-label">F-statistic (jump)</div><div class="card-val" id="o-fs">3.500</div></div>
+    <div class="card"><div class="card-label">df1 (between)</div><div class="card-val" id="o-df1">2</div></div>
+    <div class="card"><div class="card-label">df2 (within)</div><div class="card-val" id="o-df2">27</div></div>
+    <div class="card"><div class="card-label">Alpha</div><div class="card-val">0.05</div></div>
+  </div>
+  <p class="footer">ASHS 6400: Methods of Data Analysis &bull; F-critical values, &alpha; = .05. df1 = k &minus; 1, df2 = N &minus; k.</p>
+</div>
+<script>
+var FT={"1":{1:161.4,2:18.51,3:10.13,4:7.71,5:6.61,6:5.99,7:5.59,8:5.32,9:5.12,10:4.96,11:4.84,12:4.75,14:4.60,16:4.49,18:4.41,20:4.35,22:4.30,24:4.26,26:4.23,28:4.20,30:4.17,35:4.12,40:4.08,45:4.06,50:4.03,60:4.00,70:3.98,80:3.96,90:3.95,100:3.94,120:3.92,150:3.90,200:3.89},"2":{1:199.5,2:19.00,3:9.55,4:6.94,5:5.79,6:5.14,7:4.74,8:4.46,9:4.26,10:4.10,11:3.98,12:3.89,14:3.74,16:3.63,18:3.55,20:3.49,22:3.44,24:3.40,26:3.37,28:3.34,30:3.32,35:3.27,40:3.23,45:3.20,50:3.18,60:3.15,70:3.13,80:3.11,90:3.10,100:3.09,120:3.07,150:3.06,200:3.04},"3":{1:215.7,2:19.16,3:9.28,4:6.59,5:5.41,6:4.76,7:4.35,8:4.07,9:3.86,10:3.71,11:3.59,12:3.49,14:3.34,16:3.24,18:3.16,20:3.10,22:3.05,24:3.01,26:2.98,28:2.95,30:2.92,35:2.87,40:2.84,45:2.81,50:2.79,60:2.76,70:2.74,80:2.72,90:2.71,100:2.70,120:2.68,150:2.66,200:2.65},"4":{1:224.6,2:19.25,3:9.12,4:6.39,5:5.19,6:4.53,7:4.12,8:3.84,9:3.63,10:3.48,11:3.36,12:3.26,14:3.11,16:3.01,18:2.93,20:2.87,22:2.82,24:2.78,26:2.74,28:2.71,30:2.69,35:2.64,40:2.61,45:2.58,50:2.56,60:2.53,70:2.50,80:2.49,90:2.47,100:2.46,120:2.45,150:2.43,200:2.42},"5":{1:230.2,2:19.30,3:9.01,4:6.26,5:5.05,6:4.39,7:3.97,8:3.69,9:3.48,10:3.33,11:3.20,12:3.11,14:2.96,16:2.85,18:2.77,20:2.71,22:2.66,24:2.62,26:2.59,28:2.56,30:2.53,35:2.49,40:2.45,45:2.42,50:2.40,60:2.37,70:2.35,80:2.33,90:2.32,100:2.31,120:2.29,150:2.27,200:2.26}};
+function fc(df1,df2){if(df1<1)df1=1;if(df2<1)df2=1;if(df1>5)df1=5;var col=FT[String(df1)];if(!col)return 4.0;if(col[df2]!==undefined)return col[df2];var k=Object.keys(col).map(Number).sort(function(a,b){return a-b;});if(df2<=k[0])return col[k[0]];if(df2>=k[k.length-1])return col[k[k.length-1]];var lo=k[0],hi=k[k.length-1];for(var i=0;i<k.length-1;i++){if(k[i]<=df2&&k[i+1]>=df2){lo=k[i];hi=k[i+1];break;}}return col[lo]+(df2-lo)/(hi-lo)*(col[hi]-col[lo]);}
+var cv=document.getElementById('sc'),cx=cv.getContext('2d');
+var kS=document.getElementById('k-s'),kI=document.getElementById('k-i');
+var nS=document.getElementById('n-s'),nI=document.getElementById('n-i');
+var fS=document.getElementById('f-s'),fI=document.getElementById('f-i');
+var aP=1,ani=false,lt=0;
+function rsz(){var r=cv.parentElement.getBoundingClientRect();var w=r.width,h=Math.min(400,w*0.58);cv.width=w*2;cv.height=h*2;cv.style.height=h+'px';cx.setTransform(2,0,0,2,0,0);}
+rsz();window.addEventListener('resize',function(){rsz();draw();});
+function drawPerson(x,y,scale,col){cx.strokeStyle=col;cx.lineWidth=2*scale;cx.lineCap='round';var hr=5*scale,tl=18*scale,ll=14*scale;cx.beginPath();cx.arc(x,y-tl-hr-1*scale,hr,0,Math.PI*2);cx.stroke();cx.beginPath();cx.moveTo(x,y-tl);cx.lineTo(x,y);cx.stroke();cx.beginPath();cx.moveTo(x,y);cx.lineTo(x-4*scale,y+ll);cx.stroke();cx.beginPath();cx.moveTo(x,y);cx.lineTo(x+4*scale,y+ll);cx.stroke();cx.beginPath();cx.moveTo(x,y-tl);cx.lineTo(x-6*scale,y-tl+8*scale);cx.stroke();cx.beginPath();cx.moveTo(x,y-tl);cx.lineTo(x+6*scale,y-tl+8*scale);cx.stroke();}
+function draw(){
+  var W=cv.width/2,H=cv.height/2;var k=parseInt(kS.value);var N=parseInt(nS.value);if(N<k+1)N=k+1;var fSt=parseFloat(fS.value);var df1=k-1,df2=N-k;var fcv=fc(df1,df2);var sig=fSt>=fcv;
+  cx.clearRect(0,0,W,H);var gY=H-36;
+  cx.fillStyle='#F0EBF5';cx.fillRect(0,0,W,gY);cx.fillStyle='#D4C9B8';cx.fillRect(0,gY,W,H-gY);
+  var trackEnd=W*0.38;cx.fillStyle='#B8899E';cx.fillRect(0,gY,trackEnd,H-gY);cx.fillStyle='#A07888';for(var i=0;i<5;i++){cx.fillRect(W*0.06+i*W*0.06,gY+2,2,H-gY-4);}
+  var grpColors=['#534AB7','#0F6E56','#993C1D','#854F0B','#993556'];var grpStartX=W*0.04;var grpSpacing=28;
+  for(var g=0;g<k;g++){drawPerson(grpStartX+g*grpSpacing+10,gY-2,0.55,grpColors[g%5]);}
+  cx.fillStyle='#534AB7';cx.font='bold 11px Calibri,system-ui,sans-serif';cx.textAlign='left';cx.fillText('k = '+k+' groups',grpStartX,gY-36);
+  var maxF=7.0,bTop=50,bBot=gY-10;function fY(f){return bBot-(Math.min(f,maxF)/maxF)*(bBot-bTop);}
+  var postX=W*0.46,postGap=50,pW=5;
+  var matX=postX-20,matW=W-matX,matH=16;cx.fillStyle='#AFA9EC';cx.fillRect(matX,gY-matH,matW,matH);cx.fillStyle='#7F77DD';cx.fillRect(matX,gY-matH,matW,4);
+  cx.fillStyle='#B0B0B0';cx.fillRect(postX-pW/2,bTop-10,pW,gY-bTop+10-matH);cx.fillRect(postX+postGap-pW/2,bTop-10,pW,gY-bTop+10-matH);
+  cx.strokeStyle='#ccc';cx.lineWidth=0.5;cx.font='11px Calibri,system-ui,sans-serif';cx.fillStyle='#999';cx.textAlign='right';
+  for(var f=0;f<=maxF;f+=1){var y=fY(f);cx.beginPath();cx.moveTo(postX-pW/2-12,y);cx.lineTo(postX-pW/2-2,y);cx.stroke();cx.fillText(f.toFixed(0),postX-pW/2-15,y+4);}
+  var barY=fY(fcv);var bCol=sig?'#1D9E75':'#E24B4A';cx.strokeStyle=bCol;cx.lineWidth=3.5;cx.beginPath();cx.moveTo(postX,barY);cx.lineTo(postX+postGap,barY);cx.stroke();
+  cx.fillStyle='#ccc';cx.beginPath();cx.arc(postX,barY,4.5,0,Math.PI*2);cx.fill();cx.beginPath();cx.arc(postX+postGap,barY,4.5,0,Math.PI*2);cx.fill();
+  cx.fillStyle=bCol;cx.font='bold 20px Calibri,system-ui,sans-serif';cx.textAlign='right';cx.fillText('F-crit = '+fcv.toFixed(3),postX-pW/2-18,barY+7);
+  var jCol='#534AB7';var startX=W*0.22;var barMidX=postX+postGap/2;var peakY=fY(fSt);var failLandY=gY-matH;var successLandX=W*0.82;var successLandY=gY-matH;
+  var jx,jy,angle;var p=aP;
+  if(sig){if(p<=0){jx=startX;jy=gY;angle=0;}else if(p<0.3){var fr=p/0.3;jx=startX+(barMidX-startX)*fr;jy=gY-(gY-peakY)*Math.sin(fr*Math.PI/2);angle=fr*0.4;}else if(p<0.5){var fr=(p-0.3)/0.2;jx=barMidX+(successLandX-barMidX)*fr*0.3;jy=peakY;angle=0.4+fr*0.4;}else{var fr=(p-0.5)/0.5;jx=barMidX+(successLandX-barMidX)*(0.3+fr*0.7);jy=peakY+(successLandY-peakY)*Math.pow(fr,1.4);angle=0.8-fr*0.8;}}
+  else{if(p<=0){jx=startX;jy=gY;angle=0;}else if(p<0.35){var fr=p/0.35;jx=startX+(barMidX-startX)*fr;jy=gY-(gY-peakY)*Math.sin(fr*Math.PI/2);angle=fr*0.3;}else if(p<0.55){var fr=(p-0.35)/0.2;jx=barMidX;jy=peakY;angle=0.3-fr*0.3;}else{var fr=(p-0.55)/0.45;jx=barMidX+fr*10;jy=peakY+(failLandY-peakY)*Math.pow(fr,1.2);angle=-fr*0.2;}}
+  cx.save();cx.translate(jx,jy);cx.rotate(angle);cx.strokeStyle=jCol;cx.lineWidth=2.5;cx.lineCap='round';cx.lineJoin='round';
+  var hR=7,tL=28,lL=22;cx.beginPath();cx.arc(0,-tL-hR-2,hR,0,Math.PI*2);cx.stroke();cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(0,0);cx.stroke();
+  if(p<=0){cx.beginPath();cx.moveTo(0,0);cx.lineTo(-10,lL);cx.stroke();cx.beginPath();cx.moveTo(0,0);cx.lineTo(8,lL);cx.stroke();cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(-14,-tL+10);cx.stroke();cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(12,-tL+14);cx.stroke();}
+  else if(p>=0.95&&sig){cx.beginPath();cx.moveTo(0,0);cx.lineTo(-8,lL);cx.stroke();cx.beginPath();cx.moveTo(0,0);cx.lineTo(8,lL);cx.stroke();cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(-20,-tL-16);cx.stroke();cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(20,-tL-16);cx.stroke();}
+  else if(p>=0.95&&!sig){cx.beginPath();cx.moveTo(0,0);cx.lineTo(-5,lL);cx.stroke();cx.beginPath();cx.moveTo(0,0);cx.lineTo(5,lL);cx.stroke();cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(-14,-tL+14);cx.stroke();cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(14,-tL+14);cx.stroke();}
+  else{var spread=sig?12:8;var armUp=sig?-10:8;cx.beginPath();cx.moveTo(0,0);cx.lineTo(-spread,lL*0.7);cx.stroke();cx.beginPath();cx.moveTo(0,0);cx.lineTo(spread,lL*0.7);cx.stroke();cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(-16,-tL+armUp);cx.stroke();cx.beginPath();cx.moveTo(0,-tL);cx.lineTo(16,-tL+armUp);cx.stroke();}
+  cx.restore();
+  if(p>=0.92||p<=0.02){cx.fillStyle=jCol;cx.font='bold 12px Calibri,system-ui,sans-serif';cx.textAlign='center';cx.fillText('F = '+fSt.toFixed(2),jx,jy-48);}
+  if(!ani&&p<=0.02){cx.fillStyle='#ccc';cx.font='11px Calibri,system-ui,sans-serif';cx.textAlign='center';cx.fillText('bar moves with groups & sample size',postX+postGap/2,barY-12);}
+  var vb=document.getElementById('verd');
+  if(sig){vb.style.background='#E1F5EE';vb.style.color='#0F6E56';vb.textContent='Cleared! F('+df1+', '+df2+') = '+fSt.toFixed(2)+' exceeds F-crit = '+fcv.toFixed(3)+' \u2192 p < .05, statistically significant';}
+  else{vb.style.background='#FCEBEB';vb.style.color='#A32D2D';vb.textContent='Knocked the bar! F('+df1+', '+df2+') = '+fSt.toFixed(2)+' does not exceed F-crit = '+fcv.toFixed(3)+' \u2192 p > .05, not significant';}
+  document.getElementById('o-fc').textContent=fcv.toFixed(3);document.getElementById('o-fs').textContent=fSt.toFixed(2);document.getElementById('o-df1').textContent=df1.toString();document.getElementById('o-df2').textContent=df2.toString();
+}
+function animF2(ts){if(!lt)lt=ts;aP+=(ts-lt)/1000*0.85;lt=ts;if(aP>=1){aP=1;ani=false;}draw();if(ani)requestAnimationFrame(animF2);}
+function go(){aP=0;ani=true;lt=0;requestAnimationFrame(animF2);}
+function sK(v){v=Math.max(2,Math.min(6,parseInt(v)||2));kS.value=v;kI.value=v;var N=parseInt(nS.value);if(N<v+1){N=v+1;nS.value=N;nI.value=N;nS.min=v+1;}else{nS.min=v+1;}go();}
+function sN(v){var k=parseInt(kS.value);v=Math.max(k+1,Math.min(200,parseInt(v)||k+1));nS.value=v;nI.value=v;go();}
+function sF(v){v=Math.max(0,Math.min(8,parseFloat(v)||0));fS.value=v;fI.value=v.toFixed(2);go();}
+kS.addEventListener('input',function(){sK(kS.value);});kI.addEventListener('change',function(){sK(kI.value);});
+nS.addEventListener('input',function(){sN(nS.value);});nI.addEventListener('change',function(){sN(nI.value);});
+fS.addEventListener('input',function(){sF(fS.value);});fI.addEventListener('change',function(){sF(fI.value);});
+draw();
+</script>
+</body>
+</html>
