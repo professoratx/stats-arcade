@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Which Statistical Test Should I Use? — Interactive Flowchart</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Calibri,'Segoe UI',system-ui,sans-serif;background:#F0F3F5;color:#333;padding:24px 16px;min-height:100vh;}
+  .wrap{max-width:720px;margin:0 auto;background:#fff;border-radius:12px;padding:32px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.08);}
+  h1{font-size:22px;font-weight:700;color:#172940;margin-bottom:6px;}
+  .subtitle{font-size:14px;color:#616467;margin-bottom:24px;line-height:1.5;}
+  .instructions{background:#E6F1FB;border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#0C447C;line-height:1.6;}
+  .q-section{margin-bottom:1.5rem;}
+  .q-title{font-size:14px;font-weight:600;color:#172940;margin-bottom:10px;}
+  .q-options{display:flex;gap:12px;flex-wrap:wrap;}
+  .q-label{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:#333;padding:8px 16px;border:1px solid #ccc;border-radius:6px;transition:all 0.15s;}
+  .q-label:hover{background:#F0F3F5;}
+  .q-label input{cursor:pointer;}
+  .greyed{opacity:0.35;pointer-events:none;}
+  .btn{padding:6px 16px;font-size:13px;font-family:inherit;cursor:pointer;border:1px solid #ccc;border-radius:6px;background:#fff;color:#333;transition:background 0.15s;}
+  .btn:hover{background:#F0F3F5;}
+  canvas{width:100%;display:block;border-radius:10px;margin-top:8px;}
+  .result{text-align:center;padding:16px 20px;border-radius:10px;margin-top:16px;transition:all 0.3s;opacity:0;}
+  .footer{font-size:12px;color:#8B9098;text-align:center;margin-top:16px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Which statistical test should I use?</h1>
+  <p class="subtitle">Answer two questions and the flowchart will guide you to the correct test.</p>
+  <div class="instructions"><strong>How to use:</strong> Start by answering the first question — are you comparing one group across conditions (same people) or multiple groups (different people)? Then answer the second question about how many conditions or groups. The flowchart updates in real time to show your path.</div>
+
+  <div class="q-section">
+    <div class="q-title">First question: how many groups? Same people or different people?</div>
+    <div class="q-options">
+      <label class="q-label" id="lbl-one"><input type="radio" name="q1" value="one" id="q1-one" /> One group (same people)</label>
+      <label class="q-label" id="lbl-multi"><input type="radio" name="q1" value="multi" id="q1-multi" /> Multiple groups (different people)</label>
+    </div>
+  </div>
+
+  <div class="q-section greyed" id="q2-wrap">
+    <div class="q-title" id="q2-label">Second question: how many groups or conditions?</div>
+    <div class="q-options">
+      <label class="q-label" id="lbl-two"><input type="radio" name="q2" value="two" id="q2-two" /> Two</label>
+      <label class="q-label" id="lbl-three"><input type="radio" name="q2" value="three" id="q2-three" /> Three or more</label>
+    </div>
+  </div>
+
+  <div style="margin-bottom:1rem;">
+    <button class="btn" id="btn-reset">Start over</button>
+  </div>
+
+  <canvas id="cv"></canvas>
+
+  <div class="result" id="result-box"></div>
+
+  <p class="footer">ASHS 6400: Methods of Data Analysis &bull; A.T. Still University</p>
+</div>
+
+<script>
+var cv=document.getElementById('cv'),cx=cv.getContext('2d');
+var q1One=document.getElementById('q1-one'),q1Multi=document.getElementById('q1-multi');
+var q2Two=document.getElementById('q2-two'),q2Three=document.getElementById('q2-three');
+var q2Wrap=document.getElementById('q2-wrap'),q2Label=document.getElementById('q2-label');
+var resultBox=document.getElementById('result-box');
+
+var q1=null,q2=null;
+
+function rsz(){
+  var r=cv.parentElement.getBoundingClientRect();
+  var w=r.width,h=Math.min(400,w*0.58);
+  cv.width=w*2;cv.height=h*2;
+  cv.style.height=h+'px';
+  cx.setTransform(2,0,0,2,0,0);
+}
+rsz();
+window.addEventListener('resize',function(){rsz();draw();});
+
+var origFT=CanvasRenderingContext2D.prototype.fillText;
+cx.fillText=function(text,x,y,maxW){
+  if(text.indexOf('\n')!==-1){
+    var lines=text.split('\n');var lh=16;var startY=y-((lines.length-1)*lh)/2;
+    for(var i=0;i<lines.length;i++){origFT.call(cx,lines[i],x,startY+i*lh,maxW);}
+  } else {origFT.call(cx,text,x,y,maxW);}
+};
+
+function draw(){
+  var W=cv.width/2,H=cv.height/2;
+  cx.clearRect(0,0,W,H);
+
+  var midX=W/2,leftX=W*0.25,rightX=W*0.75;
+  var navy='#172940',steel='#3D7FA9',red='#C0504D',ltBlue='#D6E8F4',ltRed='#F0D4D2';
+  var grayBg='#E8E8E8',grayTx='#bbb',whiteTx='#FFFFFF';
+
+  var leftActive=(q1==='one'||q1===null);
+  var rightActive=(q1==='multi'||q1===null);
+  var leftTwoActive,leftThreeActive,rightTwoActive,rightThreeActive;
+  if(q1===null){leftTwoActive=true;leftThreeActive=true;rightTwoActive=true;rightThreeActive=true;}
+  else if(q2===null){leftTwoActive=(q1==='one');leftThreeActive=(q1==='one');rightTwoActive=(q1==='multi');rightThreeActive=(q1==='multi');}
+  else{leftTwoActive=(q1==='one'&&q2==='two');leftThreeActive=(q1==='one'&&q2==='three');rightTwoActive=(q1==='multi'&&q2==='two');rightThreeActive=(q1==='multi'&&q2==='three');}
+
+  var topBoxW=220,topBoxH=44,midBoxW=180,midBoxH=40,subLabelW=200,subLabelH=34,btmBoxW=140,btmBoxH=48,spread=80;
+
+  function drawBox(x,y,w,h,fillA,fillI,textA,textI,label,active,rx){
+    rx=rx||6;cx.fillStyle=active?fillA:grayBg;cx.beginPath();cx.roundRect(x-w/2,y,w,h,rx);cx.fill();
+    cx.fillStyle=active?textA:grayTx;cx.font='bold 14px Calibri,system-ui,sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(label,x,y+h/2);
+  }
+  function drawLine(x1,y1,x2,y2,active){
+    cx.strokeStyle=active?'#555':'#ddd';cx.lineWidth=active?1.5:1;cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();
+  }
+  function drawLabel(x,y,text,active){
+    cx.fillStyle=active?'#444':grayTx;cx.font='italic 13px Calibri,system-ui,sans-serif';cx.textAlign='center';cx.textBaseline='middle';cx.fillText(text,x,y);
+  }
+
+  var topY=20;
+  drawBox(midX,topY,topBoxW,topBoxH,navy,navy,whiteTx,whiteTx,'How many groups?',true,6);
+
+  var row2Y=topY+topBoxH+50;
+  drawLine(midX-40,topY+topBoxH,leftX,row2Y,leftActive);
+  drawLine(midX+40,topY+topBoxH,rightX,row2Y,rightActive);
+  drawBox(leftX,row2Y,midBoxW,midBoxH,steel,grayBg,whiteTx,grayTx,'One group',leftActive,6);
+  drawBox(rightX,row2Y,midBoxW,midBoxH,red,grayBg,whiteTx,grayTx,'Multiple groups',rightActive,6);
+
+  var row3Y=row2Y+midBoxH+40;
+  drawLine(leftX,row2Y+midBoxH,leftX,row3Y,leftActive);
+  drawLine(rightX,row2Y+midBoxH,rightX,row3Y,rightActive);
+  drawBox(leftX,row3Y,subLabelW,subLabelH,ltBlue,grayBg,'#0C447C',grayTx,'How many test conditions?',leftActive,4);
+  drawBox(rightX,row3Y,subLabelW,subLabelH,ltRed,grayBg,'#791F1F',grayTx,'How many total groups?',rightActive,4);
+
+  var row4Y=row3Y+subLabelH+40;
+  drawLine(leftX-20,row3Y+subLabelH,leftX-spread,row4Y,leftTwoActive);
+  drawLine(leftX+20,row3Y+subLabelH,leftX+spread,row4Y,leftThreeActive);
+  drawLine(rightX-20,row3Y+subLabelH,rightX-spread,row4Y,rightTwoActive);
+  drawLine(rightX+20,row3Y+subLabelH,rightX+spread,row4Y,rightThreeActive);
+
+  var labelY=row3Y+subLabelH+20;
+  drawLabel(leftX-spread,labelY,'Two',leftTwoActive);
+  drawLabel(leftX+spread,labelY,'Three or more',leftThreeActive);
+  drawLabel(rightX-spread,labelY,'Two',rightTwoActive);
+  drawLabel(rightX+spread,labelY,'Three or more',rightThreeActive);
+
+  drawBox(leftX-spread,row4Y,btmBoxW,btmBoxH,steel,grayBg,whiteTx,grayTx,'Dependent\nt-test',leftTwoActive,6);
+  drawBox(leftX+spread,row4Y,btmBoxW,btmBoxH,steel,grayBg,whiteTx,grayTx,'RMANOVA',leftThreeActive,6);
+  drawBox(rightX-spread,row4Y,btmBoxW,btmBoxH,red,grayBg,whiteTx,grayTx,'Independent\nt-test',rightTwoActive,6);
+  drawBox(rightX+spread,row4Y,btmBoxW,btmBoxH,red,grayBg,whiteTx,grayTx,'ANOVA',rightThreeActive,6);
+
+  if(q1!==null&&q2!==null){
+    var hlColor=(q1==='one')?steel:red;
+    var hlX=(q1==='one')?(q2==='two'?leftX-spread:leftX+spread):(q2==='two'?rightX-spread:rightX+spread);
+    cx.strokeStyle=hlColor;cx.lineWidth=3;cx.beginPath();cx.roundRect(hlX-btmBoxW/2-4,row4Y-4,btmBoxW+8,btmBoxH+8,10);cx.stroke();
+  }
+}
+
+function updateQ2(){
+  if(q1===null){q2Wrap.classList.add('greyed');}
+  else{q2Wrap.classList.remove('greyed');q2Label.textContent=q1==='one'?'Second question: how many test conditions?':'Second question: how many total groups?';}
+}
+
+function updateResult(){
+  if(q1===null||q2===null){resultBox.style.opacity='0';return;}
+  var testName='',color='',bg='',extra='';
+  if(q1==='one'&&q2==='two'){testName='Dependent t-test';color='#0C447C';bg='#D6E8F4';}
+  if(q1==='one'&&q2==='three'){testName='RMANOVA';color='#0C447C';bg='#D6E8F4';extra='<br><span style="font-size:13px;font-weight:400;color:'+color+';">If significant, run post-hoc multiple comparisons with Bonferroni adjusted alpha level.</span>';}
+  if(q1==='multi'&&q2==='two'){testName='Independent t-test';color='#791F1F';bg='#F0D4D2';}
+  if(q1==='multi'&&q2==='three'){testName='ANOVA';color='#791F1F';bg='#F0D4D2';extra='<br><span style="font-size:13px;font-weight:400;color:'+color+';">If significant, run post-hoc multiple comparisons with Bonferroni adjusted alpha level.</span>';}
+  resultBox.style.opacity='1';resultBox.style.background=bg;
+  resultBox.innerHTML='<span style="font-size:16px;font-weight:600;color:'+color+';">Use the '+testName+'</span>'+extra;
+}
+
+function highlightLabel(id,active,color){
+  var el=document.getElementById(id);
+  if(active){el.style.borderColor=color;el.style.background=color+'18';}
+  else{el.style.borderColor='';el.style.background='';}
+}
+
+function updateLabels(){
+  highlightLabel('lbl-one',q1==='one','#3D7FA9');
+  highlightLabel('lbl-multi',q1==='multi','#C0504D');
+  highlightLabel('lbl-two',q2==='two',q1==='one'?'#3D7FA9':'#C0504D');
+  highlightLabel('lbl-three',q2==='three',q1==='one'?'#3D7FA9':'#C0504D');
+}
+
+q1One.addEventListener('change',function(){q1='one';q2=null;q2Two.checked=false;q2Three.checked=false;updateQ2();updateResult();updateLabels();draw();});
+q1Multi.addEventListener('change',function(){q1='multi';q2=null;q2Two.checked=false;q2Three.checked=false;updateQ2();updateResult();updateLabels();draw();});
+q2Two.addEventListener('change',function(){q2='two';updateResult();updateLabels();draw();});
+q2Three.addEventListener('change',function(){q2='three';updateResult();updateLabels();draw();});
+
+document.getElementById('btn-reset').addEventListener('click',function(){
+  q1=null;q2=null;q1One.checked=false;q1Multi.checked=false;q2Two.checked=false;q2Three.checked=false;
+  updateQ2();updateResult();updateLabels();draw();
+});
+
+updateQ2();draw();
+</script>
+</body>
+</html>
