@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Bonferroni Limbo — Understanding Multiple Comparisons</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Calibri,'Segoe UI',system-ui,sans-serif;background:#F0F3F5;color:#333;padding:24px 16px;min-height:100vh;}
+  .wrap{max-width:720px;margin:0 auto;background:#fff;border-radius:12px;padding:32px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.08);}
+  h1{font-size:22px;font-weight:700;color:#172940;margin-bottom:6px;}
+  .subtitle{font-size:14px;color:#616467;margin-bottom:24px;line-height:1.5;}
+  .instructions{background:#FCEBEB;border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#791F1F;line-height:1.6;}
+  .cards-top{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:1rem;}
+  .card{background:#F0F3F5;border-radius:8px;padding:10px 14px;text-align:center;}
+  .card-label{font-size:12px;color:#8B9098;margin-bottom:4px;}
+  .card-val{font-size:20px;font-weight:600;color:#172940;}
+  .cr{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .cl{font-size:14px;color:#616467;min-width:120px;}
+  .cn{width:50px;text-align:center;font-size:14px;font-family:inherit;padding:6px 8px;border:1px solid #ccc;border-radius:6px;background:#fff;color:#333;}
+  input[type="range"]{flex:1;cursor:pointer;}
+  .btn-row{display:flex;gap:10px;margin-bottom:1rem;flex-wrap:wrap;}
+  .btn{padding:8px 20px;font-size:14px;font-family:inherit;cursor:pointer;border:1px solid #ccc;border-radius:6px;background:#fff;color:#333;transition:background 0.15s;}
+  .btn:hover{background:#F0F3F5;}
+  .btn-primary{background:#172940;color:#fff;border-color:#172940;}
+  .btn-primary:hover{background:#1e3550;}
+  canvas{width:100%;display:block;border-radius:10px;margin-top:8px;}
+  .verdict{text-align:center;padding:14px 16px;border-radius:10px;margin:16px 0;font-size:14px;font-weight:600;transition:all 0.3s;opacity:0;}
+  .cards-bot{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+  .footer{font-size:12px;color:#8B9098;text-align:center;margin-top:8px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>The Bonferroni limbo</h1>
+  <p class="subtitle">Why more comparisons means a stricter threshold — and how Bonferroni adjustment works</p>
+  <div class="instructions"><strong>How to use:</strong> Each stick figure represents one pairwise comparison. Its height is its p-value — taller figures have larger p-values. The limbo bar is the Bonferroni-adjusted alpha (.05 divided by the number of comparisons). Figures short enough to fit under the bar make it through. Increase the number of groups and watch the bar drop, making it harder for anyone to pass.</div>
+
+  <div class="cards-top">
+    <div class="card"><div class="card-label">Groups (k)</div><div class="card-val" id="o-k">3</div></div>
+    <div class="card"><div class="card-label">Comparisons</div><div class="card-val" id="o-comp">3</div></div>
+    <div class="card"><div class="card-label">Adjusted alpha</div><div class="card-val" style="color:#E24B4A;" id="o-alpha">.017</div></div>
+    <div class="card"><div class="card-label">Formula</div><div class="card-val" style="font-size:16px;" id="o-formula">.05 / 3</div></div>
+  </div>
+
+  <div class="cr">
+    <span class="cl">Number of groups</span>
+    <input type="range" min="3" max="6" value="3" id="k-s" step="1" />
+    <input type="number" min="3" max="6" value="3" id="k-i" class="cn" />
+  </div>
+
+  <div class="btn-row">
+    <button class="btn btn-primary" id="btn-run">Run the comparisons</button>
+    <button class="btn" id="btn-reset">Reset</button>
+  </div>
+
+  <canvas id="cv"></canvas>
+
+  <div class="verdict" id="verdict"></div>
+
+  <div class="cards-bot">
+    <div class="card"><div class="card-label">Made it under the bar</div><div class="card-val" style="color:#1D9E75;" id="o-surv">&ndash;</div></div>
+    <div class="card"><div class="card-label">Too tall for the bar</div><div class="card-val" style="color:#E24B4A;" id="o-fail">&ndash;</div></div>
+  </div>
+
+  <p class="footer">ASHS 6400: Methods of Data Analysis &bull; Each figure's height = its p-value. The bar = Bonferroni-adjusted alpha. More comparisons = lower bar = harder to limbo under.</p>
+</div>
+
+<script>
+var cv=document.getElementById('cv'),cx=cv.getContext('2d');
+var kS=document.getElementById('k-s'),kI=document.getElementById('k-i');
+var btnRun=document.getElementById('btn-run'),btnReset=document.getElementById('btn-reset');
+
+var figures=[];
+var animIdx=-1,animProg=0,running=false,lt=0,allDone=false;
+
+function numComp(k){return k*(k-1)/2;}
+function rsz(){
+  var r=cv.parentElement.getBoundingClientRect();
+  var w=r.width,h=Math.min(420,w*0.6);
+  cv.width=w*2;cv.height=h*2;
+  cv.style.height=h+'px';
+  cx.setTransform(2,0,0,2,0,0);
+}
+rsz();
+window.addEventListener('resize',function(){rsz();draw();});
+
+function updateCards(){
+  var k=parseInt(kS.value),comp=numComp(k),adj=0.05/comp;
+  document.getElementById('o-k').textContent=k;
+  document.getElementById('o-comp').textContent=comp;
+  document.getElementById('o-alpha').textContent=adj.toFixed(3);
+  document.getElementById('o-formula').textContent='.05 / '+comp;
+}
+
+function draw(){
+  var W=cv.width/2,H=cv.height/2;
+  cx.clearRect(0,0,W,H);
+
+  var k=parseInt(kS.value),comp=numComp(k),adjAlpha=0.05/comp;
+  var maxP=0.025,gY=H-24,topY=36,scaleH=gY-topY;
+  function pToH(p){return Math.min(p,maxP)/maxP*scaleH;}
+
+  cx.fillStyle='#FAFBFC';
+  cx.fillRect(0,0,W,H);
+  cx.fillStyle='#D4C9B8';
+  cx.fillRect(0,gY,W,H-gY);
+
+  var barH=pToH(adjAlpha),barScreenY=gY-barH;
+
+  var axisX=48;
+  var failZoneL=axisX+8,failZoneR=W*0.46;
+  var barPostL=failZoneR,barPostR=failZoneR+40;
+  var succZoneL=barPostR+8,succZoneR=W-10;
+
+  cx.fillStyle='#B0B0B0';
+  cx.fillRect(barPostL,barScreenY,5,barH);
+  cx.fillRect(barPostR-5,barScreenY,5,barH);
+
+  cx.strokeStyle='#E24B4A';cx.lineWidth=3.5;
+  cx.beginPath();cx.moveTo(barPostL,barScreenY);cx.lineTo(barPostR,barScreenY);cx.stroke();
+  cx.fillStyle='#ccc';
+  cx.beginPath();cx.arc(barPostL,barScreenY,4,0,Math.PI*2);cx.fill();
+  cx.beginPath();cx.arc(barPostR,barScreenY,4,0,Math.PI*2);cx.fill();
+
+  cx.fillStyle='#E24B4A';
+  cx.font='bold 14px Calibri,system-ui,sans-serif';
+  cx.textAlign='center';
+  cx.fillText('Bar = '+adjAlpha.toFixed(3),(barPostL+barPostR)/2,barScreenY-12);
+
+  cx.fillStyle='#85B7EB';
+  cx.fillRect(succZoneL,gY-8,succZoneR-succZoneL,8);
+
+  cx.strokeStyle='#E0E0E0';cx.lineWidth=0.5;
+  cx.font='11px Calibri,system-ui,sans-serif';
+  cx.fillStyle='#aaa';cx.textAlign='right';
+  var ticks=[0.025,0.020,0.015,0.010,0.005];
+  for(var ti=0;ti<ticks.length;ti++){
+    var ty=gY-pToH(ticks[ti]);
+    cx.beginPath();cx.moveTo(axisX-6,ty);cx.lineTo(axisX,ty);cx.stroke();
+    cx.fillText(ticks[ti].toFixed(3),axisX-9,ty+4);
+  }
+
+  cx.fillStyle='#999';
+  cx.save();cx.translate(14,(topY+gY)/2);cx.rotate(-Math.PI/2);
+  cx.textAlign='center';cx.font='12px Calibri,system-ui,sans-serif';
+  cx.fillText('p-value (figure height)',0,0);cx.restore();
+
+  cx.fillStyle='#ccc';
+  cx.font='11px Calibri,system-ui,sans-serif';
+  cx.textAlign='center';
+  cx.fillText('too tall',(failZoneL+failZoneR)/2,gY+16);
+  cx.fillText('made it!',(succZoneL+succZoneR)/2,gY+16);
+
+  if(figures.length===0&&!running){
+    cx.fillStyle='#aaa';
+    cx.font='14px Calibri,system-ui,sans-serif';
+    cx.textAlign='center';
+    cx.fillText('Click "Run the comparisons"',W/2,H/2);
+    cx.fillText('to see who makes it under the bar',W/2,H/2+22);
+    return;
+  }
+
+  var totalSucc=0,totalFail=0;
+  for(var c=0;c<figures.length;c++){if(figures[c].p<=adjAlpha)totalSucc++;else totalFail++;}
+
+  var failSlots=[],succSlots=[];
+  var fAvail=failZoneR-failZoneL-10;
+  if(totalFail>0){var fSp=fAvail/totalFail;for(var f=0;f<totalFail;f++)failSlots.push(failZoneL+5+f*fSp+fSp/2);}
+  var sAvail=succZoneR-succZoneL-10;
+  if(totalSucc>0){var sSp=sAvail/totalSucc;for(var s=0;s<totalSucc;s++)succSlots.push(succZoneL+5+s*sSp+sSp/2);}
+
+  var waitX=axisX+16;
+  var approachX=(failZoneL+barPostL)/2;
+  var si2=0,fi2=0;
+
+  for(var i=0;i<figures.length;i++){
+    var fig=figures[i];
+    var personH=Math.max(16,pToH(fig.p)*0.85);
+    var success=fig.p<=adjAlpha;
+    var isDone=allDone||(i<animIdx);
+    var isActive=(i===animIdx&&running);
+    var isWaiting=(!isDone&&!isActive);
+
+    if(isWaiting){
+      drawStick(waitX,gY,personH,'#bbb',false);
+      labelP(waitX,gY,personH,fig.p,'#bbb');
+    }
+
+    if(isActive){
+      var prog=animProg;
+      if(success){
+        var destX=succSlots[si2];
+        var col='#185FA5';
+        if(prog<0.3){var jx=waitX+(approachX-waitX)*(prog/0.3);drawStick(jx,gY,personH,col,false);labelP(jx,gY,personH,fig.p,col);}
+        else if(prog<0.6){var jx2=approachX+((barPostL+barPostR)/2-approachX)*((prog-0.3)/0.3);col='#1D9E75';drawStickLean(jx2,gY,personH,col,(prog-0.3)/0.3);labelP(jx2,gY,personH,fig.p,col);}
+        else{col='#1D9E75';var jx3=(barPostL+barPostR)/2+(destX-(barPostL+barPostR)/2)*((prog-0.6)/0.4);drawStick(jx3,gY,personH,col,false);labelP(jx3,gY,personH,fig.p,col);}
+      } else {
+        var destX2=failSlots[fi2];
+        var col2='#185FA5';
+        if(prog<0.4){var jx4=waitX+(approachX-waitX)*(prog/0.4);drawStick(jx4,gY,personH,col2,false);labelP(jx4,gY,personH,fig.p,col2);}
+        else if(prog<0.7){col2='#E24B4A';drawStick(approachX,gY,personH,col2,true);labelP(approachX,gY,personH,fig.p,col2);drawStars(approachX,gY,personH,col2);}
+        else{col2='#E24B4A';var jx5=approachX+(destX2-approachX)*((prog-0.7)/0.3);drawStick(jx5,gY,personH,col2,true);labelP(jx5,gY,personH,fig.p,col2);}
+      }
+    }
+
+    if(isDone){
+      if(success){drawStick(succSlots[si2],gY,personH,'#1D9E75',false);labelP(succSlots[si2],gY,personH,fig.p,'#1D9E75');si2++;}
+      else{drawStick(failSlots[fi2],gY,personH,'#E24B4A',true);labelP(failSlots[fi2],gY,personH,fig.p,'#E24B4A');fi2++;}
+    }
+    if(isActive){if(success)si2++;else fi2++;}
+    if(isWaiting){if(success)si2++;else fi2++;}
+  }
+}
+
+function labelP(x,gY,h,p,col){cx.fillStyle=col;cx.font='bold 11px Calibri,system-ui,sans-serif';cx.textAlign='center';cx.fillText('p = '+p.toFixed(3),x,gY-h-14);}
+
+function drawStars(x,gY,h,col){
+  cx.strokeStyle=col;cx.lineWidth=1.5;var bx=x+8,by=gY-h-6;
+  for(var i=0;i<3;i++){var sx=bx+Math.cos(i*2.1)*5,sy=by+Math.sin(i*2.1)*5;cx.beginPath();cx.moveTo(sx-2,sy);cx.lineTo(sx+2,sy);cx.stroke();cx.beginPath();cx.moveTo(sx,sy-2);cx.lineTo(sx,sy+2);cx.stroke();}
+}
+
+function drawStick(x,gY,h,col,slumped){
+  cx.strokeStyle=col;cx.lineWidth=2;cx.lineCap='round';
+  var hr=Math.max(3,h*0.13),torso=h*0.44,leg=h*0.36;
+  var fY=gY,hipY=fY-leg,shY=hipY-torso,hdY=shY-hr-1;
+  cx.beginPath();cx.arc(x,hdY,hr,0,Math.PI*2);cx.stroke();
+  cx.beginPath();cx.moveTo(x,shY);cx.lineTo(x,hipY);cx.stroke();
+  cx.beginPath();cx.moveTo(x,hipY);cx.lineTo(x-h*0.09,fY);cx.stroke();
+  cx.beginPath();cx.moveTo(x,hipY);cx.lineTo(x+h*0.09,fY);cx.stroke();
+  if(slumped){cx.beginPath();cx.moveTo(x,shY+2);cx.lineTo(x-h*0.14,shY+h*0.18);cx.stroke();cx.beginPath();cx.moveTo(x,shY+2);cx.lineTo(x+h*0.14,shY+h*0.16);cx.stroke();}
+  else{cx.beginPath();cx.moveTo(x,shY+2);cx.lineTo(x-h*0.16,shY+h*0.13);cx.stroke();cx.beginPath();cx.moveTo(x,shY+2);cx.lineTo(x+h*0.16,shY+h*0.13);cx.stroke();}
+}
+
+function drawStickLean(x,gY,h,col,lean){
+  cx.strokeStyle=col;cx.lineWidth=2;cx.lineCap='round';
+  var hr=Math.max(3,h*0.13),torso=h*0.44,leg=h*0.36;
+  var fY=gY,hipY=fY-leg,ang=lean*0.9;
+  var shX=x-Math.sin(ang)*torso,shY=hipY-Math.cos(ang)*torso;
+  var hdX=shX-Math.sin(ang)*(hr+1),hdY=shY-Math.cos(ang)*(hr+1);
+  cx.beginPath();cx.arc(hdX,hdY,hr,0,Math.PI*2);cx.stroke();
+  cx.beginPath();cx.moveTo(x,hipY);cx.lineTo(shX,shY);cx.stroke();
+  cx.beginPath();cx.moveTo(x,hipY);cx.lineTo(x-h*0.09,fY);cx.stroke();
+  cx.beginPath();cx.moveTo(x,hipY);cx.lineTo(x+h*0.09,fY);cx.stroke();
+  cx.beginPath();cx.moveTo(shX,shY+2);cx.lineTo(shX-h*0.12,shY-h*0.08);cx.stroke();
+  cx.beginPath();cx.moveTo(shX,shY+2);cx.lineTo(shX+h*0.08,shY-h*0.1);cx.stroke();
+}
+
+function runComparisons(){
+  if(running)return;
+  var k=parseInt(kS.value),comp=numComp(k);
+  figures=[];
+  for(var i=0;i<comp;i++){figures.push({p:parseFloat((Math.random()*0.025).toFixed(4))});}
+  figures.sort(function(a,b){return a.p-b.p;});
+  animIdx=0;animProg=0;running=true;allDone=false;lt=0;
+  document.getElementById('o-surv').textContent='\u2013';
+  document.getElementById('o-fail').textContent='\u2013';
+  document.getElementById('verdict').style.opacity='0';
+  requestAnimationFrame(animate);
+}
+
+function animate(ts){
+  if(!lt)lt=ts;animProg+=(ts-lt)/1000*1.4;lt=ts;
+  if(animProg>=1){animProg=1;draw();animIdx++;
+    if(animIdx>=figures.length){running=false;allDone=true;draw();updateSummary();return;}
+    animProg=0;lt=0;}
+  draw();if(running)requestAnimationFrame(animate);
+}
+
+function updateSummary(){
+  var k=parseInt(kS.value),comp=numComp(k),adj=0.05/comp;
+  var surv=0,fail=0;
+  for(var i=0;i<figures.length;i++){if(figures[i].p<=adj)surv++;else fail++;}
+  document.getElementById('o-surv').textContent=surv+' / '+comp;
+  document.getElementById('o-fail').textContent=fail+' / '+comp;
+  var vb=document.getElementById('verdict');vb.style.opacity='1';
+  if(surv>0&&fail>0){vb.style.background='#E1F5EE';vb.style.color='#0F6E56';vb.textContent=surv+' comparison'+(surv>1?'s':'')+' made it under the Bonferroni bar. '+fail+' were too tall.';}
+  else if(surv>0){vb.style.background='#E1F5EE';vb.style.color='#0F6E56';vb.textContent='All '+surv+' comparisons limboed under!';}
+  else{vb.style.background='#FCEBEB';vb.style.color='#A32D2D';vb.textContent='No comparisons made it under the Bonferroni bar.';}
+}
+
+function resetAll(){
+  figures=[];animIdx=-1;animProg=0;running=false;allDone=false;
+  document.getElementById('o-surv').textContent='\u2013';document.getElementById('o-fail').textContent='\u2013';
+  document.getElementById('verdict').style.opacity='0';draw();
+}
+
+btnRun.addEventListener('click',runComparisons);
+btnReset.addEventListener('click',resetAll);
+function sK(v){v=Math.max(3,Math.min(6,parseInt(v)||3));kS.value=v;kI.value=v;updateCards();resetAll();}
+kS.addEventListener('input',function(){sK(kS.value);});
+kI.addEventListener('change',function(){sK(kI.value);});
+updateCards();draw();
+</script>
+</body>
+</html>
