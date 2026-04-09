@@ -36,9 +36,9 @@
 <body>
 <div class="wrap">
   <h1>What is a confidence interval?</h1>
-  <p class="subtitle">A 95% confidence interval is like casting a net to catch the true population mean. This tool lets you see how sample size changes the width of that net.</p>
-  <div class="instructions"><strong>How to use this tool:</strong> Adjust the sample size slider, then click to cast your net and see if it catches the golden egg (the population mean). Try different sample sizes and notice how the width of the net changes each time.</div>
-  <div class="interpret"><strong>How to interpret:</strong> A larger sample gives you a narrower net — a more precise estimate of where the population mean is. A smaller sample gives you a wider net — a less precise estimate. A wide confidence interval means less certainty about where the true population mean falls.</div>
+  <p class="subtitle">A 95% confidence interval aims to estimate where the population mean exists. Think of it like casting a net on a football field to catch a golden egg (i.e., the true population mean). You don't want to search the entire field for the golden egg — it would be much easier if you knew a specific area to look, which is exactly what a confidence interval does. This tool lets you see what a confidence interval is conceptually doing (focusing your attention to an area where the population mean is) and how sample size changes the width of that net.</p>
+  <div class="instructions"><strong>How to use this tool:</strong> Adjust the sample size slider, then click "Cast the net" to throw your 95% CI onto the field. The net will land around your sample mean. Try different sample sizes and notice how the width of the net changes each time. Can your net catch the golden egg?</div>
+  <div class="interpret"><strong>How to interpret:</strong> A larger sample gives you a narrower net — a more precise estimate of where the population mean is. A smaller sample gives you a wider net — a less precise estimate. A wide confidence interval means you have to search a larger area of the field, which means less certainty about where the golden egg (population mean) actually is.</div>
 
   <div class="ctrl-row">
     <span class="ctrl-lbl">Sample size (n)</span>
@@ -60,20 +60,20 @@
       <div class="card-val" id="o-n">25</div>
     </div>
     <div class="card">
-      <div class="card-label">Net width (yards)</div>
+      <div class="card-label">Width of net (your CI width)</div>
       <div class="card-val" id="o-width">&ndash;</div>
     </div>
     <div class="card">
-      <div class="card-label">Sample mean (yard)</div>
+      <div class="card-label">Sample mean (your average, in yards)</div>
       <div class="card-val" id="o-mean">&ndash;</div>
     </div>
     <div class="card">
-      <div class="card-label">Golden egg (yard)</div>
+      <div class="card-label">Population mean (the golden egg!)</div>
       <div class="card-val" style="color:#BA7517;" id="o-egg">?</div>
     </div>
   </div>
 
-  <p class="footer">ASHS 6400: Methods of Data Analysis &bull; The field is 100 yards. Your 95% CI is one net — make it count. Larger samples = narrower net = better chance of finding the golden egg first.</p>
+  <p class="footer">ASHS 6400: Methods of Data Analysis &bull; The field is 100 yards. Your 95% CI is your net — a larger sample gives you a narrower net and a better chance of pinpointing the golden egg (population mean).</p>
 </div>
 
 <script>
