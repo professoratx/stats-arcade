@@ -10,6 +10,7 @@
   .wrap{max-width:720px;margin:0 auto;background:#fff;border-radius:12px;padding:32px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.08);}
   h1{font-size:22px;font-weight:700;color:#172940;margin-bottom:6px;}
   .subtitle{font-size:14px;color:#616467;margin-bottom:24px;line-height:1.5;}
+  .interpret{background:#E1F5EE;border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#085041;line-height:1.6;}
   .instructions{background:#FDF6E3;border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#633806;line-height:1.6;}
   .ctrl-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
   .ctrl-lbl{font-size:14px;color:#616467;min-width:110px;}
@@ -35,12 +36,9 @@
 <body>
 <div class="wrap">
   <h1>What is a confidence interval?</h1>
-  <p class="subtitle">A 95% confidence interval is like casting a net to catch the true population mean. Adjust the sample size and see how the width of your net changes.</p>
-  <div class="instructions"><strong>Interpretation:</strong> A larger sample gives you a narrower net (a more precise estimate of where the population mean is), while a smaller sample gives you a wider net (a less precise estimate of where the population mean is). A wide CI means less certainty about where the population mean (i.e., the golden egg) falls. Try different sample sizes and see if your net catches the golden egg (the population mean).</div>
-
-  <div class="instructions">
-    <strong>Interpretation:</strong> A larger sample gives you a narrower net (a more precise estimate of where the population mean is), while a smaller sample gives you a wider net (a less precise estimate of where the population mean is). A wide CI means less certainty about where the population mean (i.e., the golden egg) falls. Try different sample sizes and see if your net catches the golden egg (the population mean).
-  </div>
+  <p class="subtitle">A 95% confidence interval is like casting a net to catch the true population mean. This tool lets you see how sample size changes the width of that net.</p>
+  <div class="instructions"><strong>How to use this tool:</strong> Adjust the sample size slider, then click to cast your net and see if it catches the golden egg (the population mean). Try different sample sizes and notice how the width of the net changes each time.</div>
+  <div class="interpret"><strong>How to interpret:</strong> A larger sample gives you a narrower net — a more precise estimate of where the population mean is. A smaller sample gives you a wider net — a less precise estimate. A wide confidence interval means less certainty about where the true population mean falls.</div>
 
   <div class="ctrl-row">
     <span class="ctrl-lbl">Sample size (n)</span>

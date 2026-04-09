@@ -10,6 +10,7 @@
   .wrap{max-width:720px;margin:0 auto;background:#fff;border-radius:12px;padding:32px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.08);}
   h1{font-size:22px;font-weight:700;color:#172940;margin-bottom:6px;}
   .subtitle{font-size:14px;color:#616467;margin-bottom:24px;line-height:1.5;}
+  .interpret{background:#E1F5EE;border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#085041;line-height:1.6;}
   .instructions{background:#E6F1FB;border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#0C447C;line-height:1.6;}
   .ctrl-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
   .ctrl-label{font-size:14px;color:#616467;min-width:100px;}
@@ -32,11 +33,10 @@
 <body>
 <div class="wrap">
   <h1>What is effect size actually describing?</h1>
-  <p class="subtitle">What does Cohen's d actually describe? Use the slider to change the effect size and see how the two groups (treatment and control) move away from or toward each other.</p>
+  <p class="subtitle">Effect size (Cohen’s d) tells you how far apart two groups are in standard deviation units. This tool lets you see that difference visually.</p>
 
-  <div class="instructions">
-    <strong>Interpretation:</strong> The larger the effect size, the farther apart the groups are from each other, which means the more different they are. The smaller the effect size, the more the groups overlap, which means they are more similar. Use the preset buttons to jump to Cohen's benchmarks: small (0.20), medium (0.51 — our mock article), and large (0.80).
-  </div>
+  <div class="instructions"><strong>How to use this tool:</strong> Use the slider to change Cohen’s d and watch how the two groups (treatment in pink, control in blue) move apart or together. The overlap percentage shows how much the groups still share in common. Use the preset buttons to jump to Cohen’s benchmarks: small (0.20), medium (0.51 — our mock article), and large (0.80).</div>
+  <div class="interpret"><strong>How to interpret:</strong> The larger the effect size, the farther apart the groups are, which means the more different they are from each other. The smaller the effect size, the more the groups overlap, which means they are more similar to each other.</div>
 
   <div class="legend">
     <span><span class="legend-dot" style="background:#378ADD;"></span>Control group</span>

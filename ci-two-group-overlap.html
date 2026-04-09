@@ -10,6 +10,7 @@
   .wrap{max-width:720px;margin:0 auto;background:#fff;border-radius:12px;padding:32px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.08);}
   h1{font-size:22px;font-weight:700;color:#172940;margin-bottom:6px;}
   .subtitle{font-size:14px;color:#616467;margin-bottom:24px;line-height:1.5;}
+  .interpret{background:#E1F5EE;border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#085041;line-height:1.6;}
   .instructions{background:#E6F1FB;border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#0C447C;line-height:1.6;}
   .grp-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:1.5rem;}
   .grp-card{border:1px solid #ddd;border-radius:10px;padding:14px 16px;}
@@ -31,11 +32,10 @@
 <body>
 <div class="wrap">
   <h1>What do confidence intervals between two groups tell us?</h1>
-  <p class="subtitle">Use this tool to create confidence intervals for two groups. Then see how those two individual CIs translate into a single CI around the mean difference.</p>
+  <p class="subtitle">When comparing two groups, you can look at their individual confidence intervals or create a single CI around the mean difference. This tool shows you both.</p>
 
-  <div class="instructions">
-    <strong>How to use:</strong> Adjust the mean, standard deviation, and sample size for each group. The top section shows the individual 95% CIs for each group. The bottom section shows how those two CIs translate into a CI around the mean difference.<br><br><strong>Interpretation:</strong> If the CI of the mean difference does not include zero, the difference between groups is statistically significant. If it does include zero, the difference is not statistically significant.
-  </div>
+  <div class="instructions"><strong>How to use this tool:</strong> Adjust the mean, standard deviation, and sample size for each group using the sliders. The top section shows the individual 95% CIs for each group. The bottom section shows how those two CIs translate into a single CI around the mean difference.</div>
+  <div class="interpret"><strong>How to interpret:</strong> If the CI of the mean difference does not include zero, the difference between groups is statistically significant. If it does include zero, the difference is not statistically significant. This is the most direct way to evaluate whether two groups are different.</div>
 
   <div class="grp-grid">
     <div class="grp-card">

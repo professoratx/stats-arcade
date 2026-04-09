@@ -10,6 +10,7 @@
   .wrap{max-width:720px;margin:0 auto;background:#fff;border-radius:12px;padding:32px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.08);}
   h1{font-size:22px;font-weight:700;color:#172940;margin-bottom:6px;}
   .subtitle{font-size:14px;color:#616467;margin-bottom:24px;line-height:1.5;}
+  .interpret{background:#E1F5EE;border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#085041;line-height:1.6;}
   .instructions{background:#E6F1FB;border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#0C447C;line-height:1.6;}
   .step-num{width:28px;height:28px;border-radius:50%;background:#172940;color:#fff;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:500;flex-shrink:0;}
   .step-title{font-size:16px;font-weight:600;color:#172940;}
@@ -30,8 +31,9 @@
 <body>
 <div class="wrap">
   <h1>What happens after a significant ANOVA or RMANOVA?</h1>
-  <p class="subtitle">A significant omnibus test tells you that at least one group or condition differs — but it does not tell you which ones. This tool walks you through the full post-hoc process step by step: choosing the correct follow-up test, identifying every pairwise comparison, and applying the Bonferroni adjustment.</p>
-  <div class="instructions"><strong>How to use:</strong> Walk through each step in order: choose your test type, determine if the result was significant, set the number of groups or conditions, and review the pairwise comparisons with the Bonferroni adjustment. At Step 4, run the embedded limbo simulation to see it in action.<br><br><strong>Interpretation:</strong> Each follow-up comparison must meet the stricter Bonferroni-adjusted alpha — not the original .05. Some comparisons that look significant at .05 will not survive the adjustment.</div>
+  <p class="subtitle">A significant F-test tells you that at least one group or condition differs — but not which ones. This tool walks you through the full follow-up process step by step.</p>
+  <div class="instructions"><strong>How to use this tool:</strong> Walk through each step in order: choose your test type (ANOVA or RMANOVA), determine if the result was significant, set the number of groups or conditions, and review the pairwise comparisons. At Step 4, run the embedded limbo simulation to see which comparisons survive.</div>
+  <div class="interpret"><strong>How to interpret:</strong> Each follow-up comparison must meet the stricter Bonferroni-adjusted alpha — not the original .05. A comparison that looks significant at .05 may not survive the adjustment. The tool shows exactly which comparisons pass and which do not.</div>
 
   <div id="step-1" style="margin-bottom:1.5rem;">
     <div class="step-head"><div class="step-num">1</div><div class="step-title">What type of omnibus test did you run?</div></div>

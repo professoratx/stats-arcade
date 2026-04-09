@@ -10,6 +10,7 @@
   .wrap{max-width:720px;margin:0 auto;background:#fff;border-radius:12px;padding:32px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.08);}
   h1{font-size:22px;font-weight:700;color:#172940;margin-bottom:6px;}
   .subtitle{font-size:14px;color:#616467;margin-bottom:24px;line-height:1.5;}
+  .interpret{background:#E1F5EE;border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#085041;line-height:1.6;}
   .instructions{background:#EEEDFE;border-radius:8px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#3C3489;line-height:1.6;}
   .cr{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
   .cl{font-size:14px;color:#616467;min-width:140px;}
@@ -27,8 +28,9 @@
 <body>
 <div class="wrap">
   <h1>How do we determine if an F-statistic is significant?</h1>
-  <p class="subtitle">The same high jump concept we used for the t-test but applied to the F-test (ANOVA/RMANOVA). The purple jumper is your F-statistic, and the bar is the F-critical value. Adjust the number of groups and total participants and see how things change.</p>
-  <div class="instructions"><strong>Interpretation:</strong> If the jumper clears the bar, the F-test result is statistically significant — at least one group is different from the others. If it does not clear the bar, there is no evidence of a difference among the groups.</div>
+  <p class="subtitle">The same high jump concept we used for the t-test, but applied to the F-test (ANOVA/RMANOVA). The purple jumper is your F-statistic and the bar is the F-critical value.</p>
+  <div class="instructions"><strong>How to use this tool:</strong> Adjust the number of groups, total participants, and the F-statistic using the sliders. Watch whether the jumper clears the bar or not. The small figures on the runway represent your groups.</div>
+  <div class="interpret"><strong>How to interpret:</strong> If the jumper clears the bar, the F-test result is statistically significant — at least one group is different from the others. If it does not clear the bar, there is no evidence of a difference among the groups. Notice how changing the number of groups and total participants affects the height of the bar.</div>
 
   <div class="cr"><span class="cl">Number of groups</span><input type="range" min="2" max="6" value="3" id="k-s" step="1" /><input type="number" min="2" max="6" value="3" id="k-i" class="cn" /></div>
   <div class="cr"><span class="cl">Total participants (N)</span><input type="range" min="6" max="200" value="30" id="n-s" step="1" /><input type="number" min="6" max="200" value="30" id="n-i" class="cn" /></div>
