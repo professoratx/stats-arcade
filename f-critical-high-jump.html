@@ -26,9 +26,9 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>The F-test high jump</h1>
-  <p class="subtitle">How the number of groups and sample size change the bar for ANOVA</p>
-  <div class="instructions"><strong>How to use:</strong> The purple jumper represents your F-statistic. The crossbar is F-critical — the threshold for significance. Adjust the number of groups, total participants, and your F-statistic to see when the jumper clears the bar. The small figures on the runway represent your groups.</div>
+  <h1>How do we determine if an F-statistic is significant?</h1>
+  <p class="subtitle">The same high jump concept we used for the t-test but applied to the F-test (ANOVA/RMANOVA). The purple jumper is your F-statistic, and the bar is the F-critical value. Adjust the number of groups and total participants and see how things change.</p>
+  <div class="instructions"><strong>Interpretation:</strong> If the jumper clears the bar, the F-test result is statistically significant — at least one group is different from the others. If it does not clear the bar, there is no evidence of a difference among the groups.</div>
 
   <div class="cr"><span class="cl">Number of groups</span><input type="range" min="2" max="6" value="3" id="k-s" step="1" /><input type="number" min="2" max="6" value="3" id="k-i" class="cn" /></div>
   <div class="cr"><span class="cl">Total participants (N)</span><input type="range" min="6" max="200" value="30" id="n-s" step="1" /><input type="number" min="6" max="200" value="30" id="n-i" class="cn" /></div>

@@ -32,9 +32,9 @@
 </head>
 <body>
 <div class="wrap">
-  <h1>The Bonferroni limbo</h1>
-  <p class="subtitle">Why more comparisons means a stricter threshold — and how Bonferroni adjustment works</p>
-  <div class="instructions"><strong>How to use:</strong> Use the slider to set the number of groups, then click "Run the comparisons" to simulate the limbo.<br><br><strong>The bar</strong> represents the Bonferroni-adjusted alpha level (.05 divided by the number of comparisons). As you increase the number of groups, more comparisons are needed, and the bar drops lower — making it harder for any comparison to pass.<br><br><strong>The figures</strong> represent the p-values from each pairwise comparison. A figure's height corresponds to its p-value — a taller figure has a higher p-value, and a shorter figure has a lower p-value.<br><br><strong>The result:</strong> If a figure is short enough to make it under the bar, that comparison is statistically significant at the Bonferroni-adjusted alpha level. If a figure is too tall to pass under the bar, that comparison is not statistically significant at the adjusted level — even if it would have been significant at the original .05.</div>
+  <h1>Why do we need to adjust the alpha level for multiple comparisons?</h1>
+  <p class="subtitle">After a significant F-test, you must run multiple pairwise comparisons to identify the specific differences. When you run multiple pairwise comparisons, each one carries a risk of a false positive. The more comparisons you run, the higher that overall risk becomes. This tool illustrates the multiple comparison process.</p>
+  <div class="instructions"><strong>How to use:</strong> Use the slider to set the number of groups, then click "Run the comparisons" to simulate the limbo. Each stick figure's height represents the p-value of the comparison, and the limbo bar represents the Bonferroni-adjusted alpha that the figures must get under to signify statistical significance.<br><br><strong>Interpretation:</strong> Figures short enough (a lower p-value) to pass under the bar (the adjusted alpha level) are statistically significant. Figures too tall (a higher p-value) to pass under the bar (the adjusted alpha level) are not statistically significant. Notice how, as you increase the number of groups, the bar drops lower and fewer comparisons survive — this is the cost of running more comparisons.</div>
 
   <div class="cards-top">
     <div class="card"><div class="card-label">Groups (k)</div><div class="card-val" id="o-k">3</div></div>
