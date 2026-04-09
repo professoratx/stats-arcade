@@ -34,9 +34,9 @@
 <body>
 <div class="wrap">
   <h1>Why do we need to adjust the alpha level for multiple comparisons?</h1>
-  <p class="subtitle">After a significant F-test, you run multiple pairwise comparisons to find the specific differences. But each comparison carries a risk of a false positive — and that risk adds up. This tool shows you why we adjust.</p>
-  <div class="instructions"><strong>How to use this tool:</strong> Use the slider to set the number of groups, then click “Run the comparisons” to simulate. Each stick figure represents one pairwise comparison, and its height represents the p-value of that comparison. The limbo bar represents the Bonferroni-adjusted alpha level.</div>
-  <div class="interpret"><strong>How to interpret:</strong> Figures short enough (a lower p-value) to pass under the bar (the adjusted alpha level) are statistically significant. Figures too tall (a higher p-value) to pass under the bar are not statistically significant. As you increase the number of groups, the bar drops lower and fewer comparisons survive — this is the cost of running more comparisons.</div>
+  <p class="subtitle">After a significant F-test, you need to run multiple pairwise comparisons to find out which specific groups differ. But here’s the problem: each comparison carries a risk of a false positive, and that risk adds up with every comparison you run. To protect against this, we use the Bonferroni adjustment, which lowers the alpha level (i.e., makes the threshold for significance stricter) based on how many comparisons you are running. Think of it like a limbo contest — the bar represents the adjusted alpha level, and each stick figure represents a pairwise comparison trying to get under it. The more comparisons you run, the lower the bar drops, making it harder for any single comparison to be considered statistically significant.</p>
+  <div class="instructions"><strong>How to use this tool:</strong> Use the slider to set the number of groups, then click “Run the comparisons” to simulate. Each stick figure represents one pairwise comparison. A figure’s height represents the p-value of that comparison — a shorter figure has a lower p-value, and a taller figure has a higher p-value. The limbo bar represents the Bonferroni-adjusted alpha level (calculated as .05 divided by the number of comparisons).</div>
+  <div class="interpret"><strong>How to interpret:</strong> Figures short enough (a lower p-value) to pass under the bar (the adjusted alpha level) are statistically significant — that pairwise comparison found a real difference. Figures too tall (a higher p-value) to pass under the bar are not statistically significant — that comparison did not meet the stricter threshold. Try increasing the number of groups and notice how the bar drops lower and fewer comparisons survive. This is the trade-off of running more comparisons: the threshold becomes stricter to protect against false positives.</div>
 
   <div class="cards-top">
     <div class="card"><div class="card-label">Groups (k)</div><div class="card-val" id="o-k">3</div></div>
@@ -65,7 +65,7 @@
     <div class="card"><div class="card-label">Too tall (not statistically significant)</div><div class="card-val" style="color:#E24B4A;" id="o-fail">&ndash;</div></div>
   </div>
 
-  <p class="footer">ASHS 6400: Methods of Data Analysis &bull; Each figure's height = its p-value. The bar = Bonferroni-adjusted alpha. More comparisons = lower bar = harder to limbo under.</p>
+  <p class="footer">ASHS 6400: Methods of Data Analysis • The limbo bar = Bonferroni-adjusted alpha (.05 ÷ number of comparisons). Each figure’s height = its p-value. More groups = more comparisons = lower bar = harder to pass.</p>
 </div>
 
 <script>
