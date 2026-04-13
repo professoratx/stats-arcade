@@ -24,6 +24,15 @@
   canvas{width:100%;display:block;border-radius:10px;margin-top:8px;}
   .result{text-align:center;padding:16px 20px;border-radius:10px;margin-top:16px;transition:all 0.3s;opacity:0;}
   .footer{font-size:12px;color:#8B9098;text-align:center;margin-top:16px;}
+
+  .feedback-bar{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:24px;padding:16px 20px;background:#F0F3F5;border-radius:10px;}
+  .feedback-prompt{font-size:14px;color:#616467;font-weight:600;}
+  .feedback-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;font-size:14px;font-family:inherit;cursor:pointer;border:1px solid #ccc;border-radius:8px;background:#fff;color:#616467;transition:all 0.2s;}
+  .feedback-btn:hover{background:#E6F1FB;border-color:#3D7FA9;color:#172940;}
+  .feedback-btn.selected-yes{background:#E1F5EE;border-color:#1D9E75;color:#085041;cursor:default;}
+  .feedback-btn.selected-no{background:#FCEBEB;border-color:#E24B4A;color:#791F1F;cursor:default;}
+  .feedback-btn.disabled{opacity:0.4;cursor:default;pointer-events:none;}
+  .feedback-thanks{font-size:13px;color:#8B9098;text-align:center;margin-top:8px;display:none;}
 </style>
 </head>
 <body>
@@ -56,6 +65,14 @@
   <canvas id="cv"></canvas>
 
   <div class="result" id="result-box"></div>
+
+  <div class="feedback-bar" id="feedback-bar">
+    <span class="feedback-prompt">Did this tool help you learn?</span>
+    <button class="feedback-btn" id="fb-yes" onclick="sendFeedback('yes')">👍 Yes</button>
+    <button class="feedback-btn" id="fb-no" onclick="sendFeedback('no')">👎 No</button>
+  </div>
+  <p class="feedback-thanks" id="feedback-thanks">Thanks for your feedback!</p>
+
 
   <p class="footer">ASHS 6400: Methods of Data Analysis &bull; A.T. Still University</p>
 </div>
@@ -194,6 +211,21 @@ document.getElementById('btn-reset').addEventListener('click',function(){
 });
 
 updateQ2();draw();
+</script>
+<script>
+
+function sendFeedback(response){
+  var yesBtn=document.getElementById('fb-yes');
+  var noBtn=document.getElementById('fb-no');
+  var thanks=document.getElementById('feedback-thanks');
+  if(response==='yes'){yesBtn.classList.add('selected-yes');noBtn.classList.add('disabled');}
+  else{noBtn.classList.add('selected-no');yesBtn.classList.add('disabled');}
+  thanks.style.display='block';
+  var toolName=window.location.pathname.replace(/.*\//,'').replace('.html','');
+  if(typeof goatcounter!=='undefined'&&goatcounter.count){
+    goatcounter.count({path:'feedback/'+toolName+'/'+response,title:'Feedback: '+toolName+' - '+response,event:true});
+  }
+}
 </script>
 <script data-goatcounter="https://professoratx.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

@@ -29,6 +29,15 @@
   .verdict{text-align:center;padding:14px 16px;border-radius:10px;margin:16px 0;font-size:14px;font-weight:600;transition:all 0.3s;opacity:0;}
   .cards-bot{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
   .footer{font-size:12px;color:#8B9098;text-align:center;margin-top:8px;}
+
+  .feedback-bar{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:24px;padding:16px 20px;background:#F0F3F5;border-radius:10px;}
+  .feedback-prompt{font-size:14px;color:#616467;font-weight:600;}
+  .feedback-btn{display:inline-flex;align-items:center;gap:6px;padding:8px 18px;font-size:14px;font-family:inherit;cursor:pointer;border:1px solid #ccc;border-radius:8px;background:#fff;color:#616467;transition:all 0.2s;}
+  .feedback-btn:hover{background:#E6F1FB;border-color:#3D7FA9;color:#172940;}
+  .feedback-btn.selected-yes{background:#E1F5EE;border-color:#1D9E75;color:#085041;cursor:default;}
+  .feedback-btn.selected-no{background:#FCEBEB;border-color:#E24B4A;color:#791F1F;cursor:default;}
+  .feedback-btn.disabled{opacity:0.4;cursor:default;pointer-events:none;}
+  .feedback-thanks{font-size:13px;color:#8B9098;text-align:center;margin-top:8px;display:none;}
 </style>
 </head>
 <body>
@@ -64,6 +73,14 @@
     <div class="card"><div class="card-label">Made it under (statistically significant)</div><div class="card-val" style="color:#1D9E75;" id="o-surv">&ndash;</div></div>
     <div class="card"><div class="card-label">Too tall (not statistically significant)</div><div class="card-val" style="color:#E24B4A;" id="o-fail">&ndash;</div></div>
   </div>
+
+  <div class="feedback-bar" id="feedback-bar">
+    <span class="feedback-prompt">Did this tool help you learn?</span>
+    <button class="feedback-btn" id="fb-yes" onclick="sendFeedback('yes')">👍 Yes</button>
+    <button class="feedback-btn" id="fb-no" onclick="sendFeedback('no')">👎 No</button>
+  </div>
+  <p class="feedback-thanks" id="feedback-thanks">Thanks for your feedback!</p>
+
 
   <p class="footer">ASHS 6400: Methods of Data Analysis • The limbo bar = Bonferroni-adjusted alpha (.05 ÷ number of comparisons). Each figure’s height = its p-value. More groups = more comparisons = lower bar = harder to pass.</p>
 </div>
@@ -293,6 +310,21 @@ function sK(v){v=Math.max(3,Math.min(6,parseInt(v)||3));kS.value=v;kI.value=v;up
 kS.addEventListener('input',function(){sK(kS.value);});
 kI.addEventListener('change',function(){sK(kI.value);});
 updateCards();draw();
+</script>
+<script>
+
+function sendFeedback(response){
+  var yesBtn=document.getElementById('fb-yes');
+  var noBtn=document.getElementById('fb-no');
+  var thanks=document.getElementById('feedback-thanks');
+  if(response==='yes'){yesBtn.classList.add('selected-yes');noBtn.classList.add('disabled');}
+  else{noBtn.classList.add('selected-no');yesBtn.classList.add('disabled');}
+  thanks.style.display='block';
+  var toolName=window.location.pathname.replace(/.*\//,'').replace('.html','');
+  if(typeof goatcounter!=='undefined'&&goatcounter.count){
+    goatcounter.count({path:'feedback/'+toolName+'/'+response,title:'Feedback: '+toolName+' - '+response,event:true});
+  }
+}
 </script>
 <script data-goatcounter="https://professoratx.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
