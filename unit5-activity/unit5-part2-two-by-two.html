@@ -127,7 +127,7 @@ h2 { color: #172940; font-size: 1.3rem; margin-bottom: 12px; }
 <script>
 // Gate check
 if (sessionStorage.getItem("u5_part1_done") !== "true") {
-  document.getElementById("mainContent").innerHTML = '<div class="gate-message"><h2>Complete Part 1 first</h2><p>You need to read the mock article and enter your name before starting Part 2.</p><p style="margin-top:12px;"><a href="part1-mock-article.html">Go to Part 1</a></p></div>';
+  document.getElementById("mainContent").innerHTML = '<div class="gate-message"><h2>Complete Part 1 first</h2><p>You need to read the mock article and enter your name before starting Part 2.</p><p style="margin-top:12px;"><a href="unit5-part1-mock-article.html">Go to Part 1</a></p></div>';
 }
 
 // Iframe fallback
@@ -274,7 +274,7 @@ function showContinue() {
 
 function completePart() {
   sessionStorage.setItem("u5_part2_done", "true");
-  window.location.href = "part3-rr-arr-nnt.html";
+  window.location.href = "unit5-part3-rr-arr-nnt.html";
 }
 
 renderQuestions();

@@ -101,7 +101,7 @@ h2 { color: #172940; font-size: 1.3rem; margin-bottom: 12px; }
 
 <script>
 if (sessionStorage.getItem("u5_part2_done") !== "true") {
-  document.getElementById("mainContent").innerHTML = '<div class="gate-message"><h2>Complete Part 2 first</h2><p><a href="part2-two-by-two.html">Go to Part 2</a></p></div>';
+  document.getElementById("mainContent").innerHTML = '<div class="gate-message"><h2>Complete Part 2 first</h2><p><a href="unit5-part2-two-by-two.html">Go to Part 2</a></p></div>';
 }
 
 var frameTimer = setTimeout(function() { document.getElementById("toolFallback").style.display = "block"; }, 8000);
@@ -247,7 +247,7 @@ function showContinue() {
 
 function completePart() {
   sessionStorage.setItem("u5_part3_done", "true");
-  window.location.href = "part4-odds-ratio.html";
+  window.location.href = "unit5-part4-odds-ratio.html";
 }
 
 renderQuestions();

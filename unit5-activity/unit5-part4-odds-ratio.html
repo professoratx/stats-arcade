@@ -101,7 +101,7 @@ h2 { color: #172940; font-size: 1.3rem; margin-bottom: 12px; }
 
 <script>
 if (sessionStorage.getItem("u5_part3_done") !== "true") {
-  document.getElementById("mainContent").innerHTML = '<div class="gate-message"><h2>Complete Part 3 first</h2><p><a href="part3-rr-arr-nnt.html">Go to Part 3</a></p></div>';
+  document.getElementById("mainContent").innerHTML = '<div class="gate-message"><h2>Complete Part 3 first</h2><p><a href="unit5-part3-rr-arr-nnt.html">Go to Part 3</a></p></div>';
 }
 
 var frameTimer = setTimeout(function() { document.getElementById("toolFallback").style.display = "block"; }, 8000);
@@ -220,7 +220,7 @@ function showContinue() {
 }
 function completePart() {
   sessionStorage.setItem("u5_part4_done","true");
-  window.location.href = "part5-putting-it-together.html";
+  window.location.href = "unit5-part5-putting-it-together.html";
 }
 
 renderQuestions();
