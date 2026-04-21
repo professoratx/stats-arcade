@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What do these numbers actually mean for your patients?</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: Calibri, 'Trebuchet MS', sans-serif;
+    background: #F0F3F5;
+    color: #616467;
+    line-height: 1.6;
+    padding: 24px;
+  }
+
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+  }
+
+  h1 {
+    font-family: Calibri, 'Trebuchet MS', sans-serif;
+    color: #172940;
+    font-size: 1.85rem;
+    font-weight: bold;
+    margin-bottom: 8px;
+    line-height: 1.3;
+  }
+
+  .subtitle {
+    color: #616467;
+    font-size: 1.05rem;
+    margin-bottom: 24px;
+    line-height: 1.65;
+  }
+
+  /* ========== INSTRUCTION & INTERPRET BOXES (Studio Vivid) ========== */
+  .instructions {
+    background: #E5F3F8;
+    color: #1A5A6E;
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 14px;
+    font-size: 0.97rem;
+    line-height: 1.6;
+  }
+
+  .interpret {
+    background: #E1F5EE;
+    color: #085041;
+    border-radius: 10px;
+    padding: 18px 22px;
+    margin-bottom: 28px;
+    font-size: 0.97rem;
+    line-height: 1.6;
+  }
+
+  .instructions strong, .interpret strong {
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    padding: 32px 28px;
+    margin-bottom: 20px;
+  }
+
+  /* ========== SCENARIO SELECTOR (navy active state) ========== */
+  .scenario-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+  }
+
+  .scenario-btn {
+    font-family: Calibri, 'Trebuchet MS', sans-serif;
+    font-size: 0.92rem;
+    padding: 8px 16px;
+    border: 2px solid #172940;
+    border-radius: 8px;
+    background: #FFFFFF;
+    color: #172940;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.2s;
+  }
+
+  .scenario-btn:hover { background: #E8EBF0; }
+
+  .scenario-btn.active {
+    background: #172940;
+    color: #FFFFFF;
+  }
+
+  .scenario-description {
+    background: #F8F9FA;
+    border-left: 4px solid #2E8FAF;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin-bottom: 24px;
+    font-size: 0.95rem;
+    color: #616467;
+    line-height: 1.6;
+  }
+
+  .scenario-description strong { color: #172940; }
+
+  /* ========== 2x2 TABLE ========== */
+  .table-section h2 {
+    color: #2E8FAF;
+    font-size: 1.15rem;
+    margin-bottom: 12px;
+  }
+
+  .two-by-two {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 8px;
+    font-size: 1rem;
+  }
+
+  .two-by-two th {
+    background: #172940;
+    color: #FFFFFF;
+    padding: 10px 14px;
+    text-align: center;
+    font-weight: bold;
+    font-size: 0.93rem;
+  }
+
+  .two-by-two th:first-child { background: transparent; }
+
+  .two-by-two td {
+    padding: 10px 14px;
+    text-align: center;
+    border: 1px solid #DEE2E6;
+  }
+
+  .two-by-two td:first-child {
+    background: #2E8FAF;
+    color: #FFFFFF;
+    font-weight: bold;
+    text-align: right;
+    font-size: 0.93rem;
+    padding-right: 16px;
+  }
+
+  .two-by-two input[type="number"] {
+    width: 72px;
+    padding: 6px 8px;
+    font-family: Calibri, 'Trebuchet MS', sans-serif;
+    font-size: 1.05rem;
+    text-align: center;
+    border: 2px solid #DEE2E6;
+    border-radius: 6px;
+    color: #172940;
+    font-weight: bold;
+  }
+
+  .two-by-two input[type="number"]:focus {
+    border-color: #2E8FAF;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(46,143,175,0.15);
+  }
+
+  .total-cell {
+    background: #F0F3F5 !important;
+    color: #172940 !important;
+    font-weight: bold !important;
+    text-align: center !important;
+  }
+
+  .table-note {
+    font-size: 0.85rem;
+    color: #8B9098;
+    margin-bottom: 16px;
+  }
+
+  .calculate-btn {
+    font-family: Calibri, 'Trebuchet MS', sans-serif;
+    font-size: 1.05rem;
+    font-weight: bold;
+    padding: 12px 32px;
+    background: #2E8FAF;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    display: block;
+    margin: 0 auto;
+  }
+
+  .calculate-btn:hover { background: #247A96; }
+
+  .calculate-btn:disabled {
+    background: #bbb;
+    cursor: not-allowed;
+  }
+
+  /* ========== ANIMATIONS ========== */
+  .phase-section {
+    display: none;
+    animation: fadeSlideIn 0.5s ease;
+  }
+
+  .phase-section.visible { display: block; }
+
+  @keyframes fadeSlideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ========== COMPACT METRIC CARDS (color-coded per metric) ========== */
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 8px;
+  }
+
+  @media (max-width: 700px) {
+    .metrics-grid { grid-template-columns: 1fr; }
+  }
+
+  .metric-card-compact {
+    background: #F0F3F5;
+    border-radius: 10px;
+    padding: 18px 20px;
+    border-left: 5px solid #DEE2E6;
+    cursor: default;
+    transition: all 0.3s;
+  }
+
+  /* Color-coded metric cards */
+  .metric-card-compact.metric-rr { border-left-color: #DEE2E6; }
+  .metric-card-compact.metric-or { border-left-color: #DEE2E6; }
+  .metric-card-compact.metric-arr { border-left-color: #DEE2E6; }
+  .metric-card-compact.metric-nnt { border-left-color: #DEE2E6; }
+
+  .metric-card-compact.unlocked {
+    cursor: pointer;
+    background: #FFFFFF;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .metric-card-compact.unlocked.metric-rr { border-left-color: #C0504D; }
+  .metric-card-compact.unlocked.metric-or { border-left-color: #C27254; }
+  .metric-card-compact.unlocked.metric-arr { border-left-color: #9B7EB8; }
+  .metric-card-compact.unlocked.metric-nnt { border-left-color: #2D8659; }
+
+  .metric-card-compact.unlocked:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+    transform: translateY(-1px);
+  }
+
+  .metric-card-compact.completed {
+    background: #FFFFFF;
+  }
+
+  .metric-card-compact.completed.metric-rr { border-left-color: #C0504D; background: rgba(192,80,77,0.04); }
+  .metric-card-compact.completed.metric-or { border-left-color: #C27254; background: rgba(194,114,84,0.04); }
+  .metric-card-compact.completed.metric-arr { border-left-color: #9B7EB8; background: rgba(155,126,184,0.04); }
+  .metric-card-compact.completed.metric-nnt { border-left-color: #2D8659; background: rgba(45,134,89,0.04); }
+
+  .metric-card-compact.active-card {
+    background: #FFFFFF;
+  }
+
+  .metric-card-compact.active-card.metric-rr { border-left-color: #C0504D; box-shadow: 0 4px 16px rgba(192,80,77,0.15); }
+  .metric-card-compact.active-card.metric-or { border-left-color: #C27254; box-shadow: 0 4px 16px rgba(194,114,84,0.15); }
+  .metric-card-compact.active-card.metric-arr { border-left-color: #9B7EB8; box-shadow: 0 4px 16px rgba(155,126,184,0.15); }
+  .metric-card-compact.active-card.metric-nnt { border-left-color: #2D8659; box-shadow: 0 4px 16px rgba(45,134,89,0.15); }
+
+  .metric-label {
+    font-size: 0.8rem;
+    color: #8B9098;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: bold;
+  }
+
+  .metric-value {
+    font-size: 1.55rem;
+    color: #172940;
+    font-weight: bold;
+    margin-top: 2px;
+  }
+
+  /* Color-coded metric values */
+  .metric-value.val-rr { color: #C0504D; }
+  .metric-value.val-or { color: #C27254; }
+  .metric-value.val-arr { color: #9B7EB8; }
+  .metric-value.val-nnt { color: #2D8659; }
+
+  .card-status {
+    font-size: 0.78rem;
+    margin-top: 6px;
+    font-weight: bold;
+  }
+
+  .card-status.start { color: #2E8FAF; }
+  .card-status.locked { color: #bbb; }
+  .card-status.done { color: #2D8659; }
+
+  .card-prompt {
+    text-align: center;
+    font-size: 0.93rem;
+    color: #8B9098;
+    margin-top: 12px;
+    margin-bottom: 4px;
+  }
+
+  /* ========== EXPANDED CARD (color-coded top borders) ========== */
+  .expanded-section {
+    display: none;
+    animation: fadeSlideIn 0.4s ease;
+  }
+
+  .expanded-section.visible { display: block; }
+
+  .expanded-card {
+    background: #FFFFFF;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+    padding: 28px 24px;
+    margin-bottom: 20px;
+    border-top: 4px solid #2E8FAF;
+  }
+
+  .expanded-card.accent-rr { border-top-color: #C0504D; }
+  .expanded-card.accent-or { border-top-color: #C27254; }
+  .expanded-card.accent-arr { border-top-color: #9B7EB8; }
+  .expanded-card.accent-nnt { border-top-color: #2D8659; }
+
+  .expanded-card h3 {
+    color: #172940;
+    font-size: 1.2rem;
+    margin-bottom: 4px;
+  }
+
+  .expanded-card .expanded-value {
+    font-size: 1.8rem;
+    font-weight: bold;
+    margin-bottom: 16px;
+  }
+
+  .expanded-card .expanded-value.val-rr { color: #C0504D; }
+  .expanded-card .expanded-value.val-or { color: #C27254; }
+  .expanded-card .expanded-value.val-arr { color: #9B7EB8; }
+  .expanded-card .expanded-value.val-nnt { color: #2D8659; }
+
+  /* MC Question */
+  .mc-prompt {
+    font-size: 1rem;
+    color: #172940;
+    font-weight: bold;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+
+  .mc-option {
+    display: block;
+    width: 100%;
+    text-align: left;
+    font-family: Calibri, 'Trebuchet MS', sans-serif;
+    font-size: 0.95rem;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    background: #F8F9FA;
+    border: 2px solid #DEE2E6;
+    border-radius: 8px;
+    cursor: pointer;
+    color: #172940;
+    transition: all 0.2s;
+    line-height: 1.45;
+  }
+
+  .mc-option:hover { border-color: #2E8FAF; background: #E5F3F8; }
+  .mc-option.selected-correct { border-color: #2D8659; background: #E1F5EE; color: #085041; cursor: default; }
+  .mc-option.selected-wrong { border-color: #C0504D; background: #FDECEC; color: #8B2020; cursor: default; }
+  .mc-option.dimmed { opacity: 0.5; cursor: default; }
+  .mc-option.reveal-correct { border-color: #2D8659; background: #E1F5EE; color: #085041; cursor: default; opacity: 1; }
+
+  .mc-feedback {
+    display: none;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-top: 12px;
+    font-size: 0.93rem;
+    line-height: 1.6;
+  }
+
+  .mc-feedback.correct { display: block; background: #E1F5EE; color: #085041; border-left: 4px solid #2D8659; }
+  .mc-feedback.incorrect { display: block; background: #FDECEC; color: #8B2020; border-left: 4px solid #C0504D; }
+
+  .interp-reveal {
+    display: none;
+    margin-top: 20px;
+    animation: fadeSlideIn 0.4s ease;
+  }
+
+  .interp-reveal.visible { display: block; }
+
+  /* ========== INTERPRETATION BARS (colored bg + white text) ========== */
+  .metric-formal {
+    font-size: 0.93rem;
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 10px;
+    line-height: 1.6;
+  }
+
+  .metric-formal.interp-rr { background: #C0504D; color: #FFFFFF; }
+  .metric-formal.interp-or { background: #C27254; color: #FFFFFF; }
+  .metric-formal.interp-arr { background: #9B7EB8; color: #FFFFFF; }
+  .metric-formal.interp-nnt { background: #2D8659; color: #FFFFFF; }
+
+  .metric-formal strong { color: #FFFFFF; }
+
+  .metric-clinical {
+    font-size: 0.93rem;
+    border-radius: 8px;
+    padding: 14px 18px;
+    line-height: 1.6;
+  }
+
+  .metric-clinical.interp-rr { background: rgba(192,80,77,0.10); color: #172940; }
+  .metric-clinical.interp-or { background: rgba(194,114,84,0.10); color: #172940; }
+  .metric-clinical.interp-arr { background: rgba(155,126,184,0.10); color: #172940; }
+  .metric-clinical.interp-nnt { background: rgba(45,134,89,0.10); color: #172940; }
+
+  .label-tag {
+    font-size: 0.73rem;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .label-tag.formal { color: rgba(255,255,255,0.85); }
+  .label-tag.clinical { color: #8B9098; }
+
+  .continue-btn {
+    font-family: Calibri, 'Trebuchet MS', sans-serif;
+    font-size: 0.95rem;
+    font-weight: bold;
+    padding: 10px 24px;
+    background: #2E8FAF;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.2s;
+    margin-top: 16px;
+  }
+
+  .continue-btn:hover { background: #247A96; }
+
+  /* ========== NNT WAITING ROOM ========== */
+  .nnt-section h2 { color: #2D8659; font-size: 1.15rem; margin-bottom: 6px; }
+  .nnt-section .nnt-subtitle { font-size: 0.93rem; color: #616467; margin-bottom: 16px; }
+
+  .waiting-room {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    justify-content: center;
+    align-items: flex-end;
+    min-height: 90px;
+    padding: 16px 8px;
+    background: #F8F9FA;
+    border-radius: 10px;
+    margin-bottom: 12px;
+  }
+
+  .figure-container { display: flex; flex-direction: column; align-items: center; width: 36px; }
+  .figure-container svg { width: 28px; height: 60px; }
+  .figure-number { font-size: 0.7rem; color: #8B9098; margin-top: 2px; }
+
+  .nnt-caption { text-align: center; font-size: 0.93rem; color: #616467; line-height: 1.55; }
+  .nnt-caption strong { color: #172940; }
+  .nnt-highlight { color: #2D8659; font-weight: bold; }
+  .nnt-highlight-harm { color: #B71C1C; font-weight: bold; }
+
+  .or-note {
+    background: #FFF8E7;
+    border-left: 4px solid #C27254;
+    border-radius: 0 8px 8px 0;
+    padding: 14px 18px;
+    margin-top: 20px;
+    font-size: 0.9rem;
+    color: #616467;
+    line-height: 1.6;
+  }
+
+  .or-note strong { color: #172940; }
+
+  .takeaway {
+    background: #172940;
+    color: #FFFFFF;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-top: 24px;
+    margin-bottom: 8px;
+    font-size: 0.97rem;
+    line-height: 1.65;
+    text-align: center;
+  }
+
+  .takeaway strong { color: #FFC857; }
+
+  .reset-bar { text-align: center; margin-top: 16px; }
+
+  .reset-link {
+    font-family: Calibri, 'Trebuchet MS', sans-serif;
+    font-size: 0.9rem;
+    color: #2E8FAF;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+  }
+
+  .reset-link:hover { color: #247A96; }
+
+  .footer {
+    text-align: center;
+    color: #8B9098;
+    font-size: 0.85rem;
+    padding: 24px 0 8px 0;
+  }
+
+  .scroll-anchor { scroll-margin-top: 20px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <h1>What do these numbers actually mean for your patients?</h1>
+  <p class="subtitle">
+    Journal articles use numbers like relative risk, odds ratios, and NNT to describe whether a treatment works. These might look like different statistics, but they all come from the same simple four-cell table. Choose a scenario, enter your numbers, and then explore each measure one at a time to see what it tells you — and what it leaves out.
+  </p>
+
+  <div class="instructions">
+    <strong>How to use this tool:</strong>
+    Start by choosing a clinical scenario below (or select "Free Play" to enter your own numbers). Review the 2×2 table and click <strong>Calculate</strong>. Four metric cards will appear — click each one in order to answer an interpretation question and discover what each number means. The tool guides you through one metric at a time so you can see how each one tells a different part of the same story.
+  </div>
+
+  <div class="interpret">
+    <strong>How to interpret:</strong>
+    After you answer each question, you'll see two interpretation boxes: one shows the <em>formal language you'd encounter in a journal article</em>, and the other translates that into <em>plain clinical language</em> about what it means for patient care. The key insight: <strong>Relative Risk can make a treatment sound impressive, but Absolute Risk Reduction and NNT tell you how much it actually matters in practice.</strong>
+  </div>
+
+  <!-- PHASE 1 -->
+  <div class="card" id="phase1">
+    <div class="scenario-bar" id="scenarioBar"></div>
+    <div class="scenario-description" id="scenarioDesc"></div>
+    <div class="table-section">
+      <h2>The 2×2 Table</h2>
+      <table class="two-by-two">
+        <thead>
+          <tr>
+            <th></th>
+            <th id="colHead1">Improved</th>
+            <th id="colHead2">Did Not Improve</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Treatment Group</td>
+            <td><input type="number" id="cellA" min="0" max="9999" value="36"></td>
+            <td><input type="number" id="cellB" min="0" max="9999" value="14"></td>
+            <td class="total-cell" id="totalTreatment">50</td>
+          </tr>
+          <tr>
+            <td>Control Group</td>
+            <td><input type="number" id="cellC" min="0" max="9999" value="20"></td>
+            <td><input type="number" id="cellD" min="0" max="9999" value="30"></td>
+            <td class="total-cell" id="totalControl">50</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="table-note">You can edit any cell. Totals update automatically.</p>
+      <button class="calculate-btn" id="calcBtn" onclick="onCalculate()">Calculate</button>
+    </div>
+  </div>
+
+  <!-- PHASE 2 -->
+  <div class="phase-section scroll-anchor" id="phase2">
+    <div class="card">
+      <h2 style="color:#2E8FAF; font-size:1.15rem; margin-bottom:4px;">Your Results</h2>
+      <p style="font-size:0.93rem; color:#616467; margin-bottom:16px;">Four numbers, one table. Click the first card to begin exploring what each one means.</p>
+      <div class="metrics-grid" id="metricsGrid"></div>
+      <p class="card-prompt" id="cardPrompt"></p>
+    </div>
+  </div>
+
+  <!-- PHASE 3: expanded exploration -->
+  <div class="expanded-section scroll-anchor" id="expandedArea"></div>
+
+  <!-- PHASE 4: NNT waiting room -->
+  <div class="phase-section scroll-anchor" id="phase4">
+    <div class="card nnt-section">
+      <h2>The NNT Waiting Room</h2>
+      <p class="nnt-subtitle">Each figure represents one patient you would treat. The green figure is the one additional patient who benefits <em>because</em> of the treatment.</p>
+      <div class="waiting-room" id="waitingRoom"></div>
+      <p class="nnt-caption" id="nntCaption"></p>
+    </div>
+    <div class="or-note">
+      <strong>A note on Odds Ratios:</strong> You'll see odds ratios most often in case-control studies and logistic regression. When the outcome is relatively rare (roughly &lt;10% of the sample), the OR is very close to the RR and you can interpret them the same way. When the outcome is common, the OR will exaggerate the effect compared to RR. For this course, the most important thing is: <strong>OR &gt; 1 means higher odds in the treatment group, OR &lt; 1 means lower odds, and OR = 1 means no difference.</strong>
+    </div>
+  </div>
+
+  <!-- PHASE 5: takeaway -->
+  <div class="phase-section scroll-anchor" id="phase5">
+    <div class="takeaway" id="takeaway"></div>
+    <div class="reset-bar">
+      <button class="reset-link" onclick="resetTool()">↻ Try a different scenario</button>
+    </div>
+  </div>
+
+  <div class="footer">ASHS 6400: Methods of Data Analysis &bull; A.T. Still University</div>
+</div>
+
+<script>
+const scenarios = [
+  {
+    name: "OT: Stroke Rehab",
+    description: "<strong>Scenario:</strong> A randomized controlled trial examined whether <strong>constraint-induced movement therapy (CIMT)</strong> improves upper-extremity function in patients 3–9 months post-stroke. 50 patients received CIMT and 50 received standard OT. \"Improved\" means the patient achieved a clinically meaningful gain on the Action Research Arm Test.",
+    a: 36, b: 14, c: 20, d: 30,
+    outcomeYes: "Improved", outcomeNo: "Did Not Improve",
+    txLabel: "CIMT", ctrlLabel: "standard OT",
+    outcomePlain: "achieve meaningful improvement"
+  },
+  {
+    name: "OT: Ergonomic Program",
+    description: "<strong>Scenario:</strong> A workplace wellness study tested whether an <strong>OT-led ergonomic intervention</strong> reduces new musculoskeletal complaints among office workers over 12 months. 200 employees received the intervention and 200 received a pamphlet only. \"Developed complaint\" means the employee reported a new work-related musculoskeletal issue.",
+    a: 18, b: 182, c: 30, d: 170,
+    outcomeYes: "Developed Complaint", outcomeNo: "No Complaint",
+    txLabel: "ergonomic intervention", ctrlLabel: "pamphlet-only",
+    outcomePlain: "develop a musculoskeletal complaint",
+    invertBenefit: true
+  },
+  {
+    name: "AUD: Hearing Amplification",
+    description: "<strong>Scenario:</strong> A clinical trial evaluated whether <strong>early hearing aid fitting</strong> leads to self-reported communication improvement among adults with mild-to-moderate age-related hearing loss after 6 months. 60 patients were fitted immediately and 60 were placed on a waitlist.",
+    a: 39, b: 21, c: 18, d: 42,
+    outcomeYes: "Improved", outcomeNo: "Did Not Improve",
+    txLabel: "early amplification", ctrlLabel: "waitlist",
+    outcomePlain: "report meaningful communication improvement"
+  },
+  {
+    name: "AUD: Tinnitus Therapy",
+    description: "<strong>Scenario:</strong> A study investigated whether <strong>tinnitus retraining therapy (TRT)</strong> reduces self-reported tinnitus distress compared to general counseling over 12 months. 80 patients received TRT and 80 received counseling only. \"Reduced distress\" means the patient's Tinnitus Handicap Inventory score improved by at least one severity category.",
+    a: 30, b: 50, c: 20, d: 60,
+    outcomeYes: "Reduced Distress", outcomeNo: "No Meaningful Change",
+    txLabel: "TRT", ctrlLabel: "counseling only",
+    outcomePlain: "experience meaningful tinnitus distress reduction"
+  },
+  {
+    name: "Free Play",
+    description: "<strong>Free Play:</strong> Enter your own numbers in the 2×2 table. Try creating scenarios where Relative Risk looks impressive but NNT is large — or where RR looks modest but NNT is small. What do you notice?",
+    a: 30, b: 20, c: 15, d: 35,
+    outcomeYes: "Outcome Present", outcomeNo: "Outcome Absent",
+    txLabel: "treatment", ctrlLabel: "control",
+    outcomePlain: "experience the outcome"
+  }
+];
+
+let currentScenario = 0;
+let computed = {};
+let exploredCards = [];
+let currentlyExploring = -1;
+const metricNames = ['Relative Risk (RR)', 'Odds Ratio (OR)', 'Absolute Risk Reduction (ARR)', 'Number Needed to Treat (NNT)'];
+const metricShort = ['RR', 'OR', 'ARR', 'NNT'];
+const metricClasses = ['rr', 'or', 'arr', 'nnt'];
+const metricAccentClasses = ['accent-rr', 'accent-or', 'accent-arr', 'accent-nnt'];
+
+function init() {
+  const bar = document.getElementById('scenarioBar');
+  bar.innerHTML = '';
+  scenarios.forEach((s, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'scenario-btn' + (i === 0 ? ' active' : '');
+    btn.textContent = s.name;
+    btn.onclick = () => loadScenario(i);
+    bar.appendChild(btn);
+  });
+  loadScenario(0);
+  ['cellA','cellB','cellC','cellD'].forEach(id => {
+    document.getElementById(id).addEventListener('input', updateTotals);
+  });
+}
+
+function loadScenario(index) {
+  currentScenario = index;
+  const s = scenarios[index];
+  document.querySelectorAll('.scenario-btn').forEach((btn, i) => btn.classList.toggle('active', i === index));
+  document.getElementById('scenarioDesc').innerHTML = s.description;
+  document.getElementById('colHead1').textContent = s.outcomeYes;
+  document.getElementById('colHead2').textContent = s.outcomeNo;
+  document.getElementById('cellA').value = s.a;
+  document.getElementById('cellB').value = s.b;
+  document.getElementById('cellC').value = s.c;
+  document.getElementById('cellD').value = s.d;
+  updateTotals();
+  document.getElementById('calcBtn').disabled = false;
+  document.getElementById('phase2').classList.remove('visible');
+  document.getElementById('expandedArea').classList.remove('visible');
+  document.getElementById('expandedArea').innerHTML = '';
+  document.getElementById('phase4').classList.remove('visible');
+  document.getElementById('phase5').classList.remove('visible');
+  exploredCards = [];
+  currentlyExploring = -1;
+  document.querySelectorAll('.two-by-two input').forEach(inp => inp.disabled = false);
+}
+
+function updateTotals() {
+  const a = parseInt(document.getElementById('cellA').value) || 0;
+  const b = parseInt(document.getElementById('cellB').value) || 0;
+  const c = parseInt(document.getElementById('cellC').value) || 0;
+  const d = parseInt(document.getElementById('cellD').value) || 0;
+  document.getElementById('totalTreatment').textContent = a + b;
+  document.getElementById('totalControl').textContent = c + d;
+}
+
+function onCalculate() {
+  const a = parseInt(document.getElementById('cellA').value) || 0;
+  const b = parseInt(document.getElementById('cellB').value) || 0;
+  const c = parseInt(document.getElementById('cellC').value) || 0;
+  const d = parseInt(document.getElementById('cellD').value) || 0;
+  const n1 = a + b, n2 = c + d;
+  if (n1 === 0 || n2 === 0) { alert('Both groups need at least one participant. Check your numbers.'); return; }
+  const riskT = a / n1, riskC = c / n2;
+  computed = {
+    a, b, c, d, n1, n2, riskT, riskC,
+    rr: riskC > 0 ? riskT / riskC : null,
+    or: (b > 0 && c > 0) ? (a * d) / (b * c) : null,
+    arr: Math.abs(riskT - riskC),
+    arrSigned: riskT - riskC,
+    nnt: Math.abs(riskT - riskC) > 0 ? Math.ceil(1 / Math.abs(riskT - riskC)) : null
+  };
+  document.querySelectorAll('.two-by-two input').forEach(inp => inp.disabled = true);
+  document.getElementById('calcBtn').disabled = true;
+  exploredCards = [];
+  currentlyExploring = -1;
+  document.getElementById('expandedArea').classList.remove('visible');
+  document.getElementById('expandedArea').innerHTML = '';
+  document.getElementById('phase4').classList.remove('visible');
+  document.getElementById('phase5').classList.remove('visible');
+  buildCompactCards();
+  const p2 = document.getElementById('phase2');
+  p2.classList.add('visible');
+  setTimeout(() => p2.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+function buildCompactCards() {
+  const grid = document.getElementById('metricsGrid');
+  grid.innerHTML = '';
+  const values = [
+    computed.rr !== null ? computed.rr.toFixed(2) : '—',
+    computed.or !== null ? computed.or.toFixed(2) : '—',
+    (computed.arr * 100).toFixed(1) + '%',
+    computed.nnt !== null && computed.nnt <= 1000 ? computed.nnt.toString() : '—'
+  ];
+  for (let i = 0; i < 4; i++) {
+    const card = document.createElement('div');
+    card.className = 'metric-card-compact metric-' + metricClasses[i];
+    card.id = 'compactCard' + i;
+    if (i === 0) card.classList.add('unlocked');
+    const statusText = i === 0 ? 'Click to explore →' : 'Complete the previous card first';
+    const statusClass = i === 0 ? 'start' : 'locked';
+    card.innerHTML = `<div class="metric-label">${metricNames[i]}</div><div class="metric-value val-${metricClasses[i]}">${values[i]}</div><div class="card-status ${statusClass}" id="status${i}">${statusText}</div>`;
+    card.onclick = () => onCardClick(i);
+    grid.appendChild(card);
+  }
+  document.getElementById('cardPrompt').innerHTML = '👆 Click <strong>Relative Risk</strong> to start';
+}
+
+function onCardClick(index) {
+  const nextUnlocked = exploredCards.length;
+  if (index !== nextUnlocked || currentlyExploring >= 0) return;
+  currentlyExploring = index;
+  document.getElementById('compactCard' + index).classList.add('active-card');
+  document.getElementById('compactCard' + index).classList.remove('unlocked');
+  const area = document.getElementById('expandedArea');
+  area.innerHTML = buildExpandedHTML(index);
+  area.classList.add('visible');
+  setTimeout(() => area.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+function getFormattedValue(i) {
+  if (i === 0) return computed.rr !== null ? computed.rr.toFixed(2) : '—';
+  if (i === 1) return computed.or !== null ? computed.or.toFixed(2) : '—';
+  if (i === 2) return (computed.arr * 100).toFixed(1) + '%';
+  return computed.nnt !== null && computed.nnt <= 1000 ? computed.nnt : '—';
+}
+
+function buildExpandedHTML(index) {
+  const s = scenarios[currentScenario];
+  const isHarm = s.invertBenefit;
+  const accentClass = metricAccentClasses[index];
+  const valClass = 'val-' + metricClasses[index];
+  const interpClass = 'interp-' + metricClasses[index];
+  const q = generateQuestion(index, s, isHarm);
+  return `<div class="expanded-card ${accentClass}">
+    <h3>${metricNames[index]}</h3>
+    <div class="expanded-value ${valClass}">${getFormattedValue(index)}</div>
+    <div class="mc-question">
+      <div class="mc-prompt">${q.prompt}</div>
+      ${q.options.map((opt, oi) => `<button class="mc-option" id="opt${oi}" onclick="answerQuestion(${index},${oi},${q.correct})">${String.fromCharCode(65 + oi)}) ${opt}</button>`).join('')}
+      <div class="mc-feedback" id="mcFeedback"></div>
+    </div>
+    <div class="interp-reveal" id="interpReveal">
+      <div class="metric-formal ${interpClass}"><span class="label-tag formal">INTERPRETATION</span><span>${generateFormal(index, s, isHarm)}</span></div>
+      <div class="metric-clinical ${interpClass}"><span class="label-tag clinical">What this means clinically:</span><span>${generateClinical(index, s, isHarm)}</span></div>
+      <button class="continue-btn" onclick="onContinue(${index})">${index < 3 ? 'Continue to ' + metricShort[index + 1] + ' →' : 'See the NNT Waiting Room →'}</button>
+    </div>
+  </div>`;
+}
+
+function generateQuestion(index, s, isHarm) {
+  const tx = s.txLabel, ctrl = s.ctrlLabel;
+  switch(index) {
+    case 0: {
+      const rr = computed.rr;
+      if (rr === null) return { prompt: 'The RR could not be calculated. Why?', options: ['Treatment group was too small','Control group had zero events','The table has negative numbers'], correct: 1 };
+      if (!isHarm) {
+        return rr > 1.05
+          ? { prompt: `The Relative Risk is ${rr.toFixed(2)}. What does this tell you about patients who received ${tx}?`, options: [`Exactly ${rr.toFixed(2)} patients improved in the treatment group`,`The treatment caused a ${rr.toFixed(2)}% increase in the outcome`,`They were ${rr.toFixed(2)} times as likely to improve compared to the ${ctrl} group`], correct: 2 }
+          : { prompt: `The Relative Risk is ${rr.toFixed(2)}. What does this suggest?`, options: ['The treatment group improved at a much higher rate','The treatment group did not improve at a higher rate than the control group','The study was underpowered'], correct: 1 };
+      } else {
+        return rr < 0.95
+          ? { prompt: `The Relative Risk is ${rr.toFixed(2)}. Because the outcome here is something negative (${s.outcomeYes.toLowerCase()}), what does this tell you?`, options: [`The ${tx} group had a higher rate of the negative outcome`,`The ${tx} group was less likely to develop the problem — the intervention may be protective`,'Both groups had the same rate of the problem'], correct: 1 }
+          : { prompt: `The Relative Risk is ${rr.toFixed(2)}. What does this suggest about the ${tx}?`, options: ['The intervention had a strong protective effect','The intervention did not meaningfully reduce the rate of the negative outcome','The negative outcome was eliminated in the treatment group'], correct: 1 };
+      }
+    }
+    case 1: {
+      const or = computed.or, rr = computed.rr;
+      if (or === null) return { prompt: 'The OR could not be calculated. Why?', options: ['The sample size was too large','One or more cells in the table is zero','OR only works with three groups'], correct: 1 };
+      return { prompt: `The Odds Ratio is ${or.toFixed(2)}, while the Relative Risk is ${rr !== null ? rr.toFixed(2) : '—'}. Why might these two numbers be different?`, options: ['The OR uses a different mathematical formula and tends to exaggerate the effect when the outcome is common','They should always be the same — a difference means there is an error in the data','The OR is always more accurate than the RR'], correct: 0 };
+    }
+    case 2: {
+      const arrPct = (computed.arr * 100).toFixed(1), pctT = (computed.riskT * 100).toFixed(1), pctC = (computed.riskC * 100).toFixed(1), rrStr = computed.rr !== null ? computed.rr.toFixed(2) : '—';
+      return !isHarm
+        ? { prompt: `The Absolute Risk Reduction is ${arrPct}% (${pctT}% improved in the ${tx} group vs. ${pctC}% in the ${ctrl} group). Why is this number important in addition to the Relative Risk of ${rrStr}?`, options: ['Because ARR is always a more accurate statistic than RR','Because RR tells you how much bigger one rate is compared to the other, but ARR tells you the actual size of the gap — and a "2 times" increase could mean a gap of 1% or 30%','Because ARR adjusts for sample size while RR does not'], correct: 1 }
+        : { prompt: `The Absolute Risk Reduction is ${arrPct}% (${pctT}% in the ${tx} group vs. ${pctC}% in the ${ctrl} group). What does this gap tell you that RR alone does not?`, options: ['ARR tells you whether the study was statistically significant','ARR adjusts for confounding variables while RR does not','ARR tells you the actual percentage-point difference between groups — how many fewer patients per 100 would develop the problem'], correct: 2 };
+    }
+    case 3: {
+      const nnt = computed.nnt;
+      if (nnt === null || nnt > 1000) return { prompt: 'The NNT is very large or undefined. What does this mean clinically?', options: ['The treatment is highly effective','NNT cannot be calculated from a 2×2 table','You would need to treat a very large number of patients for just one to benefit — the treatment effect is very small'], correct: 2 };
+      const isBenefit = (!isHarm && computed.arrSigned > 0) || (isHarm && computed.arrSigned < 0);
+      return isBenefit
+        ? { prompt: `The NNT is ${nnt}. Imagine you are explaining this number to a patient or their family. Which is the best plain-language interpretation?`, options: [`Only ${nnt} patients in the study actually benefited from the treatment`,`The treatment fails for ${nnt} out of every 100 patients`,`For every ${nnt} patients who receive ${tx}, 1 additional patient will benefit compared to ${ctrl}`], correct: 2 }
+        : { prompt: `The NNT is ${nnt}, but the treatment group actually did worse. What should you conclude?`, options: ['You should report the NNT but note it is negative','NNT is not meaningful here because the treatment group did not outperform the control','The NNT of ' + nnt + ' means the treatment is moderately effective'], correct: 1 };
+    }
+  }
+}
+
+function answerQuestion(cardIndex, selected, correct) {
+  document.querySelectorAll('.mc-option').forEach(btn => btn.onclick = null);
+  const feedback = document.getElementById('mcFeedback');
+  const isCorrect = selected === correct;
+  if (isCorrect) {
+    document.getElementById('opt' + selected).classList.add('selected-correct');
+    feedback.className = 'mc-feedback correct';
+    feedback.innerHTML = '<strong>Correct!</strong> ' + getFeedbackText(cardIndex);
+  } else {
+    document.getElementById('opt' + selected).classList.add('selected-wrong');
+    document.getElementById('opt' + correct).classList.add('reveal-correct');
+    feedback.className = 'mc-feedback incorrect';
+    feedback.innerHTML = '<strong>Not quite.</strong> ' + getFeedbackText(cardIndex);
+  }
+  for (let i = 0; i < 3; i++) {
+    if (i !== selected && i !== correct) document.getElementById('opt' + i).classList.add('dimmed');
+  }
+  setTimeout(() => {
+    const reveal = document.getElementById('interpReveal');
+    reveal.classList.add('visible');
+    reveal.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 600);
+}
+
+function getFeedbackText(index) {
+  const texts = [
+    'Relative Risk compares the rate of the outcome in the treatment group to the rate in the control group. An RR of 1.80 means the treatment group\'s rate was 1.8 times that of the control group. It does NOT mean 1.8 patients or a 1.8% change.',
+    'The Odds Ratio and Relative Risk use different formulas. The OR multiplies across the diagonal of the 2×2 table (a×d / b×c), while RR compares the row proportions. When the outcome is common (more than about 10%), the OR tends to exaggerate the effect. They are not interchangeable, and neither is "more accurate" — they measure slightly different things.',
+    'This is one of the most important ideas in evidence-based practice. A Relative Risk of 2.0 sounds impressive — but it could mean the rate went from 1% to 2% (ARR = 1%) or from 30% to 60% (ARR = 30%). The ARR tells you the actual size of the difference in real-world terms.',
+    'NNT is the most patient-centered measure. It translates a statistical result into a concrete clinical number: how many patients do I need to treat with this intervention for one additional patient to benefit? Smaller NNTs mean more impactful treatments.'
+  ];
+  return texts[index];
+}
+
+function generateFormal(index, s, isHarm) {
+  const tx = s.txLabel, ctrl = s.ctrlLabel, pctT = (computed.riskT * 100).toFixed(1), pctC = (computed.riskC * 100).toFixed(1);
+  switch(index) {
+    case 0: return computed.rr !== null ? `Patients who received ${tx} were <strong>${computed.rr.toFixed(2)} times as likely</strong> to ${s.outcomePlain} compared to those who received ${ctrl} (RR = ${computed.rr.toFixed(2)}).` : 'Cannot compute — control group risk is zero.';
+    case 1: { const or = computed.or; if (or === null) return 'Cannot compute — one or more cells are zero.'; return or >= 1 ? `The odds of the outcome were <strong>${or.toFixed(2)} times higher</strong> in the ${tx} group than the ${ctrl} group (OR = ${or.toFixed(2)}).` : `The odds of the outcome were <strong>${(1/or).toFixed(2)} times lower</strong> in the ${tx} group than the ${ctrl} group (OR = ${or.toFixed(2)}).`; }
+    case 2: return `The absolute difference in outcome rates was <strong>${(computed.arr * 100).toFixed(1)} percentage points</strong> (${pctT}% in the ${tx} group vs. ${pctC}% in the ${ctrl} group).`;
+    case 3: { const nnt = computed.nnt; if (nnt === null || nnt > 1000) return 'The NNT is undefined or extremely large, indicating negligible practical difference.'; const isBenefit = (!isHarm && computed.arrSigned > 0) || (isHarm && computed.arrSigned < 0); if (!isBenefit) return 'The treatment group did not outperform the control group, so NNT is not clinically meaningful in this direction.'; return isHarm ? `The number needed to treat was <strong>${nnt}</strong>, meaning ${nnt} patients would need to receive ${tx} for 1 fewer patient to develop the negative outcome compared to ${ctrl}.` : `The number needed to treat was <strong>${nnt}</strong>, meaning ${nnt} patients would need to receive ${tx} for 1 additional patient to benefit compared to ${ctrl}.`; }
+  }
+}
+
+function generateClinical(index, s, isHarm) {
+  const tx = s.txLabel, ctrl = s.ctrlLabel;
+  switch(index) {
+    case 0: { const rr = computed.rr; if (rr === null) return 'No one in the control group experienced the outcome, so we can\'t compute a risk ratio.'; if (!isHarm) return rr > 1.05 ? `In simple terms: for every 1 patient who improved with ${ctrl}, roughly ${rr.toFixed(1)} improved with ${tx}. The treatment group had a meaningfully higher rate of improvement.` : `Both groups improved at roughly the same rate. The treatment didn't produce a clear benefit over ${ctrl}.`; return rr < 0.95 ? `Fewer patients in the ${tx} group developed the problem. The intervention appears to have a protective effect.` : `The intervention did not meaningfully reduce the rate of the negative outcome compared to ${ctrl}.`; }
+    case 1: { const or = computed.or, rr = computed.rr; if (or === null) return 'The odds ratio requires all four cells to be greater than zero.'; const common = computed.riskT > 0.10 || computed.riskC > 0.10; let t = or > 1 ? `The ${tx} group had higher odds of the outcome.` : `The ${tx} group had lower odds of the outcome.`; t += common ? ` Notice the OR (${or.toFixed(2)}) is more extreme than the RR (${rr !== null ? rr.toFixed(2) : '—'}). Because the outcome is relatively common in this study, the OR exaggerates the effect.` : ` Because the outcome is relatively rare here, the OR (${or.toFixed(2)}) is close to the RR (${rr !== null ? rr.toFixed(2) : '—'}).`; return t; }
+    case 2: { const arrRound = Math.round(computed.arr * 100); if (!isHarm) return computed.arrSigned > 0 ? `Out of every 100 patients, roughly <strong>${arrRound} more</strong> would improve with ${tx} than with ${ctrl}. This is the actual size of the benefit — and it's what you need to know when deciding whether this treatment is worth the cost, time, and effort.` : `The ${ctrl} group actually had better outcomes. In practice, this treatment isn't producing a real-world benefit.`; return computed.arrSigned < 0 ? `Out of every 100 patients, roughly <strong>${arrRound} fewer</strong> would develop the problem with ${tx}. This is the real-world size of the protective effect.` : `The intervention did not reduce the rate of the problem in practical terms.`; }
+    case 3: { const nnt = computed.nnt; const isBenefit = (!isHarm && computed.arrSigned > 0) || (isHarm && computed.arrSigned < 0); if (nnt === null || nnt > 1000 || !isBenefit) return 'The practical benefit is negligible or the treatment group did not outperform the control.'; if (nnt <= 5) return `This is a <strong>very strong</strong> NNT. You only need to treat ${nnt} patients for 1 to benefit. For context, many highly effective medical treatments have NNTs in this range.`; if (nnt <= 15) return `This is a <strong>solid</strong> NNT. Treat ${nnt} patients and 1 additional benefits. Whether this is "good enough" depends on the cost of treatment, the severity of the condition, and the alternatives available.`; if (nnt <= 40) return `This is a <strong>moderate</strong> NNT. For every ${nnt} patients treated, 1 additional benefits. Worth considering alongside cost, burden, and patient preferences.`; return `You'd need to treat <strong>${nnt} patients</strong> for just 1 extra to benefit. That's a large NNT — the per-patient benefit is small, though it may be justified if the condition is serious and alternatives don't exist.`; }
+  }
+}
+
+function onContinue(completedIndex) {
+  exploredCards.push(completedIndex);
+  currentlyExploring = -1;
+  const card = document.getElementById('compactCard' + completedIndex);
+  card.classList.remove('active-card');
+  card.classList.add('completed');
+  const status = document.getElementById('status' + completedIndex);
+  status.className = 'card-status done';
+  status.textContent = '✓ Explored';
+  document.getElementById('expandedArea').classList.remove('visible');
+  document.getElementById('expandedArea').innerHTML = '';
+
+  if (completedIndex < 3) {
+    const next = completedIndex + 1;
+    document.getElementById('compactCard' + next).classList.add('unlocked');
+    const ns = document.getElementById('status' + next);
+    ns.className = 'card-status start';
+    ns.textContent = 'Click to explore →';
+    document.getElementById('cardPrompt').innerHTML = '👆 Click <strong>' + metricShort[next] + '</strong> to continue';
+    setTimeout(() => document.getElementById('phase2').scrollIntoView({ behavior: 'smooth', block: 'start' }), 200);
+  } else {
+    document.getElementById('cardPrompt').innerHTML = '✓ All four measures explored!';
+    setTimeout(() => { showWaitingRoom(); showTakeaway(); }, 300);
+  }
+}
+
+function showWaitingRoom() {
+  const s = scenarios[currentScenario], isHarm = s.invertBenefit, nnt = computed.nnt;
+  const isBenefit = (!isHarm && computed.arrSigned > 0) || (isHarm && computed.arrSigned < 0);
+  const container = document.getElementById('waitingRoom'), caption = document.getElementById('nntCaption');
+  container.innerHTML = '';
+  if (!isBenefit) { container.innerHTML = '<p style="color:#8B9098;font-size:0.9rem;text-align:center;padding:16px;">The treatment group did not outperform the control group, so the NNT waiting room does not apply here.</p>'; caption.innerHTML = ''; }
+  else if (nnt === null || nnt > 100) { container.innerHTML = '<p style="color:#8B9098;font-size:0.9rem;text-align:center;padding:16px;">NNT is greater than 100 — imagine a very long waiting room! The treatment benefit per individual patient is very small.</p>'; caption.innerHTML = ''; }
+  else {
+    for (let i = 1; i <= nnt; i++) {
+      const isHighlight = i === nnt;
+      const color = isHighlight ? '#2D8659' : '#bbb';
+      const fig = document.createElement('div');
+      fig.className = 'figure-container';
+      fig.innerHTML = `<svg viewBox="0 0 30 65" xmlns="http://www.w3.org/2000/svg"><circle cx="15" cy="9" r="7" fill="none" stroke="${color}" stroke-width="2"/><line x1="15" y1="16" x2="15" y2="42" stroke="${color}" stroke-width="2" stroke-linecap="round"/><line x1="15" y1="24" x2="5" y2="34" stroke="${color}" stroke-width="2" stroke-linecap="round"/><line x1="15" y1="24" x2="25" y2="34" stroke="${color}" stroke-width="2" stroke-linecap="round"/><line x1="15" y1="42" x2="7" y2="58" stroke="${color}" stroke-width="2" stroke-linecap="round"/><line x1="15" y1="42" x2="23" y2="58" stroke="${color}" stroke-width="2" stroke-linecap="round"/></svg><span class="figure-number">${i}</span>`;
+      container.appendChild(fig);
+    }
+    caption.innerHTML = !isHarm
+      ? `For every <strong>${nnt}</strong> patients treated with ${s.txLabel}, <span class="nnt-highlight">1 additional patient</span> benefits compared to ${s.ctrlLabel}. The gray figures still receive treatment — they just would have had the same outcome either way.`
+      : `For every <strong>${nnt}</strong> patients who receive the ${s.txLabel}, <span class="nnt-highlight">1 fewer patient</span> develops the negative outcome compared to ${s.ctrlLabel}.`;
+  }
+  document.getElementById('phase4').classList.add('visible');
+  setTimeout(() => document.getElementById('phase4').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+}
+
+function showTakeaway() {
+  const el = document.getElementById('takeaway');
+  if (currentScenario === 4) {
+    el.innerHTML = `<strong>Try this:</strong> Click "Try a different scenario" below, pick Free Play again, and set treatment to 20 improved out of 1,000 and control to 10 improved out of 1,000. The RR is 2.0 — "twice as likely!" — but the ARR is only 1% and the NNT is 100. Now try 8 out of 10 vs. 4 out of 10. RR is still 2.0, but ARR is 40% and NNT is just 3. <strong>Same relative risk, completely different clinical stories.</strong>`;
+  } else {
+    el.innerHTML = `<strong>The bottom line:</strong> You just explored four numbers that all came from the same 2×2 table. Relative Risk tells you how the <em>rates compare</em>. The Odds Ratio gives you a similar picture but can exaggerate when the outcome is common. ARR tells you the <em>actual size of the gap</em>. And NNT tells you <em>how many patients you'd need to treat</em> for one extra to benefit. When you read a journal article, don't stop at the relative risk — always ask: "But what's the NNT?"`;
+  }
+  document.getElementById('phase5').classList.add('visible');
+  setTimeout(() => document.getElementById('phase5').scrollIntoView({ behavior: 'smooth', block: 'start' }), 400);
+}
+
+function resetTool() {
+  loadScenario(currentScenario);
+  document.getElementById('phase1').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+init();
+</script>
+
+<script data-goatcounter="https://professoratx.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+
+</body>
+</html>

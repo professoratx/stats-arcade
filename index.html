@@ -31,6 +31,47 @@
         .header-icon { font-size: 48px; margin-bottom: 8px; }
         .header h1 { font-size: 32px; font-weight: 700; margin-bottom: 4px; }
         .header p { font-size: 16px; color: #8B9098; }
+
+        /* ========== STICKY NAV ========== */
+        .unit-nav {
+            background: #FFFFFF;
+            border-bottom: 1px solid #DEE2E6;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+        }
+        .unit-nav-inner {
+            max-width: 800px;
+            margin: 0 auto;
+            display: flex;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        .unit-nav-inner::-webkit-scrollbar { display: none; }
+        .unit-nav a {
+            flex-shrink: 0;
+            padding: 12px 18px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #8B9098;
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .unit-nav a:hover {
+            color: #172940;
+            border-bottom-color: #DEE2E6;
+        }
+        .unit-nav a.active {
+            color: #172940;
+            border-bottom-color: #3D7FA9;
+        }
+
         .container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
         .section-title {
             font-size: 18px;
@@ -41,6 +82,7 @@
             margin: 32px 0 16px;
             padding-bottom: 8px;
             border-bottom: 2px solid #3D7FA9;
+            scroll-margin-top: 60px;
         }
         .section-title:first-of-type { margin-top: 8px; }
         .tool-card {
@@ -108,9 +150,19 @@
     <p>Methods of Data Analysis (ASHS 6400)</p>
 </div>
 
+<nav class="unit-nav">
+    <div class="unit-nav-inner">
+        <a href="#unit2">Unit 2</a>
+        <a href="#unit3">Unit 3</a>
+        <a href="#unit4">Unit 4</a>
+        <a href="#unit5">Unit 5</a>
+        <a href="#capstone">Capstone</a>
+    </div>
+</nav>
+
 <div class="container">
 
-    <div class="section-title">Descriptive statistics (Unit 2)</div>
+    <div class="section-title" id="unit2">Descriptive statistics (Unit 2)</div>
 
     <a class="tool-card" href="cohens_d_overlap_machine.html">
         <div class="tool-name">What is effect size actually describing?</div>
@@ -122,11 +174,11 @@
         <div class="tool-desc">A study can be statistically significant without helping patients — and vice versa. Explore the four possible outcomes every clinician should know.</div>
     </a>
 
-    <div class="section-title">Comparing two groups or conditions (Unit 3)</div>
+    <div class="section-title" id="unit3">Comparing two groups or conditions (Unit 3)</div>
 
     <a class="tool-card" href="golden-egg-hunt.html">
         <div class="tool-name">What is a confidence interval?</div>
-        <div class="tool-desc">Cast a net to catch the population mean. See how your sample size determines whether you’re fishing with a precise net or a wide one.</div>
+        <div class="tool-desc">Cast a net to catch the population mean. See how your sample size determines whether you're fishing with a precise net or a wide one.</div>
     </a>
 
     <a class="tool-card" href="ci-two-group-overlap.html">
@@ -139,7 +191,7 @@
         <div class="tool-desc">Your t-statistic is the jumper. The t-critical value is the bar. Can your result clear it? Adjust sample size and see how the bar moves.</div>
     </a>
 
-    <div class="section-title">Comparing three or more groups or conditions (Unit 4)</div>
+    <div class="section-title" id="unit4">Comparing three or more groups or conditions (Unit 4)</div>
 
     <a class="tool-card" href="test-selection-flowchart.html">
         <div class="tool-name">How do I choose the correct significance test?</div>
@@ -161,7 +213,29 @@
         <div class="tool-desc">Walk through the complete post-hoc process: from a significant omnibus test to identifying exactly which groups differ, with Bonferroni correction built in.</div>
     </a>
 
-    <div class="section-title">Putting the pieces together: The Analysis Pipeline</div>
+    <div class="section-title" id="unit5">Interpreting epidemiological studies (Unit 5)</div>
+
+    <a class="tool-card" href="two-by-two-primer.html">
+        <div class="tool-name">How do researchers turn a 2×2 table into epidemiological values?</div>
+        <div class="tool-desc">Click each measure and watch which cells it uses — all four statistics come from the same simple table.</div>
+    </a>
+
+    <a class="tool-card" href="rr-arr-nnt-explorer.html">
+        <div class="tool-name">What's the difference between relative risk, absolute risk, and NNT?</div>
+        <div class="tool-desc">Slide the rates for two groups and watch how RR can stay the same while NNT tells a completely different clinical story.</div>
+    </a>
+
+    <a class="tool-card" href="or-explorer.html">
+        <div class="tool-name">What is an odds ratio and when does it diverge from relative risk?</div>
+        <div class="tool-desc">Compare OR and RR side by side as you change outcome rates, and discover why common outcomes make the OR exaggerate.</div>
+    </a>
+
+    <a class="tool-card" href="rr-arr-nnt-guided-exploration.html">
+        <div class="tool-name">What do these numbers actually mean for your patients?</div>
+        <div class="tool-desc">Choose a clinical scenario, explore RR, OR, ARR, and NNT one at a time, and see what each one means for the clinician sitting across from the patient.</div>
+    </a>
+
+    <div class="section-title" id="capstone">Putting the pieces together: The Analysis Pipeline</div>
 
     <a class="tool-card featured" href="analysis-pipeline.html">
         <div class="tool-badge capstone">Capstone Activity</div>
@@ -174,6 +248,35 @@
 <div class="footer">
     Created for ASHS 6400: Methods of Data Analysis
 </div>
+
+<script>
+// Sticky nav active state on scroll
+(function() {
+    var sections = document.querySelectorAll('.section-title[id]');
+    var navLinks = document.querySelectorAll('.unit-nav a');
+    
+    function updateNav() {
+        var scrollPos = window.scrollY + 80;
+        var current = '';
+        
+        sections.forEach(function(section) {
+            if (section.offsetTop <= scrollPos) {
+                current = section.getAttribute('id');
+            }
+        });
+        
+        navLinks.forEach(function(link) {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + current) {
+                link.classList.add('active');
+            }
+        });
+    }
+    
+    window.addEventListener('scroll', updateNav);
+    updateNav();
+})();
+</script>
 
 <script data-goatcounter="https://professoratx.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>

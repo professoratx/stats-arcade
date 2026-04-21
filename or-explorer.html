@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>What is an odds ratio and when will you see one?</title>
+<style>
+:root {
+  --navy: #172940;
+  --g1: #2E8FAF; --g1-lt: #C4E3EF; --g1-bg: #E5F3F8;
+  --g2: #E08B52; --g2-lt: #F5D9C2; --g2-bg: #FDF0E5;
+  --or-color: #34495E; --or-bg: #EDF0F2;
+  --rr-color: #9B7EB8; --rr-bg: #F3EFF8;
+  --orange: #E8891D; --orange-bg: #FEF0E0;
+  --gray: #616467; --gray-lt: #8B9098; --gray-bg: #F0F3F5; --gray-bd: #DEE2E6;
+  --white: #FFFFFF;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Calibri, 'Trebuchet MS', sans-serif; background: var(--gray-bg); color: var(--gray); line-height: 1.6; padding: 24px; }
+.container { max-width: 920px; margin: 0 auto; }
+h1 { color: var(--navy); font-size: 1.85rem; font-weight: bold; margin-bottom: 8px; line-height: 1.3; }
+.subtitle { font-size: 1.05rem; margin-bottom: 24px; line-height: 1.65; }
+.instructions { background: var(--g1-bg); color: #1A5A6E; border-radius: 10px; padding: 18px 22px; margin-bottom: 28px; font-size: 0.97rem; line-height: 1.6; }
+.instructions strong { display: block; margin-bottom: 4px; }
+.card { background: var(--white); border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 28px 24px; margin-bottom: 20px; }
+.phase { display: none; animation: fadeIn 0.5s ease; }
+.phase.visible { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Accordion */
+.def-row { display: flex; gap: 10px; margin-bottom: 28px; }
+@media (max-width: 700px) { .def-row { flex-direction: column; } }
+.def-card { flex: 1; border-radius: 10px; overflow: hidden; cursor: pointer; border: 2px solid var(--gray-bd); background: var(--white); transition: box-shadow 0.2s; }
+.def-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.def-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: #F8F9FA; }
+.def-icon { font-size: 1.2rem; color: var(--navy); }
+.def-title { font-size: 0.9rem; font-weight: bold; color: var(--navy); flex: 1; }
+.def-arrow { font-size: 0.75rem; color: var(--gray-lt); transition: transform 0.3s; }
+.def-card.open .def-arrow { transform: rotate(180deg); }
+.def-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; padding: 0 16px; font-size: 0.85rem; line-height: 1.55; color: var(--navy); }
+.def-card.open .def-body { max-height: 280px; padding: 0 16px 14px 16px; }
+.def-body .threshold { margin-top: 8px; font-size: 0.83rem; }
+.def-body .threshold span { display: block; padding: 2px 0; }
+.def-body .threshold strong { color: var(--navy); }
+#defOR { border-color: #34495E; }
+#defOR .def-header { background: #EDF0F2; }
+#defVS { border-color: #9B7EB8; }
+#defVS .def-header { background: #F3EFF8; }
+
+/* Gut check */
+.headline-box { background: var(--navy); color: var(--white); border-radius: 12px; padding: 28px 32px; text-align: center; margin-bottom: 20px; }
+.fake-headline { font-size: 1.35rem; font-weight: bold; line-height: 1.35; margin-bottom: 6px; color: #FFC857; }
+.fake-source { font-size: 0.85rem; color: rgba(255,255,255,0.55); margin-bottom: 20px; }
+.gut-prompt { font-size: 1.05rem; margin-bottom: 16px; color: #E0E4E8; }
+.gut-btns { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.gut-btn { font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 0.95rem; font-weight: bold; padding: 10px 24px; border-radius: 8px; border: 2px solid rgba(255,255,255,0.3); background: transparent; color: var(--white); cursor: pointer; transition: all 0.2s; }
+.gut-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.5); }
+.gut-btn.selected { background: rgba(255,255,255,0.15); border-color: #FFC857; color: #FFC857; }
+.gut-response { margin-top: 16px; font-size: 0.93rem; line-height: 1.55; color: #E0E4E8; display: none; }
+.gut-response.visible { display: block; }
+.gut-continue { font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 0.95rem; font-weight: bold; padding: 10px 24px; background: var(--g1); color: var(--white); border: none; border-radius: 8px; cursor: pointer; margin-top: 14px; }
+
+/* Toggles */
+.context-toggle { display: flex; border-radius: 10px; overflow: hidden; border: 2px solid var(--navy); margin-bottom: 10px; }
+.ctx-btn { flex: 1; font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 0.9rem; font-weight: bold; padding: 11px 8px; border: none; background: var(--white); color: var(--navy); cursor: pointer; text-align: center; transition: all 0.2s; }
+.ctx-btn.active { background: var(--navy); color: var(--white); }
+.ctx-btn:not(.active):hover { background: #E8ECF0; }
+.sub-toggle { display: flex; gap: 8px; margin-bottom: 14px; justify-content: center; flex-wrap: wrap; }
+.sub-btn { font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 0.83rem; padding: 6px 14px; border-radius: 20px; border: 2px solid var(--gray-bd); background: var(--white); color: var(--gray); cursor: pointer; font-weight: bold; transition: all 0.2s; }
+.sub-btn:hover { border-color: var(--navy); color: var(--navy); }
+.sub-btn.active { border-color: var(--navy); background: var(--navy); color: var(--white); }
+
+/* Scenario */
+.scenario-context { font-size: 0.9rem; padding: 12px 16px; background: #F8F9FA; border-radius: 8px 8px 0 0; line-height: 1.55; }
+.scenario-context strong { color: var(--navy); }
+.study-design-note { font-size: 0.82rem; padding: 6px 16px 4px; background: #F8F9FA; color: var(--gray-lt); font-style: italic; }
+.outcome-defs { font-size: 0.85rem; color: var(--navy); padding: 10px 16px 14px; background: #F8F9FA; border-radius: 0 0 8px 8px; margin-bottom: 18px; line-height: 1.6; }
+.od-intro { font-style: italic; color: var(--gray); margin-bottom: 4px; }
+.od-item { margin-bottom: 2px; padding-left: 8px; }
+.od-pos { font-weight: bold; }
+.od-pos::before { content: "\2713 "; }
+.od-neg { font-weight: bold; color: var(--gray-lt); }
+.od-neg::before { content: "\2717 "; color: var(--gray-lt); }
+
+/* Table */
+.table-section { margin-bottom: 16px; }
+.table-section h3 { color: var(--navy); font-size: 1rem; margin-bottom: 4px; }
+.sync-note { font-size: 0.78rem; color: var(--g1); font-weight: bold; text-align: center; margin-bottom: 6px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 0.92rem; margin-bottom: 4px; }
+.tbl th { padding: 8px 10px; text-align: center; font-weight: bold; font-size: 0.8rem; line-height: 1.3; }
+.tbl th.corner { background: transparent; border: none; }
+.tbl th.col-pos { background: #F0F0F0; color: var(--navy); border: 1px solid var(--gray-bd); font-size: 0.78rem; }
+.tbl th.col-neg { background: #F0F0F0; color: var(--gray-lt); border: 1px solid var(--gray-bd); font-size: 0.78rem; }
+.tbl th.col-total { background: var(--navy); color: var(--white); border: 1px solid var(--navy); }
+.tbl td.row-g1 { background: var(--g1); color: var(--white); font-weight: bold; text-align: right; font-size: 0.85rem; padding: 8px 12px; }
+.tbl td.row-g2 { background: var(--g2); color: var(--white); font-weight: bold; text-align: right; font-size: 0.85rem; padding: 8px 12px; }
+.tbl td.cell-g1 { background: var(--g1-bg); border: 1px solid var(--g1-lt); text-align: center; padding: 8px 10px; }
+.tbl td.cell-g1-key { background: var(--g1-lt); border: 2px solid var(--g1); text-align: center; padding: 8px 10px; }
+.tbl td.cell-g2 { background: var(--g2-bg); border: 1px solid var(--g2-lt); text-align: center; padding: 8px 10px; }
+.tbl td.cell-g2-key { background: var(--g2-lt); border: 2px solid var(--g2); text-align: center; padding: 8px 10px; }
+.tbl td.total-cell { background: var(--gray-bg); color: var(--navy); font-weight: bold; text-align: center; padding: 8px 10px; border: 1px solid var(--gray-bd); }
+.tbl input[type=number] { width: 62px; padding: 5px 6px; font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 0.95rem; text-align: center; border: 2px solid rgba(0,0,0,0.12); border-radius: 6px; color: var(--navy); font-weight: bold; background: transparent; }
+.tbl input[type=number]:focus { border-color: var(--navy); outline: none; box-shadow: 0 0 0 3px rgba(23,41,64,0.12); }
+.tbl-axis { font-size: 0.68rem; color: var(--gray-lt); font-weight: bold; letter-spacing: 0.5px; }
+
+/* Sliders */
+.slider-section { margin-bottom: 20px; }
+.slider-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.slider-label { width: 280px; font-size: 0.82rem; font-weight: 700; text-align: right; flex-shrink: 0; line-height: 1.3; }
+.slider-label.g1 { color: var(--g1); }
+.slider-label.g2 { color: var(--g2); }
+@media (max-width: 700px) { .slider-label { width: 160px; font-size: 0.76rem; } }
+.slider-wrap { flex: 1; }
+.slider-wrap input[type=range] { width: 100%; -webkit-appearance: none; appearance: none; height: 8px; border-radius: 4px; outline: none; cursor: pointer; }
+.slider-wrap input.s1::-webkit-slider-runnable-track { background: linear-gradient(90deg, var(--g1-bg), var(--g1)); height: 8px; border-radius: 4px; }
+.slider-wrap input.s2::-webkit-slider-runnable-track { background: linear-gradient(90deg, var(--g2-bg), var(--g2)); height: 8px; border-radius: 4px; }
+.slider-wrap input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 22px; height: 22px; border-radius: 50%; background: var(--navy); border: 3px solid var(--white); box-shadow: 0 2px 6px rgba(0,0,0,0.2); margin-top: -7px; cursor: pointer; }
+.slider-wrap input[type=range]::-moz-range-thumb { width: 22px; height: 22px; border-radius: 50%; background: var(--navy); border: 3px solid var(--white); box-shadow: 0 2px 6px rgba(0,0,0,0.2); cursor: pointer; }
+.slider-val { width: 50px; font-size: 1.05rem; font-weight: bold; color: var(--navy); text-align: center; flex-shrink: 0; }
+
+/* === ALIGNED COMPARISON LAYOUT === */
+.compare-section { margin-bottom: 18px; }
+.compare-row { display: flex; gap: 14px; }
+@media (max-width: 700px) { .compare-row { flex-direction: column; } }
+.compare-col { flex: 1; display: flex; flex-direction: column; }
+
+/* Row 1: metric cards — equal height */
+.card-row { display: flex; gap: 14px; margin-bottom: 0; }
+@media (max-width: 700px) { .card-row { flex-direction: column; } }
+.compare-card { flex: 1; border-radius: 10px; padding: 16px; text-align: center; border: 2px solid var(--gray-bd); display: flex; flex-direction: column; justify-content: center; }
+.compare-card.c-or { border-left: 5px solid var(--or-color); background: var(--or-bg); }
+.compare-card.c-rr { border-left: 5px solid var(--rr-color); background: var(--rr-bg); }
+.cmp-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; color: var(--gray-lt); margin-bottom: 1px; }
+.cmp-value { font-size: 1.8rem; font-weight: bold; margin-bottom: 2px; }
+.cmp-value.v-or { color: var(--or-color); }
+.cmp-value.v-rr { color: var(--rr-color); }
+.cmp-plain { font-size: 0.8rem; color: var(--gray); line-height: 1.4; }
+
+/* Row 2: interpretation bars — equal height */
+.interp-row { display: flex; gap: 14px; margin-top: 6px; }
+@media (max-width: 700px) { .interp-row { flex-direction: column; } }
+.interp-bar { flex: 1; border-radius: 6px; padding: 8px 12px; text-align: center; color: var(--white); font-size: 0.82rem; line-height: 1.45; display: flex; flex-direction: column; justify-content: center; }
+.interp-bar strong { color: var(--white); }
+.interp-prefix { font-weight: bold; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.8px; display: block; margin-bottom: 2px; opacity: 0.85; }
+.interp-content { font-size: 0.82rem; }
+.interp-bar-or { background: var(--or-color); }
+.interp-bar-rr { background: var(--rr-color); }
+
+/* Row 3: stick figures — equal height */
+.fig-row-wrap { display: flex; gap: 14px; margin-top: 10px; }
+@media (max-width: 700px) { .fig-row-wrap { flex-direction: column; } }
+.fig-section { flex: 1; }
+.fig-group { margin-bottom: 6px; }
+.fig-label { font-size: 0.72rem; font-weight: bold; margin-bottom: 3px; text-align: center; }
+.fig-label.g1 { color: var(--g1); }
+.fig-label.g2 { color: var(--g2); }
+.fig-row { display: flex; justify-content: center; gap: 3px; flex-wrap: wrap; }
+.fig-person { width: 22px; height: 34px; display: flex; flex-direction: column; align-items: center; }
+.fig-head { width: 8px; height: 8px; border-radius: 50%; margin-bottom: 1px; }
+.fig-body { width: 2px; height: 12px; }
+.fig-legs { width: 10px; height: 10px; position: relative; }
+.fig-legs::before, .fig-legs::after { content: ""; position: absolute; width: 2px; height: 10px; top: 0; }
+.fig-legs::before { left: 1px; transform: rotate(12deg); }
+.fig-legs::after { right: 1px; transform: rotate(-12deg); }
+.fig-arms { width: 14px; height: 2px; margin-top: -4px; margin-bottom: 2px; border-radius: 1px; }
+.fig-person.active-g1 .fig-head, .fig-person.active-g1 .fig-arms, .fig-person.active-g1 .fig-body { background: var(--g1); }
+.fig-person.active-g1 .fig-legs::before, .fig-person.active-g1 .fig-legs::after { background: var(--g1); }
+.fig-person.active-g2 .fig-head, .fig-person.active-g2 .fig-arms, .fig-person.active-g2 .fig-body { background: var(--g2); }
+.fig-person.active-g2 .fig-legs::before, .fig-person.active-g2 .fig-legs::after { background: var(--g2); }
+.fig-person.inactive .fig-head, .fig-person.inactive .fig-arms, .fig-person.inactive .fig-body { background: #D8DDE2; }
+.fig-person.inactive .fig-legs::before, .fig-person.inactive .fig-legs::after { background: #D8DDE2; }
+.fig-rate-note { font-size: 0.7rem; color: var(--gray-lt); text-align: center; margin-top: 2px; }
+.fig-same-label { font-size: 0.68rem; color: var(--gray-lt); text-align: center; font-style: italic; margin-bottom: 2px; }
+
+/* Divergence visual */
+.divergence-section { margin-top: 14px; margin-bottom: 8px; }
+.div-label { font-size: 0.78rem; font-weight: bold; color: var(--gray-lt); text-align: center; margin-bottom: 4px; }
+.div-track { height: 32px; background: #E8ECF0; border-radius: 6px; position: relative; overflow: visible; display: flex; align-items: center; }
+.div-fill-or { position: absolute; left: 0; height: 100%; background: var(--or-color); border-radius: 6px 0 0 6px; opacity: 0.18; transition: width 0.3s ease; }
+.div-fill-rr { position: absolute; left: 0; height: 100%; background: var(--rr-color); border-radius: 6px 0 0 6px; opacity: 0.22; transition: width 0.3s ease; }
+.div-marker { position: absolute; height: 100%; width: 4px; border-radius: 2px; transition: left 0.3s ease; }
+.div-marker.m-or { background: var(--or-color); }
+.div-marker.m-rr { background: var(--rr-color); }
+.div-marker-label { position: absolute; top: -18px; font-size: 0.7rem; font-weight: bold; white-space: nowrap; transform: translateX(-50%); }
+.div-marker-label.l-or { color: var(--or-color); }
+.div-marker-label.l-rr { color: var(--rr-color); }
+.div-ref { position: absolute; height: 100%; width: 2px; background: var(--gray-bd); }
+.div-ref-label { position: absolute; bottom: -15px; font-size: 0.62rem; color: var(--gray-lt); transform: translateX(-50%); }
+.div-insight { border-radius: 8px; padding: 12px 16px; font-size: 0.87rem; line-height: 1.5; margin-bottom: 8px; display: none; animation: fadeIn 0.4s ease; }
+.div-insight.visible { display: block; }
+.div-close { background: #EBF7F0; color: #1B5E3A; border-left: 4px solid #2E7D32; }
+.div-diverge { background: var(--orange-bg); color: #A0640F; border-left: 4px solid var(--orange); }
+.div-equal { background: #F8F9FA; color: var(--gray); border-left: 4px solid var(--gray-bd); }
+.div-legend { display: flex; justify-content: center; gap: 18px; margin-top: 20px; margin-bottom: 6px; font-size: 0.72rem; }
+.div-legend-item { display: flex; align-items: center; gap: 5px; font-weight: bold; }
+.div-legend-swatch { width: 14px; height: 14px; border-radius: 3px; }
+.div-legend-swatch.sw-or { background: var(--or-color); }
+.div-legend-swatch.sw-rr { background: var(--rr-color); }
+
+/* Recall */
+.recall-box { background: var(--navy); color: var(--white); border-radius: 10px; padding: 20px 24px; margin-top: 20px; text-align: center; font-size: 0.95rem; line-height: 1.65; }
+.recall-box strong { color: #FFC857; }
+
+/* Feedback */
+.feedback-bar { background: var(--gray-bg); border-radius: 10px; padding: 16px 24px; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+.fb-prompt { font-size: 0.93rem; color: var(--gray); font-weight: bold; }
+.fb-btn { font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 1rem; padding: 8px 20px; border: 2px solid var(--gray-bd); border-radius: 8px; background: var(--white); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+.fb-btn:hover { border-color: var(--navy); background: #E8ECF0; }
+.fb-btn.selected { border-color: #2E7D32; background: #EBF7F0; cursor: default; }
+.fb-emoji { font-size: 1.2rem; }
+.fb-thanks { font-size: 0.88rem; color: #2E7D32; font-weight: bold; display: none; }
+.fb-thanks.visible { display: inline; }
+.footer { text-align: center; color: var(--gray-lt); font-size: 0.85rem; padding: 24px 0 8px 0; }
+.scroll-anchor { scroll-margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>What is an odds ratio and when will you see one?</h1>
+<p class="subtitle">The odds ratio is one of the most common statistics in clinical research. It looks like a relative risk — but it isn't. Drag the sliders and watch what happens when you compare them side by side.</p>
+
+<div class="instructions"><strong>How to use this tool:</strong> Start with the headline below. Then choose a clinical scenario, adjust the numbers, and watch the Odds Ratio and Relative Risk update side by side. Pay attention to when they agree — and when they don't.</div>
+
+<!-- Accordion -->
+<div class="def-row">
+  <div class="def-card" id="defOR" onclick="toggleDef('defOR')"><div class="def-header"><span class="def-icon">&#247;</span><span class="def-title">Odds Ratio (OR)</span><span class="def-arrow">&#9660;</span></div><div class="def-body">The odds ratio compares the <em>odds</em> of an outcome in one group to the odds in another. Think of it as: how much more likely is this outcome in one group vs. the other, measured in odds?<div class="threshold"><strong>How to read it:</strong><span><strong>OR = 1</strong> &mdash; No difference between groups</span><span><strong>OR &gt; 1</strong> &mdash; Higher odds in Group 1</span><span><strong>OR &lt; 1</strong> &mdash; Lower odds in Group 1</span></div></div></div>
+  <div class="def-card" id="defVS" onclick="toggleDef('defVS')"><div class="def-header"><span class="def-icon">&#8596;</span><span class="def-title">When will I see OR vs. RR?</span><span class="def-arrow">&#9660;</span></div><div class="def-body"><strong>OR</strong> appears in case-control studies and logistic regression models.<br><strong>RR</strong> appears in RCTs, cohort studies, and prevention research.<div class="threshold"><strong>Key rule:</strong><span>When the outcome is <strong>rare</strong> (under 10%), OR and RR are very similar.</span><span>When the outcome is <strong>common</strong>, OR exaggerates the effect.</span></div></div></div>
+</div>
+
+<!-- Gut check -->
+<div class="phase visible" id="phase0">
+  <div class="headline-box">
+    <div class="fake-headline">"Workers with repetitive hand use had 3.8 times the odds of developing carpal tunnel syndrome"</div>
+    <div class="fake-source">— Journal of Hand Therapy, 2025</div>
+    <div class="gut-prompt">Is this the same as saying they were 3.8 times as likely to develop CTS?</div>
+    <div class="gut-btns">
+      <button class="gut-btn" onclick="gutAns(0)">Yes — odds and<br>likelihood are the same</button>
+      <button class="gut-btn" onclick="gutAns(1)">I think so, but<br>I'm not sure</button>
+      <button class="gut-btn" onclick="gutAns(2)">No — odds and<br>risk are different things</button>
+    </div>
+    <div class="gut-response" id="gr0">That's what most people assume — but odds and risk are not the same thing. Sometimes they're close, sometimes very different. Let's find out when.</div>
+    <div class="gut-response" id="gr1">Good instinct to hesitate. Odds and risk are related but not identical. The difference matters more than you might think.</div>
+    <div class="gut-response" id="gr2">You're right. An OR of 3.8 is not the same as an RR of 3.8. Let's see exactly when and why they diverge.</div>
+    <button class="gut-continue" id="gutCont" style="display:none" onclick="showExp()">Let's explore &#8594;</button>
+  </div>
+</div>
+
+<!-- Explorer -->
+<div class="phase scroll-anchor" id="phase1">
+<div class="card">
+  <div class="context-toggle">
+    <button class="ctx-btn active" id="ct1" onclick="setCtx('risk')">Risk Factors</button>
+    <button class="ctx-btn" id="ct2" onclick="setCtx('treat')">Treatment Outcomes</button>
+    <button class="ctx-btn" id="ct3" onclick="setCtx('free')">Free Play</button>
+  </div>
+  <div class="sub-toggle" id="subT"></div>
+  <div class="scenario-context" id="sCtx"></div>
+  <div class="study-design-note" id="sdNote"></div>
+  <div class="outcome-defs" id="oDefs"></div>
+
+  <div class="table-section">
+    <h3>The Data</h3>
+    <p class="sync-note">&#8597; Edit the table or drag the sliders — they stay in sync</p>
+    <table class="tbl">
+      <thead>
+        <tr><th class="corner"></th><th colspan="2" class="tbl-axis" style="text-align:center;padding:2px 0 0;border:none;background:transparent;">OUTCOME &#8594;</th><th class="corner"></th></tr>
+        <tr><th class="corner tbl-axis" style="text-align:center;vertical-align:middle;">GROUP<br>&#8595;</th><th class="col-pos" id="cH1"></th><th class="col-neg" id="cH2"></th><th class="col-total">Total</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="row-g1" id="rL1"></td><td class="cell-g1-key"><input type="number" id="cA" min="0" max="9999" oninput="fromTable()"></td><td class="cell-g1"><input type="number" id="cB" min="0" max="9999" oninput="fromTable()"></td><td class="total-cell" id="tT">0</td></tr>
+        <tr><td class="row-g2" id="rL2"></td><td class="cell-g2-key"><input type="number" id="cC" min="0" max="9999" oninput="fromTable()"></td><td class="cell-g2"><input type="number" id="cD" min="0" max="9999" oninput="fromTable()"></td><td class="total-cell" id="tC">0</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="slider-section">
+    <div class="slider-row"><div class="slider-label g1" id="sL1"></div><div class="slider-wrap"><input type="range" class="s1" id="sl1" min="0" max="100" value="24" oninput="fromSlider()"></div><div class="slider-val" id="v1">24%</div></div>
+    <div class="slider-row"><div class="slider-label g2" id="sL2"></div><div class="slider-wrap"><input type="range" class="s2" id="sl2" min="0" max="100" value="8" oninput="fromSlider()"></div><div class="slider-val" id="v2">8%</div></div>
+  </div>
+
+  <!-- ROW 1: Metric cards (equal height) -->
+  <div class="compare-section">
+    <div class="card-row">
+      <div class="compare-card c-or">
+        <div class="cmp-label">Odds Ratio (OR)</div>
+        <div class="cmp-value v-or" id="orV">---</div>
+        <div class="cmp-plain" id="orP"></div>
+      </div>
+      <div class="compare-card c-rr">
+        <div class="cmp-label">Relative Risk (RR)</div>
+        <div class="cmp-value v-rr" id="rrV">---</div>
+        <div class="cmp-plain" id="rrP"></div>
+      </div>
+    </div>
+
+    <!-- ROW 2: Interpretation bars (equal height) -->
+    <div class="interp-row">
+      <div class="interp-bar interp-bar-or" id="dirNote">
+        <span class="interp-prefix">Interpretation</span>
+        <span class="interp-content"></span>
+      </div>
+      <div class="interp-bar interp-bar-rr" id="dirNoteRR">
+        <span class="interp-prefix">Interpretation</span>
+        <span class="interp-content"></span>
+      </div>
+    </div>
+
+    <!-- ROW 3: Stick figures (equal height) -->
+    <div class="fig-row-wrap">
+      <div class="fig-section" id="figOR">
+        <div class="fig-same-label">Same data, summarized as OR</div>
+        <div class="fig-group"><div class="fig-label g1" id="figOR_l1"></div><div class="fig-row" id="figOR_r1"></div></div>
+        <div class="fig-group"><div class="fig-label g2" id="figOR_l2"></div><div class="fig-row" id="figOR_r2"></div></div>
+        <div class="fig-rate-note" id="figOR_note"></div>
+      </div>
+      <div class="fig-section" id="figRR">
+        <div class="fig-same-label">Same data, summarized as RR</div>
+        <div class="fig-group"><div class="fig-label g1" id="figRR_l1"></div><div class="fig-row" id="figRR_r1"></div></div>
+        <div class="fig-group"><div class="fig-label g2" id="figRR_l2"></div><div class="fig-row" id="figRR_r2"></div></div>
+        <div class="fig-rate-note" id="figRR_note"></div>
+      </div>
+    </div>
+
+    <!-- Divergence bar -->
+    <div class="divergence-section">
+      <div class="div-label">OR vs. RR — how far apart are they?</div>
+      <div class="div-legend">
+        <div class="div-legend-item"><div class="div-legend-swatch sw-or"></div> Odds Ratio</div>
+        <div class="div-legend-item"><div class="div-legend-swatch sw-rr"></div> Relative Risk</div>
+      </div>
+      <div class="div-track" style="position:relative;margin-top:20px;margin-bottom:20px;">
+        <div class="div-ref" style="left:16.67%"><span class="div-ref-label">1.0</span></div>
+        <div class="div-fill-rr" id="divFillRR"></div>
+        <div class="div-fill-or" id="divFillOR"></div>
+        <div class="div-marker m-rr" id="divMrkRR"><span class="div-marker-label l-rr" id="divLblRR"></span></div>
+        <div class="div-marker m-or" id="divMrkOR"><span class="div-marker-label l-or" id="divLblOR"></span></div>
+      </div>
+    </div>
+
+    <div class="div-insight div-close" id="diClose"><strong>OR and RR are very close.</strong> When the outcome is rare (under ~10%), the odds ratio approximates the relative risk well.</div>
+    <div class="div-insight div-diverge" id="diDiverge"><strong>OR is exaggerating the effect.</strong> When the outcome is common, the OR makes the difference look larger than the RR. Always check which measure you're reading.</div>
+    <div class="div-insight div-equal" id="diEqual">Both groups have the same rate. OR = 1.0 and RR = 1.0 — no difference.</div>
+  </div>
+</div>
+
+<!-- Recall -->
+<div class="recall-box"><strong>Remember that headline?</strong> "Workers had 3.8 times the odds of developing CTS." Now you know that an OR of 3.8 is not the same as being 3.8 times as likely. <strong>Always check: is this an OR or an RR? And how common is the outcome?</strong></div>
+
+<!-- Feedback -->
+<div class="feedback-bar">
+  <span class="fb-prompt">Did this tool make the concept easier to understand?</span>
+  <button class="fb-btn" id="fbY" onclick="sendFb('yes')"><span class="fb-emoji">&#128077;</span> Yes</button>
+  <button class="fb-btn" id="fbN" onclick="sendFb('no')"><span class="fb-emoji">&#128078;</span> No</button>
+  <span class="fb-thanks" id="fbTh">Thanks for your feedback!</span>
+</div>
+</div>
+
+<div class="footer">ASHS 6400: Methods of Data Analysis &#8226; A.T. Still University</div>
+</div>
+
+<script>
+var SC = {
+  risk: [
+    {label:"OT: Repetitive Hand Use & CTS", ctx:"A case-control study examined whether <strong>repetitive hand use in the workplace</strong> is associated with developing carpal tunnel syndrome (CTS).", sdNote:"Study design: Case-control — researchers selected workers with and without CTS, then looked back at their exposure history. OR is the appropriate measure here (RR is shown for comparison).", odIntro:"For this study, researchers defined:", odPos:"Developed CTS", odPosDef:"workers with CTS confirmed via nerve conduction study (NCS)", odNeg:"No CTS", odNegDef:"workers with no CTS diagnosis", posShort:"Developed CTS<br>(confirmed NCS)", negShort:"No CTS", g1:"Repetitive hand use", g2:"Non-repetitive work", slL1:"% of repetitive hand use group who developed CTS", slL2:"% of non-repetitive work group who developed CTS", orT:function(or){return "Workers with repetitive hand use had <strong>"+or.toFixed(2)+"x the odds</strong> of developing CTS";}, rrT:function(rr){return "For comparison, the RR would be "+rr.toFixed(2)+"x as likely";}, dirT:function(or){return or>1?"<strong>OR > 1:</strong> Exposure is associated with higher odds of CTS.":"<strong>OR < 1:</strong> Exposure is not associated with higher odds of CTS.";}, rrDirT:function(rr){return rr>1?"<strong>RR > 1:</strong> Exposed workers had a higher rate of CTS.":"<strong>RR < 1:</strong> Exposed workers did not have a higher rate of CTS.";}, A:24, B:76, C:8, D:92},
+    {label:"AUD: Noise Exposure & Tinnitus", ctx:"A case-control study investigated whether <strong>recreational noise exposure</strong> (concerts, earbuds at high volume) is associated with chronic tinnitus among young adults.", sdNote:"Study design: Case-control — researchers identified young adults with and without chronic tinnitus, then compared their noise exposure history.", odIntro:"For this study, researchers defined:", odPos:"Chronic Tinnitus", odPosDef:"patients with tinnitus persisting 6+ months, confirmed by audiological evaluation", odNeg:"No Tinnitus", odNegDef:"patients with no reported tinnitus symptoms", posShort:"Chronic Tinnitus<br>(6+ months)", negShort:"No Tinnitus", g1:"High noise exposure", g2:"Low noise exposure", slL1:"% of high-noise group with chronic tinnitus", slL2:"% of low-noise group with chronic tinnitus", orT:function(or){return "Young adults with high noise exposure had <strong>"+or.toFixed(2)+"x the odds</strong> of chronic tinnitus";}, rrT:function(rr){return "For comparison, the RR would be "+rr.toFixed(2)+"x as likely";}, dirT:function(or){return or>1?"<strong>OR > 1:</strong> High noise exposure is associated with higher odds of tinnitus.":"<strong>OR < 1:</strong> High noise exposure is not associated with higher odds of tinnitus.";}, rrDirT:function(rr){return rr>1?"<strong>RR > 1:</strong> High-noise group had a higher rate of tinnitus.":"<strong>RR < 1:</strong> High-noise group did not have a higher rate of tinnitus.";}, A:18, B:82, C:6, D:94}
+  ],
+  treat: [
+    {label:"OT: Return-to-Work After Hand Injury", ctx:"A study used <strong>logistic regression</strong> to identify predictors of return-to-work within 6 months after traumatic hand injury, adjusting for age, injury severity, and socioeconomic status.", sdNote:"Study design: Logistic regression — the outcome is binary (returned vs. did not), so the model produces adjusted odds ratios.", odIntro:"For this study, researchers defined:", odPos:"Returned to Work", odPosDef:"patients who returned to full or modified duty within 6 months", odNeg:"Did Not Return", odNegDef:"patients who had not returned to work by 6 months", posShort:"Returned to Work<br>(within 6 months)", negShort:"Did Not Return<br>(by 6 months)", g1:"Early OT referral", g2:"Delayed referral", slL1:"% of early referral group who returned to work", slL2:"% of delayed referral group who returned to work", orT:function(or){return "Early OT referral: <strong>"+or.toFixed(2)+"x the odds</strong> of returning to work within 6 months";}, rrT:function(rr){return "For comparison, the RR would be "+rr.toFixed(2)+"x as likely";}, dirT:function(or){return or>1?"<strong>OR > 1:</strong> Early referral is associated with higher odds of returning to work.":"<strong>OR < 1:</strong> Early referral is not associated with higher odds of returning to work.";}, rrDirT:function(rr){return rr>1?"<strong>RR > 1:</strong> Early referral group had a higher return-to-work rate.":"<strong>RR < 1:</strong> Early referral group did not have a higher return-to-work rate.";}, A:42, B:18, C:28, D:32},
+    {label:"AUD: Hearing Aid Adoption", ctx:"A study used <strong>logistic regression</strong> to identify predictors of hearing aid adoption among older adults with mild-to-moderate hearing loss, adjusting for degree of loss, age, and self-perceived handicap.", sdNote:"Study design: Logistic regression — the model estimates adjusted odds of hearing aid adoption for patients who received motivational counseling vs. standard care.", odIntro:"For this study, researchers defined:", odPos:"Adopted Hearing Aids", odPosDef:"patients who obtained and regularly used hearing aids within 12 months", odNeg:"Did Not Adopt", odNegDef:"patients who declined or discontinued hearing aid use within 12 months", posShort:"Adopted HAs<br>(regular use by 12 months)", negShort:"Did Not Adopt<br>(declined/discontinued)", g1:"Motivational counseling", g2:"Standard care", slL1:"% of counseling group who adopted hearing aids", slL2:"% of standard care group who adopted hearing aids", orT:function(or){return "Motivational counseling: <strong>"+or.toFixed(2)+"x the odds</strong> of adopting hearing aids";}, rrT:function(rr){return "For comparison, the RR would be "+rr.toFixed(2)+"x as likely";}, dirT:function(or){return or>1?"<strong>OR > 1:</strong> Counseling is associated with higher odds of hearing aid adoption.":"<strong>OR < 1:</strong> Counseling is not associated with higher odds of hearing aid adoption.";}, rrDirT:function(rr){return rr>1?"<strong>RR > 1:</strong> Counseling group had a higher adoption rate.":"<strong>RR < 1:</strong> Counseling group did not have a higher adoption rate.";}, A:44, B:36, C:28, D:52}
+  ],
+  free: [
+    {label:"Free Play", ctx:"<strong>Free Play:</strong> Enter your own numbers. Try making the outcome very rare (under 10%), then very common (over 40%). Watch what happens to the gap between OR and RR.", sdNote:"", odIntro:"You define the outcomes:", odPos:"Outcome Present", odPosDef:"customize based on your scenario", odNeg:"Outcome Absent", odNegDef:"customize based on your scenario", posShort:"Outcome<br>Present", negShort:"Outcome<br>Absent", g1:"Group 1", g2:"Group 2", slL1:"% of Group 1 with the outcome", slL2:"% of Group 2 with the outcome", orT:function(or){return "Group 1 had <strong>"+or.toFixed(2)+"x the odds</strong> of the outcome compared to Group 2";}, rrT:function(rr){return "For comparison, the RR would be "+rr.toFixed(2)+"x as likely";}, dirT:function(or){return or>1?"<strong>OR > 1:</strong> Group 1 had higher odds.":or<1?"<strong>OR < 1:</strong> Group 1 had lower odds.":"<strong>OR = 1:</strong> No difference between groups.";}, rrDirT:function(rr){return rr>1?"<strong>RR > 1:</strong> Group 1 had a higher rate.":rr<1?"<strong>RR < 1:</strong> Group 1 had a lower rate.":"<strong>RR = 1:</strong> No difference between groups.";}, A:30, B:70, C:10, D:90}
+  ]
+};
+
+var cx = "risk", si = 0, sync = false;
+
+function toggleDef(id) { document.getElementById(id).classList.toggle("open"); }
+
+function setCtx(c) {
+  cx = c; si = 0;
+  document.getElementById("ct1").classList.toggle("active", c === "risk");
+  document.getElementById("ct2").classList.toggle("active", c === "treat");
+  document.getElementById("ct3").classList.toggle("active", c === "free");
+  bldSub(); ldSub(0);
+}
+
+function bldSub() {
+  var w = document.getElementById("subT"); w.innerHTML = "";
+  if (SC[cx].length <= 1) return;
+  SC[cx].forEach(function(s, i) {
+    var b = document.createElement("button");
+    b.className = "sub-btn" + (i === 0 ? " active" : "");
+    b.textContent = s.label;
+    b.onclick = function() { ldSub(i); };
+    w.appendChild(b);
+  });
+}
+
+function ldSub(i) {
+  si = i;
+  var btns = document.querySelectorAll(".sub-btn");
+  for (var j = 0; j < btns.length; j++) btns[j].classList.toggle("active", j === i);
+  var s = SC[cx][i];
+  document.getElementById("sCtx").innerHTML = s.ctx;
+  document.getElementById("sdNote").textContent = s.sdNote;
+  document.getElementById("sdNote").style.display = s.sdNote ? "block" : "none";
+  document.getElementById("oDefs").innerHTML = '<div class="od-intro">' + s.odIntro + '</div><div class="od-item"><span class="od-pos">' + s.odPos + '</span> = ' + s.odPosDef + '</div><div class="od-item"><span class="od-neg">' + s.odNeg + '</span> = ' + s.odNegDef + '</div>';
+  document.getElementById("cH1").innerHTML = s.posShort;
+  document.getElementById("cH2").innerHTML = s.negShort;
+  document.getElementById("rL1").textContent = s.g1;
+  document.getElementById("rL2").textContent = s.g2;
+  document.getElementById("sL1").textContent = s.slL1;
+  document.getElementById("sL2").textContent = s.slL2;
+  document.getElementById("cA").value = s.A;
+  document.getElementById("cB").value = s.B;
+  document.getElementById("cC").value = s.C;
+  document.getElementById("cD").value = s.D;
+  fromTable();
+}
+
+function p(id) { return parseInt(document.getElementById(id).value) || 0; }
+
+function fromTable() {
+  if (sync) return; sync = true;
+  var a = p("cA"), b = p("cB"), c = p("cC"), d = p("cD");
+  var n1 = a + b, n2 = c + d;
+  document.getElementById("tT").textContent = n1;
+  document.getElementById("tC").textContent = n2;
+  var r1 = n1 > 0 ? Math.round(a / n1 * 100) : 0;
+  var r2 = n2 > 0 ? Math.round(c / n2 * 100) : 0;
+  document.getElementById("sl1").value = r1;
+  document.getElementById("sl2").value = r2;
+  sync = false;
+  render(a, b, c, d);
+}
+
+function fromSlider() {
+  if (sync) return; sync = true;
+  var r1 = parseInt(document.getElementById("sl1").value);
+  var r2 = parseInt(document.getElementById("sl2").value);
+  var n1 = p("cA") + p("cB") || 100;
+  var n2 = p("cC") + p("cD") || 100;
+  var a = Math.round(n1 * r1 / 100), b = n1 - a;
+  var c = Math.round(n2 * r2 / 100), d = n2 - c;
+  document.getElementById("cA").value = a;
+  document.getElementById("cB").value = b;
+  document.getElementById("cC").value = c;
+  document.getElementById("cD").value = d;
+  document.getElementById("tT").textContent = n1;
+  document.getElementById("tC").textContent = n2;
+  sync = false;
+  render(a, b, c, d);
+}
+
+function buildFigures(containerId, pct1, pct2, g1Label, g2Label) {
+  var COUNT = 10;
+  var active1 = Math.round(pct1 / 10);
+  var active2 = Math.round(pct2 / 10);
+  document.getElementById(containerId + "_l1").textContent = g1Label + " (" + pct1 + "%)";
+  document.getElementById(containerId + "_l2").textContent = g2Label + " (" + pct2 + "%)";
+  var row1 = document.getElementById(containerId + "_r1");
+  var row2 = document.getElementById(containerId + "_r2");
+  row1.innerHTML = "";
+  row2.innerHTML = "";
+  for (var i = 0; i < COUNT; i++) {
+    row1.appendChild(makeFig(i < active1 ? "active-g1" : "inactive"));
+    row2.appendChild(makeFig(i < active2 ? "active-g2" : "inactive"));
+  }
+}
+
+function makeFig(cls) {
+  var d = document.createElement("div");
+  d.className = "fig-person " + cls;
+  d.innerHTML = '<div class="fig-head"></div><div class="fig-arms"></div><div class="fig-body"></div><div class="fig-legs"></div>';
+  return d;
+}
+
+function render(a, b, c, d) {
+  var s = SC[cx][si];
+  var n1 = a + b, n2 = c + d;
+  var r1 = n1 > 0 ? a / n1 : 0;
+  var r2 = n2 > 0 ? c / n2 : 0;
+  var pct1 = Math.round(r1 * 100), pct2 = Math.round(r2 * 100);
+
+  document.getElementById("v1").textContent = pct1 + "%";
+  document.getElementById("v2").textContent = pct2 + "%";
+
+  var equal = (r1 === r2);
+  var or = (b > 0 && c > 0) ? (a * d) / (b * c) : null;
+  var rr = r2 > 0 ? r1 / r2 : (r1 > 0 ? Infinity : 1);
+
+  if (or !== null && !equal) {
+    document.getElementById("orV").textContent = or.toFixed(2);
+    document.getElementById("orP").innerHTML = s.orT(or);
+  } else if (equal) {
+    document.getElementById("orV").textContent = "1.00";
+    document.getElementById("orP").innerHTML = "Both groups have the same rate — no difference in odds.";
+  } else {
+    document.getElementById("orV").textContent = "---";
+    document.getElementById("orP").innerHTML = "Cannot compute — a cell is zero.";
+  }
+
+  if (rr !== Infinity && !equal) {
+    document.getElementById("rrV").textContent = rr.toFixed(2);
+    document.getElementById("rrP").innerHTML = s.rrT(rr);
+  } else if (equal) {
+    document.getElementById("rrV").textContent = "1.00";
+    document.getElementById("rrP").innerHTML = "Both groups have the same rate — no difference in risk.";
+  } else {
+    document.getElementById("rrV").textContent = "---";
+    document.getElementById("rrP").innerHTML = "Comparison group has 0% — ratio undefined.";
+  }
+
+  // Interpretation bars — prefix on row 1, content on row 2
+  var orBar = document.getElementById("dirNote");
+  var rrBar = document.getElementById("dirNoteRR");
+  if (!equal && or !== null) {
+    orBar.querySelector(".interp-content").innerHTML = s.dirT(or);
+  } else if (equal) {
+    orBar.querySelector(".interp-content").innerHTML = "<strong>OR = 1.0:</strong> No difference between groups.";
+  } else {
+    orBar.querySelector(".interp-content").innerHTML = "";
+  }
+
+  if (rr !== Infinity && !equal) {
+    rrBar.querySelector(".interp-content").innerHTML = s.rrDirT(rr);
+  } else if (equal) {
+    rrBar.querySelector(".interp-content").innerHTML = "<strong>RR = 1.0:</strong> No difference between groups.";
+  } else {
+    rrBar.querySelector(".interp-content").innerHTML = "";
+  }
+
+  buildFigures("figOR", pct1, pct2, s.g1, s.g2);
+  buildFigures("figRR", pct1, pct2, s.g1, s.g2);
+  var rateNote = pct1 + "% vs. " + pct2 + "% — same rates, two different summary statistics";
+  document.getElementById("figOR_note").textContent = rateNote;
+  document.getElementById("figRR_note").textContent = rateNote;
+
+  var maxVal = 6;
+  var orClamped = or !== null ? Math.min(or, maxVal) : 0;
+  var rrClamped = (rr !== Infinity) ? Math.min(rr, maxVal) : 0;
+  var orPctBar = (orClamped / maxVal) * 100;
+  var rrPctBar = (rrClamped / maxVal) * 100;
+  document.getElementById("divFillOR").style.width = orPctBar + "%";
+  document.getElementById("divFillRR").style.width = rrPctBar + "%";
+  document.getElementById("divMrkOR").style.left = orPctBar + "%";
+  document.getElementById("divMrkRR").style.left = rrPctBar + "%";
+  document.getElementById("divLblOR").textContent = "OR " + (or !== null ? or.toFixed(2) : "---");
+  document.getElementById("divLblRR").textContent = "RR " + (rr !== Infinity ? rr.toFixed(2) : "---");
+
+  var insights = ["diClose", "diDiverge", "diEqual"];
+  for (var i = 0; i < insights.length; i++) document.getElementById(insights[i]).classList.remove("visible");
+  if (equal) {
+    document.getElementById("diEqual").classList.add("visible");
+  } else if (or !== null && rr !== Infinity) {
+    var gap = Math.abs(or - rr);
+    var avgRate = (r1 + r2) / 2;
+    if (avgRate < 0.10 || gap < 0.15) {
+      document.getElementById("diClose").classList.add("visible");
+    } else {
+      document.getElementById("diDiverge").classList.add("visible");
+    }
+  }
+}
+
+function gutAns(c) {
+  var btns = document.querySelectorAll(".gut-btn");
+  for (var i = 0; i < btns.length; i++) btns[i].classList.toggle("selected", i === c);
+  var resps = document.querySelectorAll(".gut-response");
+  for (var j = 0; j < resps.length; j++) resps[j].classList.remove("visible");
+  document.getElementById("gr" + c).classList.add("visible");
+  document.getElementById("gutCont").style.display = "inline-block";
+}
+
+function showExp() {
+  document.getElementById("phase0").classList.remove("visible");
+  document.getElementById("phase0").style.display = "none";
+  document.getElementById("phase1").classList.add("visible");
+  document.getElementById("phase1").scrollIntoView({behavior: "smooth", block: "start"});
+  setCtx("risk");
+}
+
+function sendFb(v) {
+  if (window.goatcounter && window.goatcounter.count) {
+    window.goatcounter.count({path: "or-tool-feedback-" + v, title: "OR Tool Feedback: " + v, event: true});
+  }
+  document.getElementById("fbY").classList.toggle("selected", v === "yes");
+  document.getElementById("fbN").classList.toggle("selected", v === "no");
+  document.getElementById("fbY").disabled = true;
+  document.getElementById("fbN").disabled = true;
+  document.getElementById("fbTh").classList.add("visible");
+}
+
+bldSub();
+ldSub(0);
+</script>
+<script data-goatcounter="https://professoratx.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>

@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How do researchers turn a 2×2 table into statistics?</title>
+<style>
+:root {
+  --navy: #172940;
+  --g1: #2E8FAF; --g1-lt: #C4E3EF; --g1-bg: #E5F3F8;
+  --g2: #E08B52; --g2-lt: #F5D9C2; --g2-bg: #FDF0E5;
+  --rr-color: #C0504D; --rr-bg: #FCEEED; --rr-hl: #F5CFCE;
+  --arr-color: #9B7EB8; --arr-bg: #F3EFF8; --arr-hl: #E4DAF0;
+  --nnt-color: #2D8659; --nnt-bg: #EAF5EF; --nnt-hl: #C8E6D5;
+  --or-color: #C27254; --or-bg: #FAEEE8; --or-hl1: #F5D9C2; --or-hl2: #C4E3EF;
+  --gray: #616467; --gray-lt: #8B9098; --gray-bg: #F0F3F5; --gray-bd: #DEE2E6;
+  --white: #FFFFFF;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: Calibri, 'Trebuchet MS', sans-serif; background: var(--gray-bg); color: var(--gray); line-height: 1.6; padding: 24px; }
+.container { max-width: 920px; margin: 0 auto; }
+h1 { color: var(--navy); font-size: 1.85rem; font-weight: bold; margin-bottom: 8px; line-height: 1.3; }
+.subtitle { font-size: 1.05rem; margin-bottom: 24px; line-height: 1.65; }
+.instructions { background: var(--g1-bg); color: #1A5A6E; border-radius: 10px; padding: 18px 22px; margin-bottom: 28px; font-size: 0.97rem; line-height: 1.6; }
+.instructions strong { display: block; margin-bottom: 4px; }
+.card { background: var(--white); border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 28px 24px; margin-bottom: 20px; }
+
+/* Scenario */
+/* Accordion */
+.def-row { display: flex; gap: 10px; margin-bottom: 10px; }
+@media (max-width: 700px) { .def-row { flex-direction: column; } }
+.def-card { flex: 1; border-radius: 10px; overflow: hidden; cursor: pointer; border: 2px solid var(--gray-bd); background: var(--white); transition: box-shadow 0.2s; }
+.def-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+.def-header { display: flex; align-items: center; gap: 10px; padding: 14px 16px; background: #F8F9FA; }
+.def-icon { font-size: 1.2rem; color: var(--navy); }
+.def-title { font-size: 0.9rem; font-weight: bold; color: var(--navy); flex: 1; }
+.def-arrow { font-size: 0.75rem; color: var(--gray-lt); transition: transform 0.3s; }
+.def-card.open .def-arrow { transform: rotate(180deg); }
+.def-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease, padding 0.4s ease; padding: 0 16px; font-size: 0.85rem; line-height: 1.55; color: var(--navy); }
+.def-card.open .def-body { max-height: 280px; padding: 0 16px 14px 16px; }
+.def-body .threshold { margin-top: 8px; font-size: 0.83rem; }
+.def-body .threshold span { display: block; padding: 2px 0; }
+.def-body .threshold strong { color: var(--navy); }
+#defRR { border-color: var(--rr-color); }
+#defRR .def-header { background: var(--rr-bg); }
+#defARR { border-color: var(--arr-color); }
+#defARR .def-header { background: var(--arr-bg); }
+#defNNT { border-color: var(--nnt-color); }
+#defNNT .def-header { background: var(--nnt-bg); }
+#defOR { border-color: var(--or-color); }
+#defOR .def-header { background: var(--or-bg); }
+
+/* Scenario */
+.scenario-box { font-size: 0.9rem; padding: 14px 16px; background: #F8F9FA; border-radius: 8px; margin-bottom: 20px; line-height: 1.65; }
+.scenario-box strong { color: var(--navy); }
+.table-intro { font-size: 0.88rem; color: var(--navy); margin-top: 10px; font-weight: bold; }
+.table-intro-detail { font-size: 0.85rem; color: var(--gray); margin-top: 4px; line-height: 1.55; }
+.table-intro-detail .lbl-g1 { color: var(--g1); font-weight: bold; }
+.table-intro-detail .lbl-g2 { color: var(--g2); font-weight: bold; }
+.od-intro { font-style: italic; color: var(--gray); margin-bottom: 4px; margin-top: 10px; font-size: 0.85rem; }
+.od-item { margin-bottom: 2px; padding-left: 8px; font-size: 0.85rem; color: var(--navy); }
+.od-pos { font-weight: bold; }
+.od-pos::before { content: "\2713 "; }
+.od-neg { font-weight: bold; color: var(--gray-lt); }
+.od-neg::before { content: "\2717 "; color: var(--gray-lt); }
+
+/* Table */
+.table-section { margin-bottom: 8px; }
+.tbl-axis { font-size: 0.68rem; color: var(--gray-lt); font-weight: bold; letter-spacing: 0.5px; }
+.tbl { width: 100%; border-collapse: collapse; font-size: 0.95rem; margin-bottom: 4px; }
+.tbl th { padding: 10px 12px; text-align: center; font-weight: bold; font-size: 0.82rem; line-height: 1.3; }
+.tbl th.corner { background: transparent; border: none; }
+.tbl th.col-pos { background: #F0F0F0; color: var(--navy); border: 1px solid var(--gray-bd); }
+.tbl th.col-neg { background: #F0F0F0; color: var(--gray-lt); border: 1px solid var(--gray-bd); }
+.tbl th.col-total { background: var(--navy); color: var(--white); border: 1px solid var(--navy); }
+.tbl td.row-g1 { background: var(--g1); color: var(--white); font-weight: bold; text-align: right; font-size: 0.88rem; padding: 10px 14px; }
+.tbl td.row-g2 { background: var(--g2); color: var(--white); font-weight: bold; text-align: right; font-size: 0.88rem; padding: 10px 14px; }
+.tbl td.data-cell { text-align: center; padding: 10px 8px; border: 3px solid var(--gray-bd); transition: all 0.35s ease; background: var(--white); }
+.tbl td.data-cell .cell-label { display: block; font-size: 0.62rem; color: var(--gray-lt); font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 1px; }
+.tbl td.total-cell { background: var(--gray-bg); color: var(--navy); font-weight: bold; text-align: center; padding: 10px 12px; border: 1px solid var(--gray-bd); font-size: 1rem; transition: all 0.35s ease; }
+.tbl input[type=number] { width: 62px; padding: 5px 6px; font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 1.05rem; text-align: center; border: 2px solid rgba(0,0,0,0.1); border-radius: 6px; color: var(--navy); font-weight: bold; background: transparent; }
+.tbl input[type=number]:focus { border-color: var(--navy); outline: none; box-shadow: 0 0 0 3px rgba(23,41,64,0.12); }
+.edit-note { font-size: 0.78rem; color: var(--g1); font-weight: bold; text-align: center; margin-bottom: 6px; }
+
+/* Cell highlight states */
+.tbl td.data-cell.hl-rr { background: var(--rr-hl); border-color: var(--rr-color); }
+.tbl td.data-cell.hl-rr-sec { background: var(--rr-bg); border-color: var(--rr-color); border-style: dashed; }
+.tbl td.data-cell.hl-arr { background: var(--arr-hl); border-color: var(--arr-color); }
+.tbl td.data-cell.hl-arr-sec { background: var(--arr-bg); border-color: var(--arr-color); border-style: dashed; }
+.tbl td.data-cell.hl-nnt { background: var(--nnt-hl); border-color: var(--nnt-color); }
+.tbl td.data-cell.hl-nnt-sec { background: var(--nnt-bg); border-color: var(--nnt-color); border-style: dashed; }
+.tbl td.data-cell.hl-or-d1 { background: var(--or-hl1); border-color: var(--or-color); }
+.tbl td.data-cell.hl-or-d2 { background: var(--or-hl2); border-color: var(--g1); border-style: dashed; }
+.tbl td.total-cell.hl-total-rr { background: #F5CFCE; border: 2px solid var(--rr-color); }
+.tbl td.total-cell.hl-total-arr { background: #E4DAF0; border: 2px solid var(--arr-color); }
+.tbl td.total-cell.hl-total-nnt { background: #C8E6D5; border: 2px solid var(--nnt-color); }
+
+/* Stat cards */
+.stat-cards { display: flex; gap: 10px; margin-top: 20px; margin-bottom: 10px; }
+@media (max-width: 700px) { .stat-cards { flex-wrap: wrap; } .stat-cards .stat-card { flex: 1 1 45%; } }
+.stat-card { flex: 1; border-radius: 10px; padding: 14px 12px; text-align: center; cursor: pointer; border: 2px solid var(--gray-bd); background: var(--white); transition: all 0.25s ease; user-select: none; }
+.stat-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); transform: translateY(-1px); }
+.stat-card .sc-name { font-size: 0.95rem; font-weight: bold; color: var(--navy); margin-bottom: 2px; }
+.stat-card .sc-q { font-size: 0.76rem; color: var(--gray); line-height: 1.35; }
+.stat-card.active-rr { border-color: var(--rr-color); background: var(--rr-bg); box-shadow: 0 4px 16px rgba(192,80,77,0.18); }
+.stat-card.active-arr { border-color: var(--arr-color); background: var(--arr-bg); box-shadow: 0 4px 16px rgba(155,126,184,0.18); }
+.stat-card.active-nnt { border-color: var(--nnt-color); background: var(--nnt-bg); box-shadow: 0 4px 16px rgba(45,134,89,0.18); }
+.stat-card.active-or { border-color: var(--or-color); background: var(--or-bg); box-shadow: 0 4px 16px rgba(194,114,84,0.18); }
+
+/* Result display area */
+.result-area { min-height: 80px; margin-top: 12px; transition: all 0.35s ease; }
+.result-prompt { font-size: 0.92rem; color: var(--gray-lt); font-style: italic; text-align: center; padding: 20px 0; }
+.result-content { display: none; }
+
+/* Metric card (matches OR Explorer) */
+.result-metric { border-radius: 10px; padding: 16px; text-align: center; border: 2px solid var(--gray-bd); margin-bottom: 6px; }
+.result-metric.rm-rr { border-left: 5px solid var(--rr-color); background: var(--rr-bg); }
+.result-metric.rm-arr { border-left: 5px solid var(--arr-color); background: var(--arr-bg); }
+.result-metric.rm-nnt { border-left: 5px solid var(--nnt-color); background: var(--nnt-bg); }
+.result-metric.rm-or { border-left: 5px solid var(--or-color); background: var(--or-bg); }
+.rm-label { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: bold; color: var(--gray-lt); margin-bottom: 1px; }
+.rm-value { font-size: 1.8rem; font-weight: bold; margin-bottom: 2px; }
+.rm-value.v-rr { color: var(--rr-color); }
+.rm-value.v-arr { color: var(--arr-color); }
+.rm-value.v-nnt { color: var(--nnt-color); }
+.rm-value.v-or { color: var(--or-color); }
+.rm-formula { font-size: 0.85rem; color: var(--gray); margin-top: 4px; line-height: 1.5; }
+.rm-formula strong { color: var(--navy); }
+
+/* Interpretation bar (matches OR Explorer) */
+.interp-bar { border-radius: 6px; padding: 8px 12px; margin-top: 6px; text-align: center; color: var(--white); font-size: 0.82rem; line-height: 1.45; }
+.interp-bar strong { color: var(--white); }
+.interp-prefix { font-weight: bold; text-transform: uppercase; font-size: 0.65rem; letter-spacing: 0.8px; display: block; margin-bottom: 2px; opacity: 0.85; }
+.ib-rr { background: var(--rr-color); }
+.ib-arr { background: var(--arr-color); }
+.ib-nnt { background: var(--nnt-color); }
+.ib-or { background: var(--or-color); }
+
+/* OR legend */
+.or-legend { display: flex; justify-content: center; gap: 16px; margin-top: 8px; font-size: 0.72rem; }
+.or-legend-item { display: flex; align-items: center; gap: 5px; }
+.or-legend-swatch { width: 14px; height: 14px; border-radius: 3px; border: 2px solid; }
+
+/* Next step */
+.next-box { background: var(--navy); color: var(--white); border-radius: 10px; padding: 20px 24px; margin-top: 20px; text-align: center; font-size: 0.95rem; line-height: 1.65; }
+.next-box strong { color: #FFC857; }
+
+/* Feedback */
+.feedback-bar { background: var(--gray-bg); border-radius: 10px; padding: 16px 24px; margin-top: 20px; display: flex; align-items: center; justify-content: center; gap: 16px; flex-wrap: wrap; }
+.fb-prompt { font-size: 0.93rem; color: var(--gray); font-weight: bold; }
+.fb-btn { font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 1rem; padding: 8px 20px; border: 2px solid var(--gray-bd); border-radius: 8px; background: var(--white); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 6px; }
+.fb-btn:hover { border-color: var(--navy); background: #E8ECF0; }
+.fb-btn.selected { border-color: #2E7D32; background: #EBF7F0; cursor: default; }
+.fb-emoji { font-size: 1.2rem; }
+.fb-thanks { font-size: 0.88rem; color: #2E7D32; font-weight: bold; display: none; }
+.fb-thanks.visible { display: inline; }
+.footer { text-align: center; color: var(--gray-lt); font-size: 0.85rem; padding: 24px 0 8px 0; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<h1>How do researchers turn a 2x2 table into statistics?</h1>
+<p class="subtitle">Every epidemiological statistic you'll encounter in a journal article — RR, ARR, NNT, OR — comes from the same simple table. Click a statistic below to see which cells it uses, then try changing the numbers.</p>
+
+<div class="instructions"><strong>How to use this tool:</strong> Read the scenario, then click any of the four statistic cards below the table. The cells used in that calculation will light up, and the formula and result will appear. You can also edit the numbers in the table to see how each statistic changes.</div>
+
+<!-- Accordion definition cards -->
+<div class="def-row">
+  <div class="def-card" id="defRR" onclick="toggleDef('defRR')"><div class="def-header"><span class="def-icon">&#247;</span><span class="def-title">Relative Risk (RR)</span><span class="def-arrow">&#9660;</span></div><div class="def-body">The relative risk compares the <em>rate</em> of an outcome in one group to the rate in the other. Think of it as: how many times more (or less) likely is this outcome in Group 1?<div class="threshold"><strong>How to read it:</strong><span><strong>RR = 1</strong> &mdash; No difference between groups</span><span><strong>RR &gt; 1</strong> &mdash; Higher rate in Group 1</span><span><strong>RR &lt; 1</strong> &mdash; Lower rate in Group 1</span></div></div></div>
+  <div class="def-card" id="defARR" onclick="toggleDef('defARR')"><div class="def-header"><span class="def-icon">&#8596;</span><span class="def-title">ARR</span><span class="def-arrow">&#9660;</span></div><div class="def-body">The actual gap in rates between the two groups, measured in percentage points. A "2x increase" could mean 1% vs. 2% or 30% vs. 60% &mdash; the ARR tells you which.<div class="threshold"><strong>How to read it:</strong><span><strong>ARR = 0%</strong> &mdash; No difference between groups</span><span><strong>Larger ARR</strong> &mdash; Bigger real-world gap</span><span><strong>Smaller ARR</strong> &mdash; Smaller gap (even if RR looks big)</span></div></div></div>
+</div>
+<div class="def-row">
+  <div class="def-card" id="defNNT" onclick="toggleDef('defNNT')"><div class="def-header"><span class="def-icon">&#128100;</span><span class="def-title">NNT / NNH</span><span class="def-arrow">&#9660;</span></div><div class="def-body">How many patients must receive the treatment for one additional patient to benefit (NNT)? Or how many must be exposed for one additional person to be harmed (NNH)?<div class="threshold"><strong>How to read it:</strong><span><strong>Smaller NNT</strong> &mdash; Bigger per-person impact</span><span><strong>Larger NNT</strong> &mdash; Many patients needed per benefit</span></div></div></div>
+  <div class="def-card" id="defOR" onclick="toggleDef('defOR')"><div class="def-header"><span class="def-icon">&#215;</span><span class="def-title">Odds Ratio (OR)</span><span class="def-arrow">&#9660;</span></div><div class="def-body">The odds ratio compares the <em>odds</em> of an outcome in one group to the odds in another. It uses the <strong>diagonal cells</strong> of the 2x2 table — not the row totals.<div class="threshold"><strong>How to read it:</strong><span><strong>OR = 1</strong> &mdash; No difference between groups</span><span><strong>OR &gt; 1</strong> &mdash; Higher odds in Group 1</span><span><strong>OR &lt; 1</strong> &mdash; Lower odds in Group 1</span></div></div></div>
+</div>
+
+<div class="card">
+  <div class="scenario-box">
+    A large cohort study followed <strong>1,000 adults</strong> over 20 years to determine whether <strong>smoking</strong> is associated with developing <strong>lung cancer</strong>. Half of the participants were smokers and half were non-smokers at baseline.
+    <div class="table-intro">Below depicts the 2x2 table for this study:</div>
+    <div class="table-intro-detail">The two <strong>groups</strong> (rows): <span class="lbl-g1">Smokers</span> and <span class="lbl-g2">Non-smokers</span><br>The two <strong>outcomes</strong> (columns): Developed Lung Cancer and No Lung Cancer</div>
+    <div class="od-intro">For this study, researchers defined:</div>
+    <div class="od-item"><span class="od-pos">Developed Lung Cancer</span> = confirmed diagnosis during the 20-year follow-up</div>
+    <div class="od-item"><span class="od-neg">No Lung Cancer</span> = no diagnosis during the follow-up period</div>
+  </div>
+
+  <div class="table-section">
+    <p class="edit-note">&#9998; Edit the numbers below to see how each statistic changes</p>
+    <table class="tbl">
+      <thead>
+        <tr><th class="corner"></th><th colspan="2" class="tbl-axis" style="text-align:center;padding:2px 0 0;border:none;background:transparent;">OUTCOME &#8594;</th><th class="corner"></th></tr>
+        <tr><th class="corner tbl-axis" style="text-align:center;vertical-align:middle;">GROUP<br>&#8595;</th><th class="col-pos">Developed<br>Lung Cancer</th><th class="col-neg">No Lung<br>Cancer</th><th class="col-total">Total</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="row-g1">Smokers</td>
+          <td class="data-cell" id="cellA"><span class="cell-label">A</span><input type="number" id="vA" value="80" min="0" max="9999" oninput="recalc()"></td>
+          <td class="data-cell" id="cellB"><span class="cell-label">B</span><input type="number" id="vB" value="420" min="0" max="9999" oninput="recalc()"></td>
+          <td class="total-cell" id="totalN1"><span style="display:block;font-size:0.62rem;color:var(--gray-lt);font-weight:bold;letter-spacing:0.5px;">N1</span>500</td>
+        </tr>
+        <tr>
+          <td class="row-g2">Non-smokers</td>
+          <td class="data-cell" id="cellC"><span class="cell-label">C</span><input type="number" id="vC" value="20" min="0" max="9999" oninput="recalc()"></td>
+          <td class="data-cell" id="cellD"><span class="cell-label">D</span><input type="number" id="vD" value="480" min="0" max="9999" oninput="recalc()"></td>
+          <td class="total-cell" id="totalN2"><span style="display:block;font-size:0.62rem;color:var(--gray-lt);font-weight:bold;letter-spacing:0.5px;">N2</span>500</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="stat-cards">
+    <div class="stat-card" id="scRR" onclick="showStat('rr')">
+      <div class="sc-name">Relative Risk (RR)</div>
+      <div class="sc-q">How many times more likely?</div>
+    </div>
+    <div class="stat-card" id="scARR" onclick="showStat('arr')">
+      <div class="sc-name">ARR</div>
+      <div class="sc-q">What's the actual gap?</div>
+    </div>
+    <div class="stat-card" id="scNNT" onclick="showStat('nnt')">
+      <div class="sc-name">NNT / NNH</div>
+      <div class="sc-q">How many per benefit?</div>
+    </div>
+    <div class="stat-card" id="scOR" onclick="showStat('or')">
+      <div class="sc-name">Odds Ratio (OR)</div>
+      <div class="sc-q">How do the odds compare?</div>
+    </div>
+  </div>
+
+  <div class="result-area">
+    <div class="result-prompt" id="resultPrompt">Click a statistic card above to see how it's calculated from the table</div>
+    <div class="result-content" id="resultContent"></div>
+  </div>
+</div>
+
+<div class="next-box"><strong>Now you know which cells feed each statistic.</strong> Next, you'll explore what these numbers actually mean for clinical decisions — how a big RR can hide a tiny ARR, and when an OR isn't the same as an RR. <strong>Head to the RR, ARR &amp; NNT Explorer or the Odds Ratio Explorer to dig in.</strong></div>
+
+<div class="feedback-bar">
+  <span class="fb-prompt">Did this tool make the concept easier to understand?</span>
+  <button class="fb-btn" id="fbY" onclick="sendFb('yes')"><span class="fb-emoji">&#128077;</span> Yes</button>
+  <button class="fb-btn" id="fbN" onclick="sendFb('no')"><span class="fb-emoji">&#128078;</span> No</button>
+  <span class="fb-thanks" id="fbTh">Thanks for your feedback!</span>
+</div>
+
+<div class="footer">ASHS 6400: Methods of Data Analysis &#8226; A.T. Still University</div>
+</div>
+
+<script>
+var active = null;
+
+function toggleDef(id) { document.getElementById(id).classList.toggle("open"); }
+
+function gv(id) { return parseInt(document.getElementById(id).value) || 0; }
+
+function recalc() {
+  var a = gv("vA"), b = gv("vB"), c = gv("vC"), d = gv("vD");
+  document.getElementById("totalN1").innerHTML = '<span style="display:block;font-size:0.62rem;color:var(--gray-lt);font-weight:bold;letter-spacing:0.5px;">N1</span>' + (a + b);
+  document.getElementById("totalN2").innerHTML = '<span style="display:block;font-size:0.62rem;color:var(--gray-lt);font-weight:bold;letter-spacing:0.5px;">N2</span>' + (c + d);
+  if (active) showStat(active, true);
+}
+
+function clearHighlights() {
+  var cells = ["cellA", "cellB", "cellC", "cellD"];
+  for (var i = 0; i < cells.length; i++) {
+    document.getElementById(cells[i]).className = "data-cell";
+  }
+  document.getElementById("totalN1").className = "total-cell";
+  document.getElementById("totalN2").className = "total-cell";
+  var cards = ["scRR", "scARR", "scNNT", "scOR"];
+  for (var k = 0; k < cards.length; k++) {
+    document.getElementById(cards[k]).className = "stat-card";
+  }
+}
+
+function showStat(key, isRecalc) {
+  if (active === key && !isRecalc) {
+    active = null;
+    clearHighlights();
+    document.getElementById("resultPrompt").style.display = "block";
+    document.getElementById("resultContent").style.display = "none";
+    return;
+  }
+  active = key;
+  clearHighlights();
+
+  var a = gv("vA"), b = gv("vB"), c = gv("vC"), d = gv("vD");
+  var n1 = a + b, n2 = c + d;
+  var r1 = n1 > 0 ? a / n1 : 0;
+  var r2 = n2 > 0 ? c / n2 : 0;
+
+  var cardMap = {rr: "scRR", arr: "scARR", nnt: "scNNT", or: "scOR"};
+  var cardClasses = {rr: "active-rr", arr: "active-arr", nnt: "active-nnt", or: "active-or"};
+  document.getElementById(cardMap[key]).className = "stat-card " + cardClasses[key];
+
+  var html = "";
+
+  if (key === "rr") {
+    document.getElementById("cellA").className = "data-cell hl-rr";
+    document.getElementById("cellB").className = "data-cell hl-rr-sec";
+    document.getElementById("cellC").className = "data-cell hl-rr";
+    document.getElementById("cellD").className = "data-cell hl-rr-sec";
+    document.getElementById("totalN1").className = "total-cell hl-total-rr";
+    document.getElementById("totalN2").className = "total-cell hl-total-rr";
+
+    var rr = r2 > 0 ? r1 / r2 : null;
+    var rrDisp = rr !== null ? rr.toFixed(2) : "---";
+    var interpText = "";
+    if (rr === null) interpText = "Cannot compute — comparison group rate is 0%.";
+    else if (r1 === r2) interpText = "<strong>RR = 1.0:</strong> No difference between groups.";
+    else if (rr > 1) interpText = "<strong>RR > 1:</strong> Smokers had a higher rate of lung cancer.";
+    else interpText = "<strong>RR < 1:</strong> Smokers had a lower rate of lung cancer.";
+
+    html = '<div class="result-metric rm-rr"><div class="rm-label">Relative Risk (RR)</div><div class="rm-value v-rr">' + rrDisp + '</div>' +
+      '<div class="rm-formula">RR = (<strong>A</strong> / N1) &#247; (<strong>C</strong> / N2) = (' + a + ' / ' + n1 + ') &#247; (' + c + ' / ' + n2 + ')</div></div>' +
+      '<div class="interp-bar ib-rr"><span class="interp-prefix">Interpretation</span>' + interpText + '</div>';
+
+  } else if (key === "arr") {
+    document.getElementById("cellA").className = "data-cell hl-arr";
+    document.getElementById("cellB").className = "data-cell hl-arr-sec";
+    document.getElementById("cellC").className = "data-cell hl-arr";
+    document.getElementById("cellD").className = "data-cell hl-arr-sec";
+    document.getElementById("totalN1").className = "total-cell hl-total-arr";
+    document.getElementById("totalN2").className = "total-cell hl-total-arr";
+
+    var arr = Math.abs(r1 - r2);
+    var arrDisp = (arr * 100).toFixed(1) + "%";
+    var interpText = "";
+    if (r1 === r2) interpText = "<strong>ARR = 0%:</strong> No difference between groups.";
+    else interpText = "<strong>" + Math.round(arr * 100) + " more per 100</strong> developed lung cancer among smokers vs. non-smokers.";
+
+    html = '<div class="result-metric rm-arr"><div class="rm-label">Absolute Risk Reduction (ARR)</div><div class="rm-value v-arr">' + arrDisp + '</div>' +
+      '<div class="rm-formula">ARR = | <strong>A</strong>/N1 &#8722; <strong>C</strong>/N2 | = | ' + a + '/' + n1 + ' &#8722; ' + c + '/' + n2 + ' |</div></div>' +
+      '<div class="interp-bar ib-arr"><span class="interp-prefix">Interpretation</span>' + interpText + '</div>';
+
+  } else if (key === "nnt") {
+    document.getElementById("cellA").className = "data-cell hl-nnt";
+    document.getElementById("cellB").className = "data-cell hl-nnt-sec";
+    document.getElementById("cellC").className = "data-cell hl-nnt";
+    document.getElementById("cellD").className = "data-cell hl-nnt-sec";
+    document.getElementById("totalN1").className = "total-cell hl-total-nnt";
+    document.getElementById("totalN2").className = "total-cell hl-total-nnt";
+
+    var arr = Math.abs(r1 - r2);
+    var nnt = arr > 0 ? Math.ceil(1 / arr) : null;
+    var nntDisp = nnt !== null ? nnt.toString() : "---";
+    var interpText = "";
+    if (nnt === null) interpText = "No difference between groups — NNH does not apply.";
+    else interpText = "For every <strong>" + nnt + " smokers</strong>, one additional person develops lung cancer compared to non-smokers.";
+
+    html = '<div class="result-metric rm-nnt"><div class="rm-label">Number Needed to Harm (NNH)</div><div class="rm-value v-nnt">' + nntDisp + '</div>' +
+      '<div class="rm-formula">NNH = 1 &#247; ARR = 1 &#247; ' + (arr > 0 ? (arr * 100).toFixed(1) + "%" : "0") + '</div></div>' +
+      '<div class="interp-bar ib-nnt"><span class="interp-prefix">Interpretation</span>' + interpText + '</div>';
+
+  } else if (key === "or") {
+    document.getElementById("cellA").className = "data-cell hl-or-d1";
+    document.getElementById("cellB").className = "data-cell hl-or-d2";
+    document.getElementById("cellC").className = "data-cell hl-or-d2";
+    document.getElementById("cellD").className = "data-cell hl-or-d1";
+
+    var orVal = (b > 0 && c > 0) ? (a * d) / (b * c) : null;
+    var orDisp = orVal !== null ? orVal.toFixed(2) : "---";
+    var interpText = "";
+    if (orVal === null) interpText = "Cannot compute — a cell is zero.";
+    else if (r1 === r2) interpText = "<strong>OR = 1.0:</strong> No difference between groups.";
+    else if (orVal > 1) interpText = "<strong>OR > 1:</strong> Smokers had higher odds of lung cancer.";
+    else interpText = "<strong>OR < 1:</strong> Smokers had lower odds of lung cancer.";
+
+    html = '<div class="result-metric rm-or"><div class="rm-label">Odds Ratio (OR)</div><div class="rm-value v-or">' + orDisp + '</div>' +
+      '<div class="rm-formula">OR = (<strong>A</strong> &#215; <strong>D</strong>) &#247; (<strong>B</strong> &#215; <strong>C</strong>) = (' + a + ' &#215; ' + d + ') &#247; (' + b + ' &#215; ' + c + ')</div></div>' +
+      '<div class="interp-bar ib-or"><span class="interp-prefix">Interpretation</span>' + interpText + '</div>' +
+      '<div class="or-legend"><div class="or-legend-item"><div class="or-legend-swatch" style="background:#F5D9C2;border-color:#C27254;"></div> Diagonal 1 (A &#215; D)</div><div class="or-legend-item"><div class="or-legend-swatch" style="background:#C4E3EF;border-color:#2E8FAF;border-style:dashed;"></div> Diagonal 2 (B &#215; C)</div></div>';
+  }
+
+  document.getElementById("resultPrompt").style.display = "none";
+  document.getElementById("resultContent").style.display = "block";
+  document.getElementById("resultContent").innerHTML = html;
+}
+
+function sendFb(v) {
+  if (window.goatcounter && window.goatcounter.count) {
+    window.goatcounter.count({path: "two-by-two-primer-feedback-" + v, title: "2x2 Primer Feedback: " + v, event: true});
+  }
+  document.getElementById("fbY").classList.toggle("selected", v === "yes");
+  document.getElementById("fbN").classList.toggle("selected", v === "no");
+  document.getElementById("fbY").disabled = true;
+  document.getElementById("fbN").disabled = true;
+  document.getElementById("fbTh").classList.add("visible");
+}
+</script>
+<script data-goatcounter="https://professoratx.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
