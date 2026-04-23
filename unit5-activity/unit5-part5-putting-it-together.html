@@ -132,10 +132,10 @@ h2 { color: #172940; font-size: 1.3rem; margin-bottom: 12px; }
     <div class="tool-frame-wrap">
       <div class="tool-frame-header">
         <span>What do these numbers actually mean for your patients?</span>
-        <a href="../rr-arr-nnt-guided-exploration.html" target="_blank">Open in new tab ↗</a>
+        <a href="../tool3_guided_exploration.html" target="_blank">Open in new tab ↗</a>
       </div>
-      <iframe class="tool-frame" id="toolFrame" src="../rr-arr-nnt-guided-exploration.html" loading="lazy"></iframe>
-      <div class="tool-fallback" id="toolFallback">The tool didn't load. <a href="../rr-arr-nnt-guided-exploration.html" target="_blank">Open it directly here</a>.</div>
+      <iframe class="tool-frame" id="toolFrame" src="../tool3_guided_exploration.html" loading="lazy"></iframe>
+      <div class="tool-fallback" id="toolFallback">The tool didn't load. <a href="../tool3_guided_exploration.html" target="_blank">Open it directly here</a>.</div>
     </div>
 
     <div class="card">
@@ -279,11 +279,11 @@ var questions = [
     instruction: "Think about what it means when a CI crosses the null value.",
     options: [
       "Yes — the RR is greater than 1.0, so the treatment works",
-      "Yes — the CI is narrow, indicating high precision",
+      "No — the CI crosses 1.0, meaning the true effect could be zero or even reversed",
       "Significance cannot be determined from a confidence interval",
-      "No — the CI crosses 1.0, meaning the true effect could be zero or even reversed"
+      "Yes — the CI is narrow, indicating high precision"
     ],
-    correct: 3,
+    correct: 1,
     feedback: "The CI (0.88–2.14) crosses 1.0. This means the true RR could be below 1.0 (treatment is worse), exactly 1.0 (no effect), or above 1.0 (treatment helps). Compare to the mock article's CI (1.52–3.19), which stays above 1.0 — that result IS significant. A CI crossing the null value = not significant."
   },
   {
