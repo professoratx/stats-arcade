@@ -8,248 +8,179 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: Calibri, 'Trebuchet MS', sans-serif; background: #F0F3F5; color: #616467; line-height: 1.6; }
 .top-bar { background: #172940; color: white; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; position: sticky; top: 0; z-index: 100; }
-.top-bar a { color: #8B9098; text-decoration: none; font-size: 13px; font-weight: 700; }
-.top-bar a:hover { color: #FFFFFF; }
-.top-bar-title { font-size: 14px; font-weight: 700; color: #FFFFFF; }
-.top-bar-progress { font-size: 12px; color: #8B9098; }
+.top-bar a { color: #8B9098; text-decoration: none; font-size: 13px; font-weight: 700; } .top-bar a:hover { color: #FFF; }
+.top-bar-title { font-size: 14px; font-weight: 700; } .top-bar-progress { font-size: 12px; color: #8B9098; }
 .progress-dots { display: flex; justify-content: center; gap: 8px; padding: 16px 0 8px; }
-.dot { width: 10px; height: 10px; border-radius: 50%; background: #DEE2E6; }
-.dot.active { background: #2E8FAF; }
-.dot.done { background: #2D8659; }
-.container { max-width: 760px; margin: 0 auto; padding: 20px 16px 40px; }
-.card { background: #FFFFFF; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 28px 24px; margin-bottom: 20px; animation: fadeIn 0.4s ease; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #DEE2E6; } .dot.active { background: #2E8FAF; } .dot.done { background: #2D8659; }
+.split-container { max-width: 1400px; margin: 0 auto; padding: 20px 16px 40px; }
+.orientation { background: #172940; color: #FFFFFF; border-radius: 10px; padding: 22px 26px; margin-bottom: 20px; font-size: 0.93rem; line-height: 1.65; }
+.orientation strong { color: #FFC857; }
+.orientation .step-list { margin-top: 12px; } .orientation .step-item { margin-bottom: 8px; display: flex; gap: 10px; align-items: flex-start; }
+.orientation .step-num { background: rgba(255,255,255,0.2); color: #FFF; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+.orientation .step-text { font-size: 0.88rem; color: rgba(255,255,255,0.9); } .orientation .step-text strong { color: #FFC857; }
+.split-layout { display: flex; gap: 20px; align-items: flex-start; }
+.tool-panel { flex: 1; min-width: 0; position: sticky; top: 56px; max-height: calc(100vh - 72px); overflow: hidden; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); background: #FFF; }
+.tool-frame-header { background: #172940; color: #FFF; padding: 10px 16px; font-size: 0.82rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+.tool-frame-header a { color: #8B9098; font-size: 0.75rem; text-decoration: none; } .tool-frame-header a:hover { color: #FFF; }
+.tool-frame { width: 100%; height: calc(100vh - 112px); border: none; background: #F0F3F5; }
+.questions-panel { flex: 1; min-width: 0; }
+@media (max-width: 1000px) { .split-layout { flex-direction: column; } .tool-panel { position: relative; top: auto; max-height: none; } .tool-frame { height: 650px; } }
+.tool-fallback { display: none; text-align: center; padding: 40px 20px; color: #8B9098; } .tool-fallback a { color: #2E8FAF; font-weight: 700; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-h2 { color: #172940; font-size: 1.3rem; margin-bottom: 12px; }
-.orientation { background: #E5F3F8; color: #1A5A6E; border-radius: 10px; padding: 18px 22px; margin-bottom: 20px; font-size: 0.93rem; line-height: 1.65; }
-.orientation strong { color: #172940; }
-.tool-frame-wrap { background: #FFFFFF; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px; overflow: hidden; }
-.tool-frame-header { background: #172940; color: #FFFFFF; padding: 10px 18px; font-size: 0.85rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
-.tool-frame-header a { color: #8B9098; font-size: 0.78rem; text-decoration: none; }
-.tool-frame-header a:hover { color: #FFFFFF; }
-.tool-frame { width: 100%; height: 750px; border: none; background: #F0F3F5; }
-.tool-fallback { display: none; text-align: center; padding: 40px 20px; color: #8B9098; font-size: 0.9rem; }
-.tool-fallback a { color: #2E8FAF; font-weight: 700; }
-.question-section { display: none; }
-.question-section.visible { display: block; animation: fadeIn 0.4s ease; }
-.q-card { background: #FFFFFF; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 24px 22px; margin-bottom: 16px; border-left: 4px solid #2E8FAF; }
-.q-num { font-size: 0.78rem; color: #8B9098; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-.q-stem { font-size: 0.95rem; color: #172940; font-weight: 600; margin-bottom: 14px; line-height: 1.55; }
-.q-instruction { font-size: 0.85rem; color: #2E8FAF; font-style: italic; margin-bottom: 12px; }
-.mc-option { display: block; width: 100%; text-align: left; font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 0.9rem; padding: 11px 14px; margin-bottom: 6px; background: #F8F9FA; border: 2px solid #DEE2E6; border-radius: 8px; cursor: pointer; color: #172940; transition: all 0.2s; line-height: 1.45; }
+.question-section { display: none; } .question-section.visible { display: block; animation: fadeIn 0.4s ease; }
+.q-card { background: #FFF; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 22px 20px; margin-bottom: 14px; border-left: 4px solid #2E8FAF; }
+.q-num { font-size: 0.75rem; color: #8B9098; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+.q-stem { font-size: 0.92rem; color: #172940; font-weight: 600; margin-bottom: 12px; line-height: 1.5; }
+.q-instruction { font-size: 0.82rem; color: #2E8FAF; font-style: italic; margin-bottom: 10px; }
+.mc-option { display: block; width: 100%; text-align: left; font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 0.88rem; padding: 10px 12px; margin-bottom: 5px; background: #F8F9FA; border: 2px solid #DEE2E6; border-radius: 8px; cursor: pointer; color: #172940; transition: all 0.2s; line-height: 1.4; }
 .mc-option:hover:not(.answered) { border-color: #2E8FAF; background: #E5F3F8; }
 .mc-option.correct { border-color: #2D8659; background: #E1F5EE; color: #085041; cursor: default; }
 .mc-option.incorrect { border-color: #C0504D; background: #FDECEC; color: #8B2020; cursor: default; }
-.mc-option.dimmed { opacity: 0.45; cursor: default; }
-.mc-option.reveal { border-color: #2D8659; background: #E1F5EE; color: #085041; cursor: default; opacity: 1; }
-.q-feedback { display: none; border-radius: 8px; padding: 14px 16px; margin-top: 12px; font-size: 0.88rem; line-height: 1.6; }
+.mc-option.dimmed { opacity: 0.45; cursor: default; } .mc-option.reveal { border-color: #2D8659; background: #E1F5EE; color: #085041; cursor: default; opacity: 1; }
+.q-feedback { display: none; border-radius: 8px; padding: 12px 14px; margin-top: 10px; font-size: 0.85rem; line-height: 1.55; }
 .q-feedback.show-correct { display: block; background: #E1F5EE; color: #085041; border-left: 4px solid #2D8659; }
 .q-feedback.show-incorrect { display: block; background: #FDECEC; color: #8B2020; border-left: 4px solid #C0504D; }
-.next-q-btn { font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 0.9rem; font-weight: 700; padding: 10px 20px; background: #2E8FAF; color: #FFFFFF; border: none; border-radius: 8px; cursor: pointer; margin-top: 12px; display: none; }
-.next-q-btn:hover { background: #247A96; }
-.continue-section { text-align: center; }
-.continue-btn { font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 1.05rem; font-weight: 700; padding: 14px 36px; background: #2E8FAF; color: #FFFFFF; border: none; border-radius: 8px; cursor: pointer; }
-.continue-btn:hover { background: #247A96; }
+.next-q-btn { font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 0.88rem; font-weight: 700; padding: 9px 18px; background: #2E8FAF; color: #FFF; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; display: none; } .next-q-btn:hover { background: #247A96; }
+.continue-section { text-align: center; margin-top: 16px; }
+.continue-btn { font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 1.02rem; font-weight: 700; padding: 13px 32px; background: #2E8FAF; color: #FFF; border: none; border-radius: 8px; cursor: pointer; } .continue-btn:hover { background: #247A96; }
+.q-header { background: #FFF; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 18px 20px; margin-bottom: 14px; }
+.q-header h2 { color: #172940; font-size: 1.15rem; margin-bottom: 4px; } .q-header p { font-size: 0.85rem; color: #8B9098; }
+.encourage-box { background: #E1F5EE; color: #085041; border-radius: 10px; padding: 16px 20px; margin-top: 16px; font-size: 0.88rem; line-height: 1.55; text-align: center; } .encourage-box strong { color: #172940; }
 .footer { text-align: center; padding: 20px 16px; font-size: 12px; color: #8B9098; }
-.gate-message { text-align: center; padding: 60px 20px; }
-.gate-message h2 { margin-bottom: 12px; }
-.gate-message a { color: #2E8FAF; font-weight: 700; text-decoration: none; }
+.gate-message { text-align: center; padding: 60px 20px; } .gate-message h2 { margin-bottom: 12px; color: #172940; } .gate-message a { color: #2E8FAF; font-weight: 700; text-decoration: none; }
 </style>
 </head>
 <body>
+<div class="top-bar"><a href="index.html">&larr; Activity Hub</a><span class="top-bar-title">Part 3 of 5</span><span class="top-bar-progress">~10 min</span></div>
+<div class="progress-dots"><div class="dot done"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
 
-<div class="top-bar">
-  <a href="index.html">← Activity Hub</a>
-  <span class="top-bar-title">Part 3 of 5</span>
-  <span class="top-bar-progress">~10 min</span>
-</div>
-
-<div class="progress-dots">
-  <div class="dot done"></div>
-  <div class="dot done"></div>
-  <div class="dot active"></div>
-  <div class="dot"></div>
-  <div class="dot"></div>
-</div>
-
-<div class="container" id="mainContent">
-
+<div class="split-container" id="mainContent">
   <div class="orientation">
-    <strong>What you're looking at:</strong> This tool lets you move sliders to change the outcome rates for two groups and instantly see how RR, ARR, and NNT respond. The key insight: Relative Risk (RR) tells you how much bigger one rate is compared to another, but it hides the actual size of the gap. Two studies can both report "RR = 2.0" and have completely different clinical implications. In the mock article, RR = 2.20 sounds impressive — but it's the NNT of 4 that tells you this treatment truly matters. Select "Treatment vs. Control" and any audiology scenario to begin.
-  </div>
-
-  <div class="tool-frame-wrap">
-    <div class="tool-frame-header">
-      <span>What's the difference between relative risk, absolute risk, and NNT?</span>
-      <a href="../rr-arr-nnt-explorer.html" target="_blank">Open in new tab ↗</a>
+    <strong>In this tool, you'll explore whether a new upper-extremity rehab protocol improves outcomes for post-stroke patients compared to standard OT.</strong> The tool lets you move sliders to change the improvement rates for each group and instantly see how RR, ARR, and NNT respond. The key insight: a treatment can look impressive in relative terms (RR) while having a very different real-world impact (NNT).
+    <div class="step-list">
+      <div class="step-item"><div class="step-num">1</div><div class="step-text">Start with the <strong>"Treatment Effectiveness"</strong> context and <strong>"OT: Post-Stroke Rehab"</strong> scenario.</div></div>
+      <div class="step-item"><div class="step-num">2</div><div class="step-text"><strong>Move the sliders</strong> to change the improvement rates and watch how all three values (RR, ARR, NNT) update in real time.</div></div>
+      <div class="step-item"><div class="step-num">3</div><div class="step-text">Pay attention to the <strong>NNT Waiting Room</strong> at the bottom &mdash; watch the patient figures change as you adjust the rates.</div></div>
     </div>
-    <iframe class="tool-frame" id="toolFrame" src="../rr-arr-nnt-explorer.html" loading="lazy"></iframe>
-    <div class="tool-fallback" id="toolFallback">The tool didn't load. <a href="../rr-arr-nnt-explorer.html" target="_blank">Open it directly here</a>.</div>
   </div>
 
-  <div class="card">
-    <h2>Questions</h2>
-    <p style="font-size:0.88rem; color:#8B9098; margin-bottom:16px;">Use the sliders in the tool above to explore each question.</p>
-    <div id="questionsArea"></div>
-  </div>
-
-  <div class="question-section continue-section" id="continueSection">
-    <button class="continue-btn" onclick="completePart()">Continue to Part 4 →</button>
+  <div class="split-layout">
+    <div class="tool-panel">
+      <div class="tool-frame-header"><span>What's the difference between relative risk, absolute risk, and NNT?</span><a href="../rr-arr-nnt-explorer.html" target="_blank">Open in new tab &nearr;</a></div>
+      <iframe class="tool-frame" id="toolFrame" src="../rr-arr-nnt-explorer.html" loading="lazy"></iframe>
+      <div class="tool-fallback" id="toolFallback">The tool didn't load. <a href="../rr-arr-nnt-explorer.html" target="_blank">Open it directly here</a> and return to answer the questions.</div>
+    </div>
+    <div class="questions-panel">
+      <div class="q-header"><h2>Questions</h2><p>Use the OT: Post-Stroke Rehab scenario and adjust the sliders to answer these questions.</p></div>
+      <div id="questionsArea"></div>
+      <div class="question-section" id="encourageSection"><div class="encourage-box"><strong>Great job!</strong> This tool has other clinical scenarios — including fall prevention, noise exposure, and free play. You are encouraged to explore them to continue building your understanding.</div></div>
+      <div class="question-section continue-section" id="continueSection"><button class="continue-btn" onclick="completePart()">Continue to Part 4 &rarr;</button></div>
+    </div>
   </div>
 </div>
-
 <div class="footer">ASHS 6400: Methods of Data Analysis &bull; A.T. Still University</div>
 
 <script>
-if (sessionStorage.getItem("u5_part2_done") !== "true") {
-  document.getElementById("mainContent").innerHTML = '<div class="gate-message"><h2>Complete Part 2 first</h2><p><a href="unit5-part2-two-by-two.html">Go to Part 2</a></p></div>';
+if (sessionStorage.getItem("u5_part3_done") !== "true") {
+  document.getElementById("mainContent").innerHTML = '<div class="gate-message"><h2>Complete Part 3 first</h2><p>You need to complete Part 2 before starting Part 3.</p><p style="margin-top:12px;"><a href="unit5-part2-two-by-two.html">Go to Part 2</a></p></div>';
 }
+var ft = setTimeout(function(){document.getElementById("toolFallback").style.display="block";},8000);
+document.getElementById("toolFrame").onload = function(){clearTimeout(ft);};
 
-var frameTimer = setTimeout(function() { document.getElementById("toolFallback").style.display = "block"; }, 8000);
-document.getElementById("toolFrame").onload = function() { clearTimeout(frameTimer); };
-
+// Target positions: B, A, D, A, C, B, C
 var questions = [
   {
-    stem: "Set the treatment group rate to 55% and the control group rate to 25% to match the mock article. The RR should be about 2.20 and NNT about 4. Now keep the RR at approximately 2.00 by setting rates to 4% and 2%. What is the NNT now?",
-    instruction: "Try both rate combinations and compare.",
+    stem: "In the OT: Post-Stroke Rehab scenario, set the rehab group to about 55% and the standard OT group to about 25% \u2014 similar to the mock article. The RR should be approximately 2.20 and the NNT about 4. Now keep the RR around 2.00 by setting rates to 4% and 2%. What happens to the NNT?",
+    instruction: "Try both rate combinations and compare the NNT values.",
     options: [
-      "NNT = 50 — you need to treat 50 patients for 1 extra to benefit",
-      "NNT = 4, the same as before",
-      "NNT = 10, a moderate effect",
-      "NNT is undefined because the rates are too low"
-    ],
-    correct: 0,
-    feedback: "Both setups have RR ≈ 2.0, but the clinical impact is completely different. At 55% vs. 25%, NNT = 4 (strong). At 4% vs. 2%, NNT = 50 (weak). A \"twice as likely\" headline could describe either scenario. This is the single most important lesson in this unit: never stop at the RR — always check the ARR and NNT."
-  },
-  {
-    stem: "Set both sliders to 50% so the groups have identical rates. What happens to all three values (RR, ARR, NNT)?",
-    instruction: "Move both sliders to the same position.",
-    options: [
-      "RR = 2.00, ARR = 0%, NNT = undefined",
-      "RR = 0.00, ARR = 50%, NNT = 2",
-      "RR = 1.00, ARR = 50%, NNT = 1",
-      "RR = 1.00, ARR = 0%, NNT shows as a dash (undefined)"
-    ],
-    correct: 3,
-    feedback: "When both groups have the same rate, RR = 1.00 (no difference), ARR = 0% (no gap), and NNT is undefined (you can't divide by zero). RR = 1.0 is the null value — no association. If a 95% CI around an RR crosses 1.0, it means the true effect could be zero."
-  },
-  {
-    stem: "Set treatment to 80% and control to 20%. Look at the NNT waiting room. How many patient figures appear, and what does the green figure represent?",
-    instruction: "Look below the sliders at the waiting room visualization.",
-    options: [
-      "2 figures; the green one is the 1 additional patient who benefits because of the treatment",
-      "2 figures; the green one is the patient who improved in the treatment group",
-      "5 figures; the green one represents the 20% who did not improve",
-      "10 figures; the green one represents the average effect"
-    ],
-    correct: 0,
-    feedback: "ARR = 60%, NNT = 2. The gray figure would have improved regardless of group. The green figure benefits specifically because of the treatment. In the mock article, NNT = 4 means 1 in 4 patients benefits from early amplification — the green figure is that one additional patient."
-  },
-  {
-    stem: "Switch to the \"Risk Factor\" context. The tool now shows NNH instead of NNT. Set exposed to 40% and unexposed to 10%. What does NNH = 4 mean for an audiologist counseling patients about noise?",
-    instruction: "Switch contexts using the toggle at the top of the tool.",
-    options: [
-      "For every 4 patients exposed to hazardous noise, 1 additional patient develops hearing loss compared to unexposed patients",
-      "Every 4th patient exposed to noise will develop hearing loss",
-      "40% of patients will develop hearing loss within 4 years",
-      "The risk decreases by a factor of 4 with hearing protection"
-    ],
-    correct: 0,
-    feedback: "NNH = 4 means for every 4 noise-exposed patients, 1 additional person develops hearing loss compared to unexposed patients. NNH is the mirror of NNT — same formula, applied to harmful exposures. For an audiologist: \"Out of every 4 patients with this noise exposure, 1 would not have hearing loss if the exposure were eliminated.\""
-  },
-  {
-    stem: "A supplement advertises: \"Cuts cold risk by 50%!\" (RR = 0.50). Set treatment to 3% and control to 6% to recreate this. What is the NNT?",
-    instruction: "Enter these specific rates and check the NNT.",
-    options: [
-      "NNT = 2 — very effective",
-      "NNT = 17 — most patients benefit",
-      "NNT = 50 — practically no benefit",
-      "NNT = 34 — 33 of 34 people get no benefit despite the headline"
-    ],
-    correct: 3,
-    feedback: "RR = 0.50 (\"50% reduction!\") sounds dramatic, but ARR = only 3%, and NNT = 34. Only 1 in 34 people benefits. Compare to the mock article's NNT = 4. Same impressive-sounding relative measure, vastly different real-world impact. Always ask: \"What's the absolute difference?\""
-  },
-  {
-    stem: "Create a scenario where RR is above 3.0 but NNT is above 20. Then create one where RR is below 1.5 but NNT is below 5. Which combination of rates makes RR large but NNT also large?",
-    instruction: "Experiment with the sliders — try very low baseline rates for the first scenario.",
-    options: [
-      "High baseline rates (e.g., 80% vs. 60%) produce large RR and large NNT",
-      "Very low baseline rates (e.g., 6% vs. 2%) produce large RR but large NNT because the absolute gap is tiny",
-      "Equal rates in both groups",
-      "It's impossible — large RR always means small NNT"
+      "NNT stays around 4 because the RR is similar",
+      "NNT jumps to about 50 \u2014 even though the rehab protocol is still \u201Ctwice as effective,\u201D you would need to treat 50 patients for one extra to improve",
+      "NNT = 10, which is still a strong result",
+      "NNT becomes undefined because the rates are too low"
     ],
     correct: 1,
-    feedback: "Large RR + large NNT happens when baseline rates are very low (e.g., 6% vs. 2%: RR = 3.0, NNT = 25). Small RR + small NNT happens at high baselines (e.g., 80% vs. 60%: RR = 1.33, NNT = 5). RR measures the ratio of rates; NNT measures the gap. They capture different things, and clinicians need both."
+    feedback: "Both setups have RR \u2248 2.0 (\u201Ctwice as likely to improve\u201D), but the clinical stories are completely different. At 55% vs. 25%, 1 in 4 patients benefits (strong reason to adopt the protocol). At 4% vs. 2%, 1 in 50 patients benefits (much harder to justify). A colleague who says \u201CThe rehab protocol doubles the improvement rate!\u201D could be describing either scenario. Always check the NNT."
   },
   {
-    stem: "Return to the mock article's results: RR = 2.20, NNT = 4 (95% CI: 3 to 6). In plain language a patient could understand, what does NNT = 4 mean?",
-    instruction: "Think about how you would explain this at a bedside.",
+    stem: "Set both sliders to 50% so both groups have the same improvement rate. What happens to all three values (RR, ARR, NNT), and what would this mean for a clinician deciding whether to adopt the new rehab protocol?",
+    instruction: "Move both sliders to the same position.",
     options: [
-      "\"You need to come back for 4 appointments before the hearing aids start helping.\"",
-      "\"The hearing aids work for exactly 4 out of every 100 patients.\"",
-      "\"For every 4 patients who get hearing aids early, 1 extra patient notices a meaningful improvement in communication.\"",
-      "\"There is a 4% chance the hearing aids will help you.\""
+      "RR = 1.00, ARR = 0%, NNT = undefined \u2014 the new protocol offers no benefit over standard OT",
+      "RR = 0.00, ARR = 50%, NNT = 2 \u2014 the protocol is highly effective",
+      "RR = 1.00, ARR = 50%, NNT = 1 \u2014 every patient benefits",
+      "All three measures become negative, indicating harm"
+    ],
+    correct: 0,
+    feedback: "When both groups improve at the same rate, there is no treatment effect. RR = 1.0 (the null value), ARR = 0% (no gap), and NNT is undefined. For a clinician, this means the new protocol produces the same outcomes as standard OT \u2014 no reason to switch. This is what the \u201Cnull state\u201D looks like for these measures."
+  },
+  {
+    stem: "Set the rehab protocol group to 80% improved and the standard OT group to 20% improved. Look at the NNT Waiting Room at the bottom. How many patient figures appear, and what does the green figure represent clinically?",
+    instruction: "Look at the patient figures below the slider area.",
+    options: [
+      "2 figures; the green one is any patient who improved in the rehab group",
+      "5 figures; the green one represents the 20% who did not improve",
+      "10 figures; the green one represents the average treatment effect across the study",
+      "2 figures; the green one is the 1 additional patient who improved specifically because they received the rehab protocol instead of standard OT"
+    ],
+    correct: 3,
+    feedback: "ARR = 60%, NNT = 2. The gray figure represents a patient who would have improved regardless of which group they were in. The green figure is the one additional patient who improved specifically because of the rehab protocol. At the bedside, this means: \u201CFor every 2 patients I treat with this protocol, 1 of them improves because of the new approach.\u201D In the mock article, NNT = 4 carries the same logic \u2014 1 in 4."
+  },
+  {
+    stem: "Switch to the \u201CRisk Factors\u201D context and select a scenario (the tool will show NNH instead of NNT). Set the exposed group rate to 40% and the unexposed group rate to 10%. What does NNH = 4 mean for a clinician counseling patients about this risk factor?",
+    instruction: "Switch contexts using the toggle at the top of the tool.",
+    options: [
+      "NNH = 4 means for every 4 patients exposed to the risk factor, 1 additional patient develops the outcome compared to unexposed patients",
+      "NNH = 4 means every 4th exposed patient will definitely develop the condition",
+      "NNH = 4 means the risk decreases by a factor of 4 when the exposure is removed",
+      "NNH = 4 means 40% of patients are harmed, divided by 10%"
+    ],
+    correct: 0,
+    feedback: "NNH = 4 means for every 4 patients exposed to the risk factor, 1 additional patient develops the outcome compared to patients who are not exposed. NNH is the mirror of NNT \u2014 same formula, but applied to harmful rather than beneficial exposures. For a clinician: \u201COut of every 4 patients with this exposure, 1 would not have the condition if the exposure were eliminated.\u201D"
+  },
+  {
+    stem: "A supplement company advertises: \u201COur product cuts cold risk by 50%!\u201D (RR = 0.50). Switch back to \u201CTreatment Effectiveness\u201D and set the treatment group to 3% and control to 6% to recreate this claim. What does the NNT tell you about whether this headline is misleading?",
+    instruction: "Set these specific rates and check the NNT.",
+    options: [
+      "NNT = 2 \u2014 the supplement is very effective and the headline is accurate",
+      "NNT = 17 \u2014 the supplement helps most patients",
+      "NNT = 34 \u2014 33 out of 34 people who take this supplement get no benefit, despite the dramatic-sounding \u201C50% reduction\u201D",
+      "NNT = 50 \u2014 the supplement is completely ineffective"
     ],
     correct: 2,
-    feedback: "NNT = 4 means: \"For every 4 patients fitted with hearing aids early instead of waiting, 1 additional patient achieves meaningful communication improvement.\" The CI of 3 to 6 means the true NNT is likely between 1-in-3 and 1-in-6. This is strong evidence supporting early amplification."
+    feedback: "RR = 0.50 (\u201C50% reduction\u201D) is technically accurate, but the ARR is only 3% and NNT = 34. Only 1 in 34 people benefits. Compare this to the mock article\u2019s NNT of 4 \u2014 both sound impressive as relative measures, but the real-world per-patient impact is vastly different. This is the classic relative risk trap in advertising. Always ask: \u201CWhat\u2019s the absolute difference?\u201D"
+  },
+  {
+    stem: "Experiment with the sliders: try to create a scenario where the RR is large (above 3.0) but the NNT is also large (above 20). What kind of rates produce this pattern, and what does it teach you?",
+    instruction: "Try different combinations until you find one that works.",
+    options: [
+      "High baseline rates (e.g., 80% vs. 60%) \u2014 large rates always produce large RR and large NNT",
+      "Very low baseline rates (e.g., 6% vs. 2%) \u2014 the ratio is large because the rates are far apart proportionally, but the actual gap is tiny",
+      "Equal rates in both groups \u2014 this always produces large RR",
+      "It\u2019s impossible \u2014 a large RR always means a small NNT"
+    ],
+    correct: 1,
+    feedback: "Large RR + large NNT happens when baseline rates are very low. At 6% vs. 2%, RR = 3.0 (\u201Cthree times as likely!\u201D) but NNT = 25 (only 1 in 25 benefits). The ratio is dramatic because the baseline is small, but the actual per-person gap is tiny. RR measures the ratio; NNT measures the gap. They tell different parts of the clinical story."
+  },
+  {
+    stem: "Return to the mock article: RR = 2.20, NNT = 4 (95% CI: 3 to 6). Imagine you are an audiologist explaining this result to a patient considering early hearing aid fitting. Which explanation best translates these numbers?",
+    instruction: "Think about how you would explain this at a patient visit.",
+    options: [
+      "\u201CYou have a 2.20% chance of improving with hearing aids.\u201D",
+      "\u201CThe hearing aids work for exactly 4 out of every 100 patients.\u201D",
+      "\u201CFor every 4 patients who get hearing aids early instead of waiting, 1 extra patient notices a meaningful improvement in communication. The evidence is strong that this is a real benefit.\u201D",
+      "\u201CYou need to wear the hearing aids for 4 months before they start working.\u201D"
+    ],
+    correct: 2,
+    feedback: "NNT = 4 translates to: \u201CFor every 4 patients who get hearing aids early, 1 additional patient achieves meaningful communication improvement.\u201D The CI of 3 to 6 tells us the true NNT is likely between 1-in-3 and 1-in-6. This is strong evidence. RR = 2.20 adds context (\u201Cmore than twice as likely to improve\u201D), but the NNT is the number that helps a patient understand the practical benefit."
   }
 ];
 
-var currentQ = 0;
 var answered = [];
-
-function renderQuestions() {
-  var html = "";
-  for (var i = 0; i < questions.length; i++) {
-    var q = questions[i];
-    html += '<div class="question-section ' + (i === 0 ? "visible" : "") + '" id="q' + i + '"><div class="q-card"><div class="q-num">Question ' + (i+1) + ' of ' + questions.length + '</div>';
-    if (q.instruction) html += '<div class="q-instruction">' + q.instruction + '</div>';
-    html += '<div class="q-stem">' + q.stem + '</div>';
-    for (var j = 0; j < q.options.length; j++) {
-      html += '<button class="mc-option" id="q' + i + 'o' + j + '" onclick="answer(' + i + ',' + j + ')">' + String.fromCharCode(65+j) + ') ' + q.options[j] + '</button>';
-    }
-    html += '<div class="q-feedback" id="q' + i + 'fb"></div>';
-    html += '<button class="next-q-btn" id="q' + i + 'next" onclick="' + (i < questions.length-1 ? 'showNext('+i+')' : 'showContinue()') + '">' + (i < questions.length-1 ? 'Next Question →' : 'Complete Part 3 ✓') + '</button>';
-    html += '</div></div>';
-  }
-  document.getElementById("questionsArea").innerHTML = html;
-}
-
-function answer(qi, oi) {
-  if (answered.indexOf(qi) !== -1) return;
-  answered.push(qi);
-  var q = questions[qi], isCorrect = (oi === q.correct), fb = document.getElementById("q"+qi+"fb");
-  for (var j = 0; j < q.options.length; j++) {
-    var btn = document.getElementById("q"+qi+"o"+j);
-    btn.classList.add("answered");
-    if (j === oi && isCorrect) btn.classList.add("correct");
-    else if (j === oi) btn.classList.add("incorrect");
-    else if (j === q.correct && !isCorrect) btn.classList.add("reveal");
-    else btn.classList.add("dimmed");
-  }
-  fb.className = "q-feedback " + (isCorrect ? "show-correct" : "show-incorrect");
-  fb.innerHTML = (isCorrect ? "<strong>Correct!</strong> " : "<strong>Not quite.</strong> ") + q.feedback;
-  document.getElementById("q"+qi+"next").style.display = "inline-block";
-  var ans = JSON.parse(sessionStorage.getItem("u5_answers") || "{}");
-  ans["p3q"+(qi+1)] = { selected: oi, correct: q.correct, right: isCorrect };
-  sessionStorage.setItem("u5_answers", JSON.stringify(ans));
-  setTimeout(function() { fb.scrollIntoView({behavior:"smooth",block:"nearest"}); }, 200);
-}
-
-function showNext(qi) {
-  document.getElementById("q"+(qi+1)).classList.add("visible");
-  setTimeout(function() { document.getElementById("q"+(qi+1)).scrollIntoView({behavior:"smooth",block:"start"}); }, 100);
-}
-
-function showContinue() {
-  document.getElementById("continueSection").classList.add("visible");
-  setTimeout(function() { document.getElementById("continueSection").scrollIntoView({behavior:"smooth",block:"center"}); }, 100);
-}
-
-function completePart() {
-  sessionStorage.setItem("u5_part3_done", "true");
-  window.location.href = "unit5-part4-odds-ratio.html";
-}
-
+function renderQuestions(){var h="";for(var i=0;i<questions.length;i++){var q=questions[i];h+='<div class="question-section '+(i===0?"visible":"")+'" id="q'+i+'"><div class="q-card"><div class="q-num">Question '+(i+1)+' of '+questions.length+'</div>';if(q.instruction)h+='<div class="q-instruction">'+q.instruction+'</div>';h+='<div class="q-stem">'+q.stem+'</div>';for(var j=0;j<q.options.length;j++)h+='<button class="mc-option" id="q'+i+'o'+j+'" onclick="answer('+i+','+j+')">'+String.fromCharCode(65+j)+') '+q.options[j]+'</button>';h+='<div class="q-feedback" id="q'+i+'fb"></div><button class="next-q-btn" id="q'+i+'next" onclick="'+(i<questions.length-1?'showNext('+i+')':'showComplete()')+'">'+(i<questions.length-1?'Next Question \u2192':'Complete Part 3 \u2713')+'</button></div></div>';}document.getElementById("questionsArea").innerHTML=h;}
+function answer(qi,oi){if(answered.indexOf(qi)!==-1)return;answered.push(qi);var q=questions[qi],ok=(oi===q.correct),fb=document.getElementById("q"+qi+"fb");for(var j=0;j<q.options.length;j++){var b=document.getElementById("q"+qi+"o"+j);b.classList.add("answered");if(j===oi&&ok)b.classList.add("correct");else if(j===oi)b.classList.add("incorrect");else if(j===q.correct&&!ok)b.classList.add("reveal");else b.classList.add("dimmed");}fb.className="q-feedback "+(ok?"show-correct":"show-incorrect");fb.innerHTML=(ok?"<strong>Correct!</strong> ":"<strong>Not quite.</strong> ")+q.feedback;document.getElementById("q"+qi+"next").style.display="inline-block";var a=JSON.parse(sessionStorage.getItem("u5_answers")||"{}");a["p3q"+(qi+1)]={selected:oi,correct:q.correct,right:ok};sessionStorage.setItem("u5_answers",JSON.stringify(a));setTimeout(function(){fb.scrollIntoView({behavior:"smooth",block:"nearest"});},200);}
+function showNext(qi){document.getElementById("q"+(qi+1)).classList.add("visible");setTimeout(function(){document.getElementById("q"+(qi+1)).scrollIntoView({behavior:"smooth",block:"start"});},100);}
+function showComplete(){document.getElementById("encourageSection").classList.add("visible");document.getElementById("continueSection").classList.add("visible");setTimeout(function(){document.getElementById("encourageSection").scrollIntoView({behavior:"smooth",block:"center"});},100);}
+function completePart(){sessionStorage.setItem("u5_part3_done","true");window.location.href="unit5-part4-odds-ratio.html";}
 renderQuestions();
 </script>
 <script data-goatcounter="https://professoratx.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
