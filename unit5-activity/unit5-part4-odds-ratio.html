@@ -8,221 +8,155 @@
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: Calibri, 'Trebuchet MS', sans-serif; background: #F0F3F5; color: #616467; line-height: 1.6; }
 .top-bar { background: #172940; color: white; display: flex; align-items: center; justify-content: space-between; padding: 12px 20px; position: sticky; top: 0; z-index: 100; }
-.top-bar a { color: #8B9098; text-decoration: none; font-size: 13px; font-weight: 700; }
-.top-bar a:hover { color: #FFFFFF; }
-.top-bar-title { font-size: 14px; font-weight: 700; color: #FFFFFF; }
-.top-bar-progress { font-size: 12px; color: #8B9098; }
+.top-bar a { color: #8B9098; text-decoration: none; font-size: 13px; font-weight: 700; } .top-bar a:hover { color: #FFF; }
+.top-bar-title { font-size: 14px; font-weight: 700; } .top-bar-progress { font-size: 12px; color: #8B9098; }
 .progress-dots { display: flex; justify-content: center; gap: 8px; padding: 16px 0 8px; }
-.dot { width: 10px; height: 10px; border-radius: 50%; background: #DEE2E6; }
-.dot.active { background: #2E8FAF; }
-.dot.done { background: #2D8659; }
-.container { max-width: 760px; margin: 0 auto; padding: 20px 16px 40px; }
-.card { background: #FFFFFF; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 28px 24px; margin-bottom: 20px; animation: fadeIn 0.4s ease; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #DEE2E6; } .dot.active { background: #2E8FAF; } .dot.done { background: #2D8659; }
+.split-container { max-width: 1400px; margin: 0 auto; padding: 20px 16px 40px; }
+.orientation { background: #172940; color: #FFFFFF; border-radius: 10px; padding: 22px 26px; margin-bottom: 20px; font-size: 0.93rem; line-height: 1.65; }
+.orientation strong { color: #FFC857; }
+.orientation .step-list { margin-top: 12px; } .orientation .step-item { margin-bottom: 8px; display: flex; gap: 10px; align-items: flex-start; }
+.orientation .step-num { background: rgba(255,255,255,0.2); color: #FFF; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; margin-top: 2px; }
+.orientation .step-text { font-size: 0.88rem; color: rgba(255,255,255,0.9); } .orientation .step-text strong { color: #FFC857; }
+.split-layout { display: flex; gap: 20px; align-items: flex-start; }
+.tool-panel { flex: 1; min-width: 0; position: sticky; top: 56px; max-height: calc(100vh - 72px); overflow: hidden; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); background: #FFF; }
+.tool-frame-header { background: #172940; color: #FFF; padding: 10px 16px; font-size: 0.82rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+.tool-frame-header a { color: #8B9098; font-size: 0.75rem; text-decoration: none; } .tool-frame-header a:hover { color: #FFF; }
+.tool-frame { width: 100%; height: calc(100vh - 112px); border: none; background: #F0F3F5; }
+.questions-panel { flex: 1; min-width: 0; }
+@media (max-width: 1000px) { .split-layout { flex-direction: column; } .tool-panel { position: relative; top: auto; max-height: none; } .tool-frame { height: 650px; } }
+.tool-fallback { display: none; text-align: center; padding: 40px 20px; color: #8B9098; } .tool-fallback a { color: #2E8FAF; font-weight: 700; }
 @keyframes fadeIn { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-h2 { color: #172940; font-size: 1.3rem; margin-bottom: 12px; }
-.orientation { background: #E5F3F8; color: #1A5A6E; border-radius: 10px; padding: 18px 22px; margin-bottom: 20px; font-size: 0.93rem; line-height: 1.65; }
-.orientation strong { color: #172940; }
-.tool-frame-wrap { background: #FFFFFF; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); margin-bottom: 20px; overflow: hidden; }
-.tool-frame-header { background: #172940; color: #FFFFFF; padding: 10px 18px; font-size: 0.85rem; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
-.tool-frame-header a { color: #8B9098; font-size: 0.78rem; text-decoration: none; }
-.tool-frame-header a:hover { color: #FFFFFF; }
-.tool-frame { width: 100%; height: 750px; border: none; background: #F0F3F5; }
-.tool-fallback { display: none; text-align: center; padding: 40px 20px; color: #8B9098; font-size: 0.9rem; }
-.tool-fallback a { color: #2E8FAF; font-weight: 700; }
-.question-section { display: none; }
-.question-section.visible { display: block; animation: fadeIn 0.4s ease; }
-.q-card { background: #FFFFFF; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 24px 22px; margin-bottom: 16px; border-left: 4px solid #2E8FAF; }
-.q-num { font-size: 0.78rem; color: #8B9098; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
-.q-stem { font-size: 0.95rem; color: #172940; font-weight: 600; margin-bottom: 14px; line-height: 1.55; }
-.q-instruction { font-size: 0.85rem; color: #2E8FAF; font-style: italic; margin-bottom: 12px; }
-.mc-option { display: block; width: 100%; text-align: left; font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 0.9rem; padding: 11px 14px; margin-bottom: 6px; background: #F8F9FA; border: 2px solid #DEE2E6; border-radius: 8px; cursor: pointer; color: #172940; transition: all 0.2s; line-height: 1.45; }
+.question-section { display: none; } .question-section.visible { display: block; animation: fadeIn 0.4s ease; }
+.q-card { background: #FFF; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 22px 20px; margin-bottom: 14px; border-left: 4px solid #2E8FAF; }
+.q-num { font-size: 0.75rem; color: #8B9098; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 5px; }
+.q-stem { font-size: 0.92rem; color: #172940; font-weight: 600; margin-bottom: 12px; line-height: 1.5; }
+.q-instruction { font-size: 0.82rem; color: #2E8FAF; font-style: italic; margin-bottom: 10px; }
+.mc-option { display: block; width: 100%; text-align: left; font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 0.88rem; padding: 10px 12px; margin-bottom: 5px; background: #F8F9FA; border: 2px solid #DEE2E6; border-radius: 8px; cursor: pointer; color: #172940; transition: all 0.2s; line-height: 1.4; }
 .mc-option:hover:not(.answered) { border-color: #2E8FAF; background: #E5F3F8; }
 .mc-option.correct { border-color: #2D8659; background: #E1F5EE; color: #085041; cursor: default; }
 .mc-option.incorrect { border-color: #C0504D; background: #FDECEC; color: #8B2020; cursor: default; }
-.mc-option.dimmed { opacity: 0.45; cursor: default; }
-.mc-option.reveal { border-color: #2D8659; background: #E1F5EE; color: #085041; cursor: default; opacity: 1; }
-.q-feedback { display: none; border-radius: 8px; padding: 14px 16px; margin-top: 12px; font-size: 0.88rem; line-height: 1.6; }
+.mc-option.dimmed { opacity: 0.45; cursor: default; } .mc-option.reveal { border-color: #2D8659; background: #E1F5EE; color: #085041; cursor: default; opacity: 1; }
+.q-feedback { display: none; border-radius: 8px; padding: 12px 14px; margin-top: 10px; font-size: 0.85rem; line-height: 1.55; }
 .q-feedback.show-correct { display: block; background: #E1F5EE; color: #085041; border-left: 4px solid #2D8659; }
 .q-feedback.show-incorrect { display: block; background: #FDECEC; color: #8B2020; border-left: 4px solid #C0504D; }
-.next-q-btn { font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 0.9rem; font-weight: 700; padding: 10px 20px; background: #2E8FAF; color: #FFFFFF; border: none; border-radius: 8px; cursor: pointer; margin-top: 12px; display: none; }
-.next-q-btn:hover { background: #247A96; }
-.continue-section { text-align: center; }
-.continue-btn { font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 1.05rem; font-weight: 700; padding: 14px 36px; background: #2E8FAF; color: #FFFFFF; border: none; border-radius: 8px; cursor: pointer; }
-.continue-btn:hover { background: #247A96; }
+.next-q-btn { font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 0.88rem; font-weight: 700; padding: 9px 18px; background: #2E8FAF; color: #FFF; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px; display: none; } .next-q-btn:hover { background: #247A96; }
+.continue-section { text-align: center; margin-top: 16px; }
+.continue-btn { font-family: Calibri, 'Trebuchet MS', sans-serif; font-size: 1.02rem; font-weight: 700; padding: 13px 32px; background: #2E8FAF; color: #FFF; border: none; border-radius: 8px; cursor: pointer; } .continue-btn:hover { background: #247A96; }
+.q-header { background: #FFF; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); padding: 18px 20px; margin-bottom: 14px; }
+.q-header h2 { color: #172940; font-size: 1.15rem; margin-bottom: 4px; } .q-header p { font-size: 0.85rem; color: #8B9098; }
+.encourage-box { background: #E1F5EE; color: #085041; border-radius: 10px; padding: 16px 20px; margin-top: 16px; font-size: 0.88rem; line-height: 1.55; text-align: center; } .encourage-box strong { color: #172940; }
 .footer { text-align: center; padding: 20px 16px; font-size: 12px; color: #8B9098; }
-.gate-message { text-align: center; padding: 60px 20px; }
-.gate-message h2 { margin-bottom: 12px; }
-.gate-message a { color: #2E8FAF; font-weight: 700; text-decoration: none; }
+.gate-message { text-align: center; padding: 60px 20px; } .gate-message h2 { margin-bottom: 12px; color: #172940; } .gate-message a { color: #2E8FAF; font-weight: 700; text-decoration: none; }
 </style>
 </head>
 <body>
+<div class="top-bar"><a href="index.html">&larr; Activity Hub</a><span class="top-bar-title">Part 4 of 5</span><span class="top-bar-progress">~7 min</span></div>
+<div class="progress-dots"><div class="dot done"></div><div class="dot active"></div><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
 
-<div class="top-bar">
-  <a href="index.html">← Activity Hub</a>
-  <span class="top-bar-title">Part 4 of 5</span>
-  <span class="top-bar-progress">~7 min</span>
-</div>
-
-<div class="progress-dots">
-  <div class="dot done"></div>
-  <div class="dot done"></div>
-  <div class="dot done"></div>
-  <div class="dot active"></div>
-  <div class="dot"></div>
-</div>
-
-<div class="container" id="mainContent">
-
+<div class="split-container" id="mainContent">
   <div class="orientation">
-    <strong>What you're looking at:</strong> The Odds Ratio (OR) appears frequently in journal articles, especially in case-control studies and logistic regression. It measures the same basic idea as RR — is there an association? — but uses a different formula. Recall from the mock article: the RR was 2.20 but the OR was 3.67 from the same data. This tool shows you exactly when and why they diverge, and when you can treat them as interchangeable. Start in the "Risk Factor" context with any scenario.
-  </div>
-
-  <div class="tool-frame-wrap">
-    <div class="tool-frame-header">
-      <span>What is an odds ratio and when does it diverge from relative risk?</span>
-      <a href="../or-explorer.html" target="_blank">Open in new tab ↗</a>
+    <strong>In this tool, you'll explore whether repetitive hand use at work increases the odds of developing carpal tunnel syndrome (CTS).</strong> The Odds Ratio (OR) appears frequently in journal articles, especially in case-control studies and logistic regression. It measures the same basic idea as RR &mdash; is there an association? &mdash; but uses a different formula. Recall from the mock article: the RR was 2.20 but the OR was 3.67 from the same data. This tool shows you when and why they diverge.
+    <div class="step-list">
+      <div class="step-item"><div class="step-num">1</div><div class="step-text">Start in the <strong>&ldquo;Risk Factor&rdquo;</strong> context with the default scenario.</div></div>
+      <div class="step-item"><div class="step-num">2</div><div class="step-text"><strong>Move the sliders</strong> to change outcome rates and watch how OR and RR compare side by side.</div></div>
+      <div class="step-item"><div class="step-num">3</div><div class="step-text">Pay attention to the <strong>divergence indicator</strong> &mdash; it tells you how much the OR exaggerates compared to the RR.</div></div>
     </div>
-    <iframe class="tool-frame" id="toolFrame" src="../or-explorer.html" loading="lazy"></iframe>
-    <div class="tool-fallback" id="toolFallback">The tool didn't load. <a href="../or-explorer.html" target="_blank">Open it directly here</a>.</div>
   </div>
 
-  <div class="card">
-    <h2>Questions</h2>
-    <p style="font-size:0.88rem; color:#8B9098; margin-bottom:16px;">Use the sliders to explore each question.</p>
-    <div id="questionsArea"></div>
-  </div>
-
-  <div class="question-section continue-section" id="continueSection">
-    <button class="continue-btn" onclick="completePart()">Continue to Part 5 →</button>
+  <div class="split-layout">
+    <div class="tool-panel">
+      <div class="tool-frame-header"><span>What is an odds ratio and when does it diverge from relative risk?</span><a href="../or-explorer.html" target="_blank">Open in new tab &nearr;</a></div>
+      <iframe class="tool-frame" id="toolFrame" src="../or-explorer.html" loading="lazy"></iframe>
+      <div class="tool-fallback" id="toolFallback">The tool didn't load. <a href="../or-explorer.html" target="_blank">Open it directly here</a> and return to answer the questions.</div>
+    </div>
+    <div class="questions-panel">
+      <div class="q-header"><h2>Questions</h2><p>Use the default Risk Factor scenario and adjust the sliders to explore each question.</p></div>
+      <div id="questionsArea"></div>
+      <div class="question-section" id="encourageSection"><div class="encourage-box"><strong>Great job!</strong> This tool also has hearing aid and tinnitus scenarios. You are encouraged to explore them to see how the OR behaves in different clinical contexts.</div></div>
+      <div class="question-section continue-section" id="continueSection"><button class="continue-btn" onclick="completePart()">Continue to Part 5 &rarr;</button></div>
+    </div>
   </div>
 </div>
-
 <div class="footer">ASHS 6400: Methods of Data Analysis &bull; A.T. Still University</div>
 
 <script>
 if (sessionStorage.getItem("u5_part3_done") !== "true") {
-  document.getElementById("mainContent").innerHTML = '<div class="gate-message"><h2>Complete Part 3 first</h2><p><a href="unit5-part3-rr-arr-nnt.html">Go to Part 3</a></p></div>';
+  document.getElementById("mainContent").innerHTML = '<div class="gate-message"><h2>Complete Part 3 first</h2><p>Complete Part 3 before starting Part 4.</p><p style="margin-top:12px;"><a href="unit5-part5-putting-it-together.html">Go to Part 3</a></p></div>';
 }
+var ft = setTimeout(function(){document.getElementById("toolFallback").style.display="block";},8000);
+document.getElementById("toolFrame").onload = function(){clearTimeout(ft);};
 
-var frameTimer = setTimeout(function() { document.getElementById("toolFallback").style.display = "block"; }, 8000);
-document.getElementById("toolFrame").onload = function() { clearTimeout(frameTimer); };
-
+// Target positions: D, B, A, C, A
 var questions = [
   {
-    stem: "Set both sliders to 10% so exposed and unexposed groups have equal rates. What are the OR and RR values?",
+    stem: "Set both sliders so the exposed and unexposed groups have the same CTS rate (e.g., both at 10%). What are the OR and RR values, and what do they tell you about the relationship between repetitive hand use and CTS?",
     instruction: "Move both sliders to the same position.",
     options: [
-      "OR = 0.00 and RR = 0.00 — both measures show zero risk",
-      "OR = 2.00 and RR = 1.00 — OR detects a difference RR misses",
-      "OR = 1.00 and RR = 2.00 — RR detects a difference OR misses",
-      "OR = 1.00 and RR = 1.00 — no difference between groups"
+      "OR = 0.00 and RR = 0.00 \u2014 there is no risk in either group",
+      "OR = 2.00 and RR = 1.00 \u2014 the OR detects a difference the RR misses",
+      "OR = 1.00 and RR = 1.00 \u2014 there is no association between repetitive hand use and CTS",
+      "OR = 1.00 and RR = 2.00 \u2014 the RR detects a difference the OR misses"
+    ],
+    correct: 2,
+    feedback: "When both groups have the same outcome rate, OR = 1.0 and RR = 1.0. The null value for both measures is 1.0 (not zero), because they are ratios. This is also the reference for confidence intervals: if a CI around an OR or RR crosses 1.0, the result is not statistically significant. In the mock article, neither CI crosses 1.0 \u2014 both results are significant."
+  },
+  {
+    stem: "Now set the exposed group (repetitive hand use) to 55% and the unexposed group to 25% \u2014 the same rates as the mock article\u2019s hearing aid study. Compare the OR and RR values. The OR is notably larger. Why does this happen when the outcome is this common?",
+    instruction: "Look at both values and the divergence indicator between them.",
+    options: [
+      "The OR always overestimates the true effect, so it should never be reported",
+      "The tool has a calculation error \u2014 OR and RR should always be equal",
+      "The OR is more accurate than the RR, so the larger value is the \u201Ctrue\u201D effect",
+      "When the outcome is common (above roughly 10%), the OR exaggerates the effect because the formulas for odds and risk diverge at higher rates"
     ],
     correct: 3,
-    feedback: "When both groups have the same rate, OR = 1.0 and RR = 1.0. The null value for both is 1.0 (not zero), because they are ratios. This is also the reference for confidence intervals: if a CI around an OR or RR crosses 1.0, the result is not statistically significant. In the mock article, neither CI crosses 1.0."
+    feedback: "The OR uses odds (event \u00f7 non-event), while the RR uses risk (event \u00f7 total). When the outcome is rare, these denominators are nearly the same, so OR \u2248 RR. But at 55% and 25%, the odds inflate faster than the risk. In the mock article, this is why OR = 3.67 while RR = 2.20 from the same data. Neither is \u201Cwrong\u201D \u2014 they measure slightly different things."
   },
   {
-    stem: "Set exposed to 55% and unexposed to 25% — the mock article rates. The OR and RR are displayed side by side. Why is the OR (3.67) notably larger than the RR (2.20)?",
-    instruction: "Look at both values and the divergence indicator.",
+    stem: "Try setting both groups to rare outcome rates (e.g., 5% exposed, 2% unexposed). Compare the OR and RR. Then try common rates (e.g., 60% and 30%). At what outcome frequency do the OR and RR give approximately the same number?",
+    instruction: "Try both combinations and watch the divergence.",
     options: [
-      "The OR is always larger than the RR regardless of outcome frequency",
-      "The tool has a calculation error — they should always be the same",
-      "When the outcome is common (above ~10% in both groups), the OR exaggerates the effect because the formulas diverge at higher rates",
-      "The OR is more accurate than the RR, so the larger number is the \"true\" effect"
-    ],
-    correct: 2,
-    feedback: "The OR uses odds (event ÷ non-event), while the RR uses risk (event ÷ total). When the outcome is rare, these denominators are nearly equal, so OR ≈ RR. But at 55% and 25%, the odds inflate faster, making the OR appear more extreme. Neither is \"wrong\" — they measure slightly different things. The mock article reports both, which is good practice."
-  },
-  {
-    stem: "Now try rare outcome rates: set exposed to 5% and unexposed to 2%. Compare the OR and RR. Then try common rates: exposed to 60%, unexposed to 30%. When are OR and RR approximately equal?",
-    instruction: "Try both combinations and compare the two values.",
-    options: [
-      "When the outcome is rare — roughly below 10% in both groups",
-      "When the sample size is very large",
+      "When the outcome is rare \u2014 roughly below 10% in both groups",
+      "When the sample size is very large (over 1,000 per group)",
       "When the treatment group rate is exactly double the control",
-      "The OR and RR are always the same regardless of frequency"
+      "The OR and RR are always the same regardless of outcome frequency"
     ],
     correct: 0,
-    feedback: "This is the \"rare disease assumption.\" At 5% vs. 2%, OR and RR are nearly identical. At 60% vs. 30%, the OR is noticeably larger. Below ~10% in both groups, you can treat an OR approximately like an RR. Above that, be cautious about the OR's magnitude."
+    feedback: "This is the \u201Crare disease assumption.\u201D At 5% vs. 2%, the OR and RR are nearly identical. At 60% vs. 30%, the OR is noticeably larger. Below approximately 10% in both groups, you can treat an OR approximately like an RR. Above that, be cautious about interpreting the magnitude of the OR."
   },
   {
-    stem: "A case-control study reports OR = 2.80 (95% CI: 1.40 to 5.60). What can you conclude about this result?",
-    instruction: "This question doesn't require the tool — apply what you've learned.",
+    stem: "A case-control study of occupational noise exposure and hearing loss reports: OR = 2.80 (95% CI: 1.40 to 5.60). Based on what you\u2019ve learned about the OR, what can an audiologist conclude from these numbers?",
+    instruction: "Apply what you\u2019ve observed in the tool to this clinical example.",
     options: [
-      "Workers had 2.80 times the risk — OR and RR are always the same",
-      "The result is not significant because OR is above 1.0",
-      "The odds were 2.80 times higher, and the result is significant because the CI does not cross 1.0",
-      "The OR means 2.80% of the exposed group had the outcome"
+      "Workers exposed to noise had exactly 2.80 times the risk \u2014 OR and RR are identical",
+      "The OR means 2.80% of exposed workers developed hearing loss",
+      "The odds of hearing loss were 2.80 times higher among noise-exposed workers, and the result is statistically significant because the CI does not cross 1.0",
+      "The result is not significant because the OR is above 1.0"
     ],
     correct: 2,
-    feedback: "The OR of 2.80 means the odds of the outcome were 2.80 times higher in the exposed group. The CI (1.40–5.60) doesn't include 1.0, confirming statistical significance. In case-control studies, the OR is the correct measure — RR cannot be directly calculated from that design."
+    feedback: "The OR tells you the odds (not risk) of hearing loss were 2.80 times higher among exposed workers. The CI (1.40\u20135.60) does not include 1.0, confirming statistical significance. In a case-control study, the OR is the appropriate measure \u2014 RR cannot be directly calculated from that design. If the outcome is rare, the OR approximates the RR."
   },
   {
-    stem: "Thinking back to the mock article: OR = 3.67 (95% CI: 2.01 to 6.68). A colleague says, \"Patients in the amplification group were 3.67 times as likely to improve.\" Is this wording precise?",
+    stem: "Thinking back to the mock article: it reports OR = 3.67 (95% CI: 2.01 to 6.68). A colleague says, \u201CPatients in the amplification group were 3.67 times as likely to improve.\u201D Is this wording precise?",
     instruction: "Think about the difference between odds and risk.",
     options: [
-      "Yes — OR and RR can be described interchangeably",
-      "No — the correct wording is \"the odds of improvement were 3.67 times higher,\" not \"times as likely.\" \"Times as likely\" describes relative risk, not odds",
-      "No — the OR of 3.67 means 3.67% of patients improved",
-      "Yes — when CIs don't cross 1.0, OR and RR mean the same thing"
+      "Yes \u2014 OR and RR can always be described interchangeably",
+      "No \u2014 the correct wording is \u201Cthe odds of improvement were 3.67 times higher.\u201D \u201CTimes as likely\u201D describes relative risk, not odds.",
+      "No \u2014 the OR of 3.67 means 3.67% of patients improved",
+      "Yes \u2014 when the CI doesn\u2019t cross 1.0, the OR and RR mean the same thing"
     ],
     correct: 1,
-    feedback: "Precise language matters. \"Times as likely\" describes relative risk (probability). \"Times the odds\" describes the odds ratio. Since the outcome is common here (55% vs. 25%), the OR exaggerates compared to the RR. The RR of 2.20 — \"2.20 times as likely\" — is more intuitive and accurate for describing the rate comparison. The OR is technically \"3.67 times the odds,\" which is a different concept."
+    feedback: "Precise language matters. \u201CTimes as likely\u201D describes risk (RR). \u201CTimes the odds\u201D describes the OR. Since the outcome is common here (55% vs. 25%), the OR of 3.67 exaggerates compared to the RR of 2.20. The article\u2019s RR of 2.20 (\u201C2.20 times as likely\u201D) is more intuitive for describing the rate comparison. Good articles report both so readers can see the full picture."
   }
 ];
 
 var answered = [];
-
-function renderQuestions() {
-  var html = "";
-  for (var i = 0; i < questions.length; i++) {
-    var q = questions[i];
-    html += '<div class="question-section ' + (i===0?"visible":"") + '" id="q'+i+'"><div class="q-card"><div class="q-num">Question '+(i+1)+' of '+questions.length+'</div>';
-    if (q.instruction) html += '<div class="q-instruction">'+q.instruction+'</div>';
-    html += '<div class="q-stem">'+q.stem+'</div>';
-    for (var j = 0; j < q.options.length; j++) {
-      html += '<button class="mc-option" id="q'+i+'o'+j+'" onclick="answer('+i+','+j+')">'+String.fromCharCode(65+j)+') '+q.options[j]+'</button>';
-    }
-    html += '<div class="q-feedback" id="q'+i+'fb"></div>';
-    html += '<button class="next-q-btn" id="q'+i+'next" onclick="'+(i<questions.length-1?'showNext('+i+')':'showContinue()')+'">'+(i<questions.length-1?'Next Question →':'Complete Part 4 ✓')+'</button>';
-    html += '</div></div>';
-  }
-  document.getElementById("questionsArea").innerHTML = html;
-}
-
-function answer(qi, oi) {
-  if (answered.indexOf(qi) !== -1) return;
-  answered.push(qi);
-  var q = questions[qi], isCorrect = (oi === q.correct), fb = document.getElementById("q"+qi+"fb");
-  for (var j = 0; j < q.options.length; j++) {
-    var btn = document.getElementById("q"+qi+"o"+j);
-    btn.classList.add("answered");
-    if (j===oi&&isCorrect) btn.classList.add("correct");
-    else if (j===oi) btn.classList.add("incorrect");
-    else if (j===q.correct&&!isCorrect) btn.classList.add("reveal");
-    else btn.classList.add("dimmed");
-  }
-  fb.className = "q-feedback "+(isCorrect?"show-correct":"show-incorrect");
-  fb.innerHTML = (isCorrect?"<strong>Correct!</strong> ":"<strong>Not quite.</strong> ")+q.feedback;
-  document.getElementById("q"+qi+"next").style.display = "inline-block";
-  var ans = JSON.parse(sessionStorage.getItem("u5_answers")||"{}");
-  ans["p4q"+(qi+1)] = {selected:oi,correct:q.correct,right:isCorrect};
-  sessionStorage.setItem("u5_answers",JSON.stringify(ans));
-  setTimeout(function(){fb.scrollIntoView({behavior:"smooth",block:"nearest"});},200);
-}
-
-function showNext(qi) {
-  document.getElementById("q"+(qi+1)).classList.add("visible");
-  setTimeout(function(){document.getElementById("q"+(qi+1)).scrollIntoView({behavior:"smooth",block:"start"});},100);
-}
-function showContinue() {
-  document.getElementById("continueSection").classList.add("visible");
-  setTimeout(function(){document.getElementById("continueSection").scrollIntoView({behavior:"smooth",block:"center"});},100);
-}
-function completePart() {
-  sessionStorage.setItem("u5_part4_done","true");
-  window.location.href = "unit5-part5-putting-it-together.html";
-}
-
+function renderQuestions(){var h="";for(var i=0;i<questions.length;i++){var q=questions[i];h+='<div class="question-section '+(i===0?"visible":"")+'" id="q'+i+'"><div class="q-card"><div class="q-num">Question '+(i+1)+' of '+questions.length+'</div>';if(q.instruction)h+='<div class="q-instruction">'+q.instruction+'</div>';h+='<div class="q-stem">'+q.stem+'</div>';for(var j=0;j<q.options.length;j++)h+='<button class="mc-option" id="q'+i+'o'+j+'" onclick="answer('+i+','+j+')">'+String.fromCharCode(65+j)+') '+q.options[j]+'</button>';h+='<div class="q-feedback" id="q'+i+'fb"></div><button class="next-q-btn" id="q'+i+'next" onclick="'+(i<questions.length-1?'showNext('+i+')':'showComplete()')+'">'+(i<questions.length-1?'Next Question \u2192':'Complete Part 4 \u2713')+'</button></div></div>';}document.getElementById("questionsArea").innerHTML=h;}
+function answer(qi,oi){if(answered.indexOf(qi)!==-1)return;answered.push(qi);var q=questions[qi],ok=(oi===q.correct),fb=document.getElementById("q"+qi+"fb");for(var j=0;j<q.options.length;j++){var b=document.getElementById("q"+qi+"o"+j);b.classList.add("answered");if(j===oi&&ok)b.classList.add("correct");else if(j===oi)b.classList.add("incorrect");else if(j===q.correct&&!ok)b.classList.add("reveal");else b.classList.add("dimmed");}fb.className="q-feedback "+(ok?"show-correct":"show-incorrect");fb.innerHTML=(ok?"<strong>Correct!</strong> ":"<strong>Not quite.</strong> ")+q.feedback;document.getElementById("q"+qi+"next").style.display="inline-block";var a=JSON.parse(sessionStorage.getItem("u5_answers")||"{}");a["p4q"+(qi+1)]={selected:oi,correct:q.correct,right:ok};sessionStorage.setItem("u5_answers",JSON.stringify(a));setTimeout(function(){fb.scrollIntoView({behavior:"smooth",block:"nearest"});},200);}
+function showNext(qi){document.getElementById("q"+(qi+1)).classList.add("visible");setTimeout(function(){document.getElementById("q"+(qi+1)).scrollIntoView({behavior:"smooth",block:"start"});},100);}
+function showComplete(){document.getElementById("encourageSection").classList.add("visible");document.getElementById("continueSection").classList.add("visible");setTimeout(function(){document.getElementById("encourageSection").scrollIntoView({behavior:"smooth",block:"center"});},100);}
+function completePart(){sessionStorage.setItem("u5_part4_done","true");window.location.href="unit5-part5-putting-it-together.html";}
 renderQuestions();
 </script>
 <script data-goatcounter="https://professoratx.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>

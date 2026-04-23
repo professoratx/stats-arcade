@@ -81,8 +81,8 @@ body { font-family: Calibri, 'Trebuchet MS', sans-serif; background: #F0F3F5; co
 <div class="footer">ASHS 6400: Methods of Data Analysis &bull; A.T. Still University</div>
 
 <script>
-if (sessionStorage.getItem("u5_part3_done") !== "true") {
-  document.getElementById("mainContent").innerHTML = '<div class="gate-message"><h2>Complete Part 3 first</h2><p>You need to complete Part 2 before starting Part 3.</p><p style="margin-top:12px;"><a href="unit5-part2-two-by-two.html">Go to Part 2</a></p></div>';
+if (sessionStorage.getItem("u5_part2_done") !== "true") {
+  document.getElementById("mainContent").innerHTML = '<div class="gate-message"><h2>Complete Part 2 first</h2><p>You need to complete Part 2 before starting Part 3.</p><p style="margin-top:12px;"><a href="unit5-part2-two-by-two.html">Go to Part 2</a></p></div>';
 }
 var ft = setTimeout(function(){document.getElementById("toolFallback").style.display="block";},8000);
 document.getElementById("toolFrame").onload = function(){clearTimeout(ft);};
