@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit 8 Activity — Part 1a: Welcome &amp; Orientation</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Calibri, "Segoe UI", Tahoma, sans-serif; background: #F0F3F5; color: #172940; line-height: 1.55; min-height: 100vh; font-size: 16.5px; }
+  .header { background: #172940; color: white; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid #2E8FAF; }
+  .header-left { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .header h1 { font-size: 23px; font-weight: 700; }
+  .header .part-label { font-size: 13.5px; color: #FFC857; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+  .progress-pill { background: rgba(255,255,255,0.12); padding: 6px 14px; border-radius: 20px; font-size: 13.5px; color: #F0F3F5; }
+  .progress-pill strong { color: #FFC857; }
+
+  .container { max-width: 920px; margin: 0 auto; padding: 28px 32px 60px; display: flex; flex-direction: column; gap: 22px; }
+
+  .panel { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 26px 30px; border-left: 5px solid #2E8FAF; }
+  .panel h2 { color: #172940; font-size: 21px; font-weight: 700; margin-bottom: 12px; }
+  .panel p { color: #2c3e50; font-size: 16.5px; line-height: 1.7; margin-bottom: 12px; }
+  .panel p:last-child { margin-bottom: 0; }
+  .panel p strong { color: #172940; }
+
+  /* Welcome / orientation panel — dark */
+  .welcome { background: #172940; color: white; border-left: 5px solid #FFC857; padding: 32px 34px; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); }
+  .welcome .subtitle { color: #FFC857; font-size: 13px; text-transform: uppercase; letter-spacing: 1.6px; font-weight: 700; margin-bottom: 8px; }
+  .welcome h1 { color: white; font-size: 28px; font-weight: 700; margin-bottom: 14px; line-height: 1.25; }
+  .welcome p { color: #F0F3F5; font-size: 16.5px; line-height: 1.7; margin-bottom: 14px; }
+  .welcome p:last-of-type { margin-bottom: 0; }
+  .welcome strong { color: #FFC857; }
+
+  /* Roadmap of 10 parts */
+  .roadmap { background: rgba(255,255,255,0.07); border-radius: 8px; padding: 18px 20px; margin-top: 18px; }
+  .roadmap-title { color: #FFC857; font-size: 12.5px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; margin-bottom: 12px; }
+  .roadmap-list { list-style: none; padding: 0; margin: 0; }
+  .roadmap-list li { display: flex; align-items: center; gap: 12px; padding: 7px 0; font-size: 14.5px; color: #F0F3F5; border-bottom: 1px solid rgba(255,255,255,0.08); }
+  .roadmap-list li:last-child { border-bottom: none; }
+  .roadmap-list .num { background: #2E8FAF; color: white; min-width: 32px; height: 28px; padding: 0 6px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12.5px; flex-shrink: 0; }
+  .roadmap-list .here { color: #FFC857; font-weight: 700; }
+  .roadmap-list .here .num { background: #FFC857; color: #172940; }
+  .roadmap-list strong { color: white; }
+
+  /* Gold standard panel callouts */
+  .gs-callout {
+    background: #F8FAFB; border: 1px solid #d8dde2; border-left: 4px solid #FFC857;
+    border-radius: 6px; padding: 20px 24px; margin: 16px 0 4px;
+  }
+  .gs-callout-label { font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; color: #8B6914; font-weight: 700; margin-bottom: 10px; }
+  .gs-callout p { font-size: 16px; color: #2c3e50; line-height: 1.7; margin: 0; }
+  .gs-callout p strong { color: #172940; }
+  .gs-callout p em { font-style: italic; color: #5a4a10; }
+
+  /* Field examples reveal (interactive gate) */
+  .field-examples-wrap {
+    background: #F8FAFB; border: 1px solid #d8dde2; border-radius: 10px;
+    padding: 20px 24px; margin: 18px 0 4px;
+  }
+  .field-ex-prompt { text-align: center; margin-bottom: 8px; }
+  .field-ex-prompt .fe-label {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px;
+    color: #2E8FAF; font-weight: 700; margin-bottom: 4px; display: block;
+  }
+  .field-ex-prompt p {
+    font-size: 15.5px; color: #2c3e50; line-height: 1.6; margin: 0 0 14px;
+  }
+  .field-ex-buttons {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 4px;
+  }
+  .field-ex-btn {
+    background: white; border: 2px solid #2E8FAF; color: #2E8FAF;
+    padding: 14px 18px; border-radius: 8px;
+    font-size: 15px; font-weight: 700; cursor: pointer; font-family: inherit;
+    transition: all 0.2s ease; line-height: 1.4;
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+  }
+  .field-ex-btn:hover:not(.done) {
+    background: #EAF3F7; transform: translateY(-1px);
+    box-shadow: 0 3px 10px rgba(46, 143, 175, 0.18);
+  }
+  .field-ex-btn.done {
+    background: #246F89; color: white; border-color: #246F89; cursor: default;
+  }
+  .field-ex-btn .fe-icon { font-size: 17px; }
+
+  .field-ex-card {
+    background: white; border-radius: 8px; padding: 18px 22px; margin-top: 14px;
+    border-left: 4px solid #2E8FAF;
+    display: none; animation: fadeIn 0.45s ease;
+  }
+  .field-ex-card.shown { display: block; }
+  .field-ex-card.ot { border-left-color: #246F89; }
+  .field-ex-card.aud { border-left-color: #2E8FAF; }
+  .field-ex-card .fe-card-title {
+    font-size: 12.5px; text-transform: uppercase; letter-spacing: 1px;
+    color: #246F89; font-weight: 700; margin-bottom: 8px;
+  }
+  .field-ex-card.aud .fe-card-title { color: #2E8FAF; }
+  .field-ex-card .fe-pair {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 10px 0;
+  }
+  .fe-test-card {
+    border-radius: 8px; padding: 14px 16px;
+    background: #F8FAFB; border: 1px solid #d8dde2;
+  }
+  .fe-test-card.quick { border-top: 3px solid #2E8FAF; }
+  .fe-test-card.gold { border-top: 3px solid #FFC857; background: #FFFBF0; }
+  .fe-test-card .fe-test-label {
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px;
+    font-weight: 700; margin-bottom: 4px;
+  }
+  .fe-test-card.quick .fe-test-label { color: #2E8FAF; }
+  .fe-test-card.gold .fe-test-label { color: #8B6914; }
+  .fe-test-card .fe-test-name {
+    font-size: 15.5px; font-weight: 700; color: #172940;
+    margin-bottom: 6px; line-height: 1.3;
+  }
+  .fe-test-card .fe-test-desc {
+    font-size: 13.5px; color: #2c3e50; line-height: 1.5;
+  }
+  .field-ex-card .fe-takeaway {
+    background: #F8FAFB; border-radius: 6px;
+    padding: 12px 16px; margin-top: 12px;
+    font-size: 14.5px; color: #2c3e50; line-height: 1.55;
+  }
+  .field-ex-card .fe-takeaway strong { color: #172940; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .field-ex-progress {
+    font-size: 14px; color: #616467; text-align: center; margin-top: 14px;
+    font-style: italic; transition: color 0.3s ease;
+  }
+  .field-ex-progress.complete { color: #2D8659; font-weight: 600; }
+
+  /* Nav */
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 0; gap: 12px; flex-wrap: wrap; }
+  .nav-btn { background: #2E8FAF; color: white; border: none; padding: 14px 32px; border-radius: 8px; font-size: 15.5px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s ease; text-decoration: none; display: inline-block; }
+  .nav-btn:hover { background: #246F89; transform: translateY(-1px); }
+  .nav-btn.locked { background: #c5cdd3; cursor: not-allowed; pointer-events: none; }
+  .nav-btn.secondary { background: white; color: #2E8FAF; border: 2px solid #2E8FAF; }
+  .nav-btn.secondary:hover { background: #EAF3F7; }
+  .nav-completion { color: #2D8659; font-size: 14.5px; font-weight: 600; flex-grow: 1; text-align: center; margin: 0 16px; }
+
+  @media (max-width: 720px) {
+    .field-ex-buttons { grid-template-columns: 1fr; }
+    .field-ex-card .fe-pair { grid-template-columns: 1fr; }
+    .header { padding: 14px 18px; flex-direction: column; gap: 8px; align-items: flex-start; }
+    .container { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <h1>Unit 8: Diagnostic Accuracy Activity</h1>
+    <span class="part-label">Part 1a of 10 &middot; Welcome &amp; Orientation</span>
+  </div>
+  <div class="progress-pill">Section <strong id="section-counter">1</strong> of 3</div>
+</header>
+
+<main class="container">
+
+  <!-- 1. Welcome -->
+  <section class="welcome">
+    <div class="subtitle">Welcome to Unit 8</div>
+    <h1>Reading diagnostic accuracy like a clinician</h1>
+    <p>Every test you order, recommend, or read about in OT and audiology comes with a set of numbers that tell you how good it is at finding disease &mdash; and how much you can trust the result you're holding. Sensitivity, specificity, predictive values, prevalence: these aren't just terminology to memorize. They're how you decide whether to act on a test result, follow up with another test, or reassure a patient.</p>
+    <p>This activity walks you through six diagnostic accuracy concepts &mdash; one at a time, anchored to a single mock article &mdash; then asks you to apply all of them to a different clinical scenario. By the end, you'll be able to read any diagnostic accuracy paper with confidence and translate the findings to a patient or colleague.</p>
+
+    <div class="roadmap">
+      <div class="roadmap-title">The 10 parts ahead</div>
+      <ul class="roadmap-list">
+        <li class="here"><span class="num">1a</span><span><strong>Welcome &amp; orientation</strong> &mdash; you are here</span></li>
+        <li><span class="num">1b</span><span>The 2 &times; 2 table &mdash; the foundation</span></li>
+        <li><span class="num">1c</span><span>Mock article + confidence check</span></li>
+        <li><span class="num">2</span><span>Overall accuracy &mdash; and why it can mislead</span></li>
+        <li><span class="num">3</span><span>Prevalence &mdash; the lever everything else swings on</span></li>
+        <li><span class="num">4</span><span>Sensitivity (Sn) &mdash; ruling out disease</span></li>
+        <li><span class="num">5</span><span>Specificity (Sp) &mdash; ruling in disease</span></li>
+        <li><span class="num">6</span><span>PPV &amp; NPV &mdash; what a result means for one patient</span></li>
+        <li><span class="num">7</span><span>Apply it &mdash; a new test in OT</span></li>
+        <li><span class="num">8</span><span>Reflection + certificate</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- 2. Why it matters for OT/AuD -->
+  <section class="panel">
+    <h2>Why diagnostic accuracy matters for OT and AuD</h2>
+    <p>You will spend your career making decisions based on imperfect tests. A pure-tone audiogram, a hand grip dynamometer, a cognitive screen, a vestibular bedside test, a balance assessment &mdash; every one of them sometimes says &ldquo;positive&rdquo; when the patient is healthy, and sometimes says &ldquo;negative&rdquo; when the patient has the condition. That's not a flaw of medicine. It's the nature of testing.</p>
+    <p>What separates a clinician who reads tests well from one who doesn't is not whether they know the numbers exist, but whether they know <strong>which numbers to trust under which circumstances</strong>. Should you act on a positive screen, or follow up with a more definitive test? When a patient tests negative but you still suspect the condition, what does that mean? When the prevalence in your clinic is much higher than in the general population, how does that change your reading?</p>
+    <p>Six numbers &mdash; the ones in this activity &mdash; answer those questions.</p>
+  </section>
+
+  <!-- 3. Gold standard explainer -->
+  <section class="panel" style="border-left-color: #FFC857;">
+    <h2>One more thing before we start: what's a &ldquo;gold standard&rdquo;?</h2>
+    <p>You'll see this term constantly in diagnostic accuracy work, so it's worth pinning down now. The <strong>gold standard</strong> is the most authoritative test available for a condition &mdash; the test we treat as the source of truth when we're judging how good a different test is. Every diagnostic accuracy statistic in this activity is built on a comparison: <strong>what the test under study said</strong>, versus <strong>what the gold standard said</strong>.</p>
+    <p>Why don't we just use the gold standard for everyone, then? Because gold standards usually cost something other tests don't &mdash; time, money, equipment, expertise, patient burden, or all of the above. The whole point of having a less authoritative test is that it's faster, cheaper, more accessible, or less invasive. The accuracy numbers tell you how much you're giving up to get those benefits.</p>
+
+    <div class="gs-callout">
+      <div class="gs-callout-label">In our running scenario</div>
+      <p>In Parts 2&ndash;6, we'll work with a study comparing an <strong>over-the-counter rapid antigen test for COVID</strong> against <strong>RT-PCR (the gold standard for COVID diagnosis)</strong>. PCR is more accurate, but it has to be sent to a lab, takes hours to a day to come back, and isn't something a patient can do at home. The antigen test gives a result in 15 minutes on a kitchen counter &mdash; <em>if</em> we can trust it. That's the question every diagnostic accuracy statistic is built to answer.</p>
+    </div>
+
+    <div class="field-examples-wrap">
+      <div class="field-ex-prompt">
+        <span class="fe-label">A quick interactive moment</span>
+        <p>The same logic shows up in OT and AuD all the time. Tap each button below to see a quick &ldquo;screening test vs. gold standard&rdquo; pair from your field. <strong>You'll need to view both to continue.</strong></p>
+      </div>
+
+      <div class="field-ex-buttons">
+        <button class="field-ex-btn" id="fe-btn-ot" onclick="revealField('ot')">
+          <span class="fe-icon">&#9656;</span>
+          <span>An OT example</span>
+        </button>
+        <button class="field-ex-btn" id="fe-btn-aud" onclick="revealField('aud')">
+          <span class="fe-icon">&#9656;</span>
+          <span>An AuD example</span>
+        </button>
+      </div>
+
+      <!-- OT example card -->
+      <div class="field-ex-card ot" id="fe-card-ot">
+        <div class="fe-card-title">In Occupational Therapy &mdash; cognitive screening</div>
+        <div class="fe-pair">
+          <div class="fe-test-card quick">
+            <div class="fe-test-label">The quick test</div>
+            <div class="fe-test-name">Brief cognitive screen (e.g., Mini-Cog or SLUMS)</div>
+            <div class="fe-test-desc">Takes 5&ndash;15 minutes during a home-safety eval. An OT can administer it. Scores flag patients who may need follow-up.</div>
+          </div>
+          <div class="fe-test-card gold">
+            <div class="fe-test-label">The gold standard</div>
+            <div class="fe-test-name">Comprehensive neuropsychological battery</div>
+            <div class="fe-test-desc">Multi-hour evaluation by a neuropsychologist. Considered the source of truth for cognitive impairment, but expensive, scheduled out weeks, and not portable.</div>
+          </div>
+        </div>
+        <div class="fe-takeaway">
+          <strong>Why the quick test exists:</strong> a 5-minute screen during a routine home visit can flag the patients who need the gold-standard workup &mdash; without sending every older adult for a full neuropsych battery they don't need.
+        </div>
+      </div>
+
+      <!-- AuD example card -->
+      <div class="field-ex-card aud" id="fe-card-aud">
+        <div class="fe-card-title">In Audiology &mdash; hearing screening</div>
+        <div class="fe-pair">
+          <div class="fe-test-card quick">
+            <div class="fe-test-label">The quick test</div>
+            <div class="fe-test-name">Pure-tone hearing screen (e.g., school or workplace)</div>
+            <div class="fe-test-desc">Takes a few minutes in a quiet room with a portable audiometer. Pass/fail at a few key frequencies. Can be administered by a trained tech.</div>
+          </div>
+          <div class="fe-test-card gold">
+            <div class="fe-test-label">The gold standard</div>
+            <div class="fe-test-name">Comprehensive audiologic evaluation</div>
+            <div class="fe-test-desc">Full audiometric battery in a sound-treated booth, performed by an audiologist. Air and bone conduction across all frequencies, speech testing, otoacoustic emissions, tympanometry. The reference for hearing diagnosis.</div>
+          </div>
+        </div>
+        <div class="fe-takeaway">
+          <strong>Why the quick test exists:</strong> screening lets you identify the patients who need the full booth eval, in settings (schools, work physicals, home visits) where a sound-treated booth isn't an option. Most patients pass the screen and never need the full workup.
+        </div>
+      </div>
+
+      <div class="field-ex-progress" id="fe-progress">0 of 2 examples viewed</div>
+    </div>
+  </section>
+
+  <!-- Nav -->
+  <div class="nav-bar">
+    <span></span>
+    <span class="nav-completion" id="nav-msg">View both field examples to continue.</span>
+    <a href="part1b.html" class="nav-btn locked" id="next-btn">Continue to Part 1b &rarr;</a>
+  </div>
+
+</main>
+
+<script>
+  var state = { viewed: { ot: false, aud: false } };
+
+  function revealField(field) {
+    if (state.viewed[field]) return;
+    state.viewed[field] = true;
+
+    var btn = document.getElementById('fe-btn-' + field);
+    btn.classList.add('done');
+    var card = document.getElementById('fe-card-' + field);
+    card.classList.add('shown');
+    btn.querySelector('.fe-icon').innerHTML = '&#10003;';
+
+    updateGate();
+  }
+
+  function updateGate() {
+    var viewedCount = (state.viewed.ot ? 1 : 0) + (state.viewed.aud ? 1 : 0);
+    var progress = document.getElementById('fe-progress');
+    var nextBtn = document.getElementById('next-btn');
+    var navMsg = document.getElementById('nav-msg');
+    var counter = document.getElementById('section-counter');
+
+    if (viewedCount === 2) {
+      progress.textContent = '\u2713 Both examples viewed \u2014 ready to continue';
+      progress.classList.add('complete');
+      nextBtn.classList.remove('locked');
+      navMsg.textContent = '\u2713 Ready \u2014 continue to Part 1b for the 2 \u00d7 2 table.';
+      try { localStorage.setItem('unit8_part1a_done', '1'); } catch (e) {}
+      counter.textContent = '3';
+    } else if (viewedCount === 1) {
+      progress.textContent = '1 of 2 examples viewed \u2014 view the other to continue';
+      counter.textContent = '3';
+    } else {
+      progress.textContent = '0 of 2 examples viewed';
+    }
+  }
+
+  updateGate();
+</script>
+</body>
+</html>

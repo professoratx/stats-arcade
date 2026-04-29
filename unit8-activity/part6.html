@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit 8 Activity — Part 6: PPV and NPV</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Calibri, "Segoe UI", Tahoma, sans-serif; background: #F0F3F5; color: #172940; line-height: 1.55; min-height: 100vh; font-size: 16.5px; }
+  .header { background: #172940; color: white; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid #8B6FB0; }
+  .header-left { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .header h1 { font-size: 23px; font-weight: 700; }
+  .header .part-label { font-size: 13.5px; color: #B79AD0; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+  .progress-pill { background: rgba(255,255,255,0.12); padding: 6px 14px; border-radius: 20px; font-size: 13.5px; color: #F0F3F5; }
+  .progress-pill strong { color: #B79AD0; }
+
+  .container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 24px 32px 60px; max-width: 1500px; margin: 0 auto; }
+
+  .left-panel { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 26px 26px 22px; position: sticky; top: 24px; height: fit-content; max-height: calc(100vh - 48px); overflow-y: auto; }
+  .left-panel h2 { font-size: 19px; color: #172940; margin-bottom: 4px; font-weight: 700; }
+  .left-panel .subtitle { color: #616467; font-size: 14px; margin-bottom: 18px; }
+  .panel-section-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: #6B4F92; font-weight: 700; margin-bottom: 8px; margin-top: 18px; }
+
+  .viz-wrap { background: #F8FAFB; border: 1px solid #d8dde2; border-radius: 10px; padding: 16px 12px 10px; }
+  .viz-title { font-size: 13px; font-weight: 700; color: #172940; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 4px; text-align: center; }
+  .viz-subtitle { font-size: 12px; color: #616467; text-align: center; margin-bottom: 10px; font-style: italic; }
+  .viz-svg { display: block; width: 100%; height: auto; max-width: 380px; margin: 0 auto; }
+
+  .contingency { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; margin-bottom: 6px; margin-top: 4px; }
+  .contingency th, .contingency td { padding: 9px 6px; text-align: center; border: 1px solid #d8dde2; }
+  .contingency th { background: #172940; color: white; font-weight: 600; font-size: 12px; }
+  .contingency th:first-child { background: transparent; border: none; }
+  .contingency .row-label { color: white; font-weight: 600; text-align: left; padding: 9px 8px; font-size: 12.5px; }
+  .contingency .row-label-pos { background: #8B6FB0; }
+  .contingency .row-label-neg { background: #1B5E3F; }
+  .contingency .group-total { background: #F0F3F5; font-weight: 700; color: #172940; }
+  .contingency .cell-tp { background: #E8F4EC; font-weight: 700; font-size: 16px; color: #1B5E3F; transition: background 0.3s ease; }
+  .contingency .cell-fp { background: #FBEAE7; font-weight: 700; font-size: 16px; color: #8B2B1F; transition: background 0.3s ease; }
+  .contingency .cell-fn { background: #FBEAE7; font-weight: 700; font-size: 16px; color: #8B2B1F; transition: background 0.3s ease; }
+  .contingency .cell-tn { background: #E8F4EC; font-weight: 700; font-size: 16px; color: #1B5E3F; transition: background 0.3s ease; }
+  .contingency .row-pos-hl { box-shadow: inset 0 0 0 3px #8B6FB0; }
+  .contingency .row-neg-hl { box-shadow: inset 0 0 0 3px #1B5E3F; }
+  .table-caption { text-align: center; color: #616467; font-size: 12px; margin-top: 4px; font-style: italic; }
+  .table-caption .ppv-key { color: #6B4F92; font-weight: 700; }
+  .table-caption .npv-key { color: #1B5E3F; font-weight: 700; }
+
+  .sliders { background: #F8FAFB; border: 1px solid #d8dde2; border-radius: 10px; padding: 14px 16px; margin-top: 14px; position: relative; transition: opacity 0.3s ease; }
+  .sliders.locked { opacity: 0.55; pointer-events: none; }
+  .sliders-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .sliders-header .s-title { font-size: 13px; font-weight: 700; color: #172940; text-transform: uppercase; letter-spacing: 0.8px; }
+  .reset-btn { background: white; border: 1.5px solid #8B6FB0; color: #6B4F92; padding: 4px 10px; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.18s ease; }
+  .reset-btn:hover { background: #F0E9F5; }
+  .lock-overlay { position: absolute; top: 6px; right: 12px; font-size: 12px; color: #8B9098; font-style: italic; }
+  .sliders.locked .lock-overlay { display: block; }
+  .sliders:not(.locked) .lock-overlay { display: none; }
+
+  .slider-row { display: grid; grid-template-columns: 110px 1fr 60px; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .slider-row:last-of-type { margin-bottom: 0; }
+  .slider-row .s-label { font-size: 13px; font-weight: 600; color: #172940; }
+  .slider-row .s-label.prev { color: #8B6914; }
+  .slider-row input[type="range"] { width: 100%; accent-color: #8B6FB0; }
+  .slider-row .s-value { text-align: right; font-size: 13.5px; font-weight: 700; color: #172940; font-variant-numeric: tabular-nums; }
+
+  .live-stats { margin-top: 14px; padding: 12px 14px; background: white; border: 1px solid #d8dde2; border-radius: 8px; }
+  .live-stats-title { font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px; color: #616467; font-weight: 700; margin-bottom: 10px; text-align: center; }
+  .live-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .live-stat { background: #F8FAFB; border-radius: 6px; padding: 10px 6px; text-align: center; }
+  .live-stat .ls-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: #616467; font-weight: 700; margin-bottom: 3px; }
+  .live-stat .ls-value { font-size: 18px; font-weight: 700; color: #172940; font-variant-numeric: tabular-nums; }
+  .live-stat.ppv .ls-value { color: #6B4F92; }
+  .live-stat.npv .ls-value { color: #1B5E3F; }
+  .live-stats-fixed { margin-top: 8px; padding: 8px 10px; background: #F0F3F5; border-radius: 6px; font-size: 12px; color: #616467; text-align: center; line-height: 1.45; }
+  .live-stats-fixed strong { color: #172940; }
+
+  .stat-card { border: 2px solid; border-radius: 10px; padding: 18px 20px; text-align: center; cursor: pointer; transition: all 0.25s ease; background: white; user-select: none; margin-top: 12px; }
+  .stat-card.locked { background: #F0F3F5; border-style: dashed; border-color: #b8c2c8; }
+  .stat-card.locked-stage2 { opacity: 0.45; pointer-events: none; }
+  .stat-card .label { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #616467; margin-bottom: 6px; font-weight: 600; }
+  .stat-card .value { font-size: 42px; font-weight: 700; line-height: 1; margin-bottom: 6px; color: #172940; font-variant-numeric: tabular-nums; }
+  .stat-card .ci { font-size: 13px; color: #616467; }
+  .stat-card .hint { font-size: 13px; font-weight: 600; margin-top: 6px; }
+  .stat-card .formula { font-size: 13.5px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-family: "Cambria Math", Cambria, serif; display: none; font-variant-numeric: tabular-nums; }
+
+  .stat-card-ppv { border-color: #8B6FB0; }
+  .stat-card-ppv.locked:hover { background: #F0E9F5; border-color: #8B6FB0; transform: translateY(-1px); }
+  .stat-card-ppv.locked .hint { color: #6B4F92; }
+  .stat-card-ppv.revealed { background: linear-gradient(135deg, #8B6FB0 0%, #6B4F92 100%); color: white; border-color: #6B4F92; cursor: default; border-style: solid; }
+  .stat-card-ppv.revealed .label { color: #FFC857; }
+  .stat-card-ppv.revealed .value { color: white; }
+  .stat-card-ppv.revealed .ci { color: #E6DBF0; }
+  .stat-card-ppv.revealed .hint { display: none; }
+  .stat-card-ppv.revealed .formula { display: block; color: #E6DBF0; }
+
+  .stat-card-npv { border-color: #1B5E3F; }
+  .stat-card-npv.locked:hover { background: #E8F4EC; border-color: #1B5E3F; transform: translateY(-1px); }
+  .stat-card-npv.locked .hint { color: #1B5E3F; }
+  .stat-card-npv.revealed { background: linear-gradient(135deg, #2D8659 0%, #1B5E3F 100%); color: white; border-color: #1B5E3F; cursor: default; border-style: solid; }
+  .stat-card-npv.revealed .label { color: #FFC857; }
+  .stat-card-npv.revealed .value { color: white; }
+  .stat-card-npv.revealed .ci { color: #C9E4D5; }
+  .stat-card-npv.revealed .hint { display: none; }
+  .stat-card-npv.revealed .formula { display: block; color: #C9E4D5; }
+
+  .dual-scale-wrap { margin-top: 16px; background: white; border: 1px solid #d8dde2; border-radius: 10px; padding: 16px 18px; }
+  .dual-scale-title { font-size: 13px; font-weight: 700; color: #172940; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 22px; text-align: center; }
+  .dual-scale-outer { position: relative; padding-top: 50px; padding-bottom: 50px; }
+  .dual-scale { position: relative; height: 30px; background: linear-gradient(90deg, #C0504D 0%, #D89A92 35%, #FFC857 65%, #B79AD0 78%, #6B4F92 100%); border-radius: 15px; }
+  .ds-tick-70 { position: absolute; top: -6px; bottom: -6px; left: 70%; width: 2px; background: #172940; z-index: 2; }
+  .ds-tick-70-pill { position: absolute; top: -22px; left: 70%; transform: translateX(-50%); background: #FFC857; color: #172940; padding: 3px 8px; border-radius: 5px; font-size: 11px; font-weight: 700; white-space: nowrap; z-index: 1; }
+  .ds-marker { position: absolute; transform: translateX(-50%); transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 5; }
+  .ds-marker-ppv { top: -42px; }
+  .ds-marker-npv { top: 38px; }
+  .ds-marker-pill { padding: 5px 10px; border-radius: 6px; font-size: 12.5px; font-weight: 700; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.18); color: white; font-variant-numeric: tabular-nums; text-align: center; }
+  .ds-pill-ppv { background: #6B4F92; }
+  .ds-pill-npv { background: #1B5E3F; }
+  .ds-marker-ppv::after { content: ''; position: absolute; left: 50%; bottom: -10px; transform: translateX(-50%); width: 2px; height: 14px; background: #6B4F92; }
+  .ds-marker-npv::before { content: ''; position: absolute; left: 50%; top: -10px; transform: translateX(-50%); width: 2px; height: 14px; background: #1B5E3F; }
+  .ds-axis-labels { display: flex; justify-content: space-between; margin-top: 12px; font-size: 12px; color: #172940; font-weight: 600; padding: 0 2px; }
+  .ds-readout-bar { margin-top: 14px; padding: 10px 14px; border-radius: 6px; font-size: 13.5px; font-weight: 600; text-align: center; line-height: 1.5; transition: background 0.4s ease, color 0.4s ease; }
+  .ds-readout-bar.high { background: rgba(139, 111, 176, 0.14); color: #6B4F92; border-left: 3px solid #8B6FB0; }
+  .ds-readout-bar.mixed { background: #FFF8E1; color: #8B6914; border-left: 3px solid #FFC857; }
+  .ds-readout-bar.low { background: #FBEAE7; color: #8B2B1F; border-left: 3px solid #C0504D; }
+
+  .right-panel { display: flex; flex-direction: column; gap: 18px; }
+  .step { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 24px 26px; border-left: 5px solid #8B6FB0; }
+  .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .step-number { background: #8B6FB0; color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+  .step-title { font-size: 18.5px; font-weight: 700; color: #172940; }
+  .step-body { color: #2c3e50; font-size: 16px; line-height: 1.7; }
+  .step-body p { margin-bottom: 12px; }
+  .step-body p:last-child { margin-bottom: 0; }
+  .step-body strong { color: #172940; }
+
+  .article-excerpt { background: #F8FAFB; border: 1px solid #d8dde2; border-left: 4px solid #172940; border-radius: 6px; padding: 18px 22px; margin: 14px 0; font-family: Georgia, "Times New Roman", serif; color: #2c3e50; font-size: 16.5px; line-height: 1.75; }
+  .article-excerpt .article-meta { font-size: 13px; font-family: Calibri, sans-serif; color: #616467; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .hi-target { background: transparent; transition: background 0.5s ease; padding: 1px 3px; border-radius: 2px; }
+  .hi-target.on-ppv-val { background: #E6DBF0; }
+  .hi-target.on-ppv-ci { background: #F0E6F5; }
+  .hi-target.on-npv-val { background: #C9E4D5; }
+  .hi-target.on-npv-ci { background: #DCEAE0; }
+
+  .reveal-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .reveal-btn { background: white; color: #6B4F92; border: 2px solid #8B6FB0; padding: 10px 18px; border-radius: 7px; font-size: 14.5px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.18s ease; }
+  .reveal-btn:hover { background: #F0E9F5; transform: translateY(-1px); }
+  .reveal-btn.done { background: #6B4F92; color: white; border-color: #6B4F92; cursor: default; }
+  .reveal-btn.done:hover { transform: none; }
+
+  .annot-line { margin-top: 10px; padding: 12px 18px; background: #fff; border-radius: 6px; border-left: 3px solid #FFC857; font-family: Calibri, sans-serif; font-size: 15.5px; color: #172940; display: none; animation: fadeIn 0.4s ease-out; line-height: 1.6; }
+  .annot-line.show { display: block; }
+  .annot-line .a-tag { display: inline-block; font-weight: 700; color: #6B4F92; margin-right: 6px; text-transform: uppercase; font-size: 12.5px; letter-spacing: 1px; }
+  .annot-line .a-tag.npv { color: #1B5E3F; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .concept-wrap { background: linear-gradient(135deg, #172940 0%, #2A1F40 100%); color: white; border-radius: 10px; padding: 22px 24px; margin: 14px 0; }
+  .concept-wrap .concept-title { font-size: 19px; font-weight: 700; color: #FFC857; margin-bottom: 12px; text-align: center; }
+  .concept-wrap .concept-body { font-size: 15.5px; line-height: 1.7; color: #F0F3F5; margin-bottom: 12px; }
+  .concept-wrap .concept-body strong { color: #FFC857; }
+  .concept-wrap .concept-body:last-of-type { margin-bottom: 0; }
+  .concept-wrap ul { padding-left: 22px; margin: 10px 0 14px; line-height: 1.75; color: #F0F3F5; font-size: 15.5px; }
+  .concept-wrap ul li { margin-bottom: 6px; }
+  .concept-wrap ul li strong { color: #B79AD0; }
+  .concept-wrap ul li.npv-item strong { color: #6FCF97; }
+  .concept-reveal-row { text-align: center; margin-top: 14px; }
+  .concept-reveal-msg { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,200,87,0.3); border-radius: 6px; padding: 14px 18px; margin-top: 14px; font-size: 15.5px; line-height: 1.65; display: none; animation: fadeIn 0.4s ease; color: #F0F3F5; }
+  .concept-reveal-msg.show { display: block; }
+  .concept-reveal-msg strong { color: #FFC857; }
+  .concept-reveal-row .reveal-btn { background: rgba(255,255,255,0.12); color: #FFC857; border-color: #FFC857; }
+  .concept-reveal-row .reveal-btn:hover { background: rgba(255,255,255,0.2); }
+  .concept-reveal-row .reveal-btn.done { background: #FFC857; color: #172940; border-color: #FFC857; }
+
+  .calc-box { background: #F8FAFB; border-radius: 10px; border: 1px solid #d8dde2; padding: 20px 22px; margin: 14px 0; text-align: center; font-family: "Cambria Math", Cambria, serif; font-size: 18px; color: #172940; }
+  .calc-box .calc-stat { font-family: Calibri, sans-serif; font-size: 12.5px; text-transform: uppercase; letter-spacing: 1.2px; font-weight: 700; margin-bottom: 4px; }
+  .calc-box .calc-stat.ppv { color: #6B4F92; }
+  .calc-box .calc-stat.npv { color: #1B5E3F; }
+  .calc-box .calc-step { margin: 4px 0; transition: opacity 0.4s ease; }
+  .calc-box .calc-divider { height: 1px; background: #d8dde2; margin: 14px 0; }
+  .calc-box .calc-result { font-weight: 700; font-size: 22px; opacity: 0; transition: opacity 0.6s ease; display: inline-block; }
+  .calc-box .calc-result.ppv { color: #6B4F92; }
+  .calc-box .calc-result.npv { color: #1B5E3F; }
+  .calc-box .calc-result.show { opacity: 1; }
+  .calc-box .calc-action { margin-top: 14px; }
+  .calc-cursor { display: inline-block; width: 10px; color: #6B4F92; animation: blink 1s infinite; }
+  @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+
+  .so-what { background: #FFF8E1; border: 1px solid #F4D77A; border-radius: 8px; padding: 15px 19px; margin-top: 12px; }
+  .so-what .sw-label { color: #8B6914; font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .so-what p { color: #5a4a10; font-size: 16px; line-height: 1.65; margin: 0; }
+  .so-what p strong { color: #172940; }
+
+  .mc-block { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 24px 26px; border-top: 5px solid #8B6FB0; opacity: 0.45; pointer-events: none; transition: opacity 0.4s ease; }
+  .mc-block.unlocked { opacity: 1; pointer-events: auto; }
+  .mc-question { font-size: 17px; font-weight: 700; color: #172940; margin-bottom: 14px; line-height: 1.5; }
+  .mc-question .q-num { color: #6B4F92; margin-right: 6px; }
+  .mc-options { display: flex; flex-direction: column; gap: 10px; }
+  .mc-option { background: #F8FAFB; border: 2px solid #d8dde2; border-radius: 8px; padding: 13px 17px; cursor: pointer; font-size: 16px; color: #2c3e50; text-align: left; transition: all 0.18s ease; font-family: inherit; width: 100%; line-height: 1.6; }
+  .mc-option:hover:not(:disabled) { border-color: #8B6FB0; background: #F0E9F5; }
+  .mc-option:disabled { cursor: default; }
+  .mc-option.selected-correct { background: #E8F4EC; border-color: #2D8B5A; color: #1B5E3F; font-weight: 600; }
+  .mc-option.selected-wrong { background: #FBEAE7; border-color: #C0504D; color: #8B2B1F; }
+  .mc-option.show-correct { background: #E8F4EC; border-color: #2D8B5A; color: #1B5E3F; font-weight: 600; }
+  .mc-option .marker { display: inline-block; font-weight: 700; margin-right: 8px; color: #6B4F92; }
+  .mc-feedback { margin-top: 14px; padding: 15px 17px; border-radius: 8px; font-size: 15.5px; line-height: 1.65; display: none; }
+  .mc-feedback.correct { background: #E8F4EC; border-left: 4px solid #2D8B5A; color: #1B5E3F; display: block; }
+  .mc-feedback.incorrect { background: #FBEAE7; border-left: 4px solid #C0504D; color: #8B2B1F; display: block; }
+  .mc-feedback strong { display: block; margin-bottom: 4px; font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .explore-prompt { background: #FFF8E1; border: 1px solid #F4D77A; border-radius: 8px; padding: 13px 17px; margin-bottom: 14px; font-size: 15.5px; color: #5a4a10; line-height: 1.6; }
+  .explore-prompt strong { color: #172940; }
+  .explore-prompt .e-label { color: #8B6914; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block; }
+
+  .takeaways { background: #172940; color: white; border-radius: 12px; padding: 28px 30px; border-left: 5px solid #8B6FB0; }
+  .takeaways h3 { color: #B79AD0; font-size: 13.5px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; font-weight: 700; }
+  .takeaways h2 { font-size: 23px; color: white; margin-bottom: 18px; font-weight: 700; }
+  .takeaways ul { list-style: none; padding: 0; margin: 0; }
+  .takeaways li { padding: 13px 0 13px 38px; border-bottom: 1px solid rgba(255,255,255,0.12); position: relative; font-size: 16px; line-height: 1.7; color: #F0F3F5; }
+  .takeaways li:last-child { border-bottom: none; }
+  .takeaways li::before { content: "\2713"; position: absolute; left: 0; top: 13px; width: 24px; height: 24px; border-radius: 50%; background: #B79AD0; color: #172940; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 13.5px; }
+  .takeaways li strong { color: white; }
+
+  .nav-bar { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 18px 0 0; margin-top: 8px; }
+  .nav-btn { background: #6B4F92; color: white; border: none; padding: 14px 30px; border-radius: 8px; font-size: 15.5px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s ease; text-decoration: none; display: inline-block; }
+  .nav-btn:hover { background: #5A4180; transform: translateY(-1px); }
+  .nav-btn.secondary { background: white; color: #6B4F92; border: 2px solid #6B4F92; }
+  .nav-btn.secondary:hover { background: #F0E9F5; }
+  .completion-msg { color: #6B4F92; font-size: 14.5px; font-weight: 600; text-align: center; flex-grow: 1; margin: 0 20px; }
+
+  @media (max-width: 1100px) { .container { grid-template-columns: 1fr; } .left-panel { position: relative; top: auto; max-height: none; } }
+  @media (max-width: 600px) { .header { padding: 14px 18px; flex-direction: column; gap: 8px; align-items: flex-start; } .container { padding: 16px; } .live-stats-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <h1>Unit 8: Diagnostic Accuracy Activity</h1>
+    <span class="part-label">Part 6 of 10 &middot; PPV &amp; NPV</span>
+  </div>
+  <div class="progress-pill">Step <strong id="step-counter">1</strong> of 6</div>
+</header>
+
+<main class="container">
+
+  <aside class="left-panel">
+    <h2>From test result to patient meaning</h2>
+    <p class="subtitle">What does this specific test result mean for this specific patient?</p>
+
+    <div class="viz-wrap">
+      <div class="viz-title">Pre-test &rarr; Post-test probability</div>
+      <div class="viz-subtitle">How a test result updates what we believe about the patient</div>
+      <svg class="viz-svg" viewBox="0 0 380 280" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id="clip-pre"><circle cx="70" cy="125" r="50"/></clipPath>
+          <clipPath id="clip-ppv"><circle cx="305" cy="80" r="38"/></clipPath>
+          <clipPath id="clip-npvi"><circle cx="305" cy="200" r="38"/></clipPath>
+          <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L9,3 z" fill="#172940"/>
+          </marker>
+        </defs>
+
+        <!-- Column headers -->
+        <text x="70" y="22" font-size="11" font-weight="700" text-anchor="middle" fill="#172940" font-family="Calibri, sans-serif">PRE-TEST</text>
+        <text x="305" y="22" font-size="11" font-weight="700" text-anchor="middle" fill="#172940" font-family="Calibri, sans-serif">POST-TEST</text>
+
+        <!-- Pre-test circle -->
+        <circle cx="70" cy="125" r="50" fill="#F0F3F5" stroke="#172940" stroke-width="2"/>
+        <rect id="pre-fill" x="20" y="155" width="100" height="20" fill="#FFC857" clip-path="url(#clip-pre)"/>
+        <circle cx="70" cy="125" r="50" fill="none" stroke="#172940" stroke-width="2.5"/>
+        <text id="pre-pct-text" x="70" y="120" font-size="20" font-weight="700" text-anchor="middle" fill="#172940" font-family="Calibri, sans-serif">20%</text>
+        <text x="70" y="135" font-size="9" text-anchor="middle" fill="#172940" font-family="Calibri, sans-serif">prevalence</text>
+        <text x="70" y="195" font-size="11" font-weight="700" text-anchor="middle" fill="#172940" font-family="Calibri, sans-serif">Before the test</text>
+        <text x="70" y="210" font-size="10" font-style="italic" text-anchor="middle" fill="#616467" font-family="Calibri, sans-serif">baseline belief</text>
+
+        <!-- Arrows splitting from pre-test -->
+        <line x1="125" y1="105" x2="255" y2="80" stroke="#6B4F92" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+        <line x1="125" y1="145" x2="255" y2="200" stroke="#1B5E3F" stroke-width="2" stroke-dasharray="4,3" marker-end="url(#arrow)"/>
+
+        <!-- Center label -->
+        <text x="190" y="120" font-size="10" font-style="italic" text-anchor="middle" fill="#616467" font-family="Calibri, sans-serif">test result updates</text>
+        <text x="190" y="132" font-size="10" font-style="italic" text-anchor="middle" fill="#616467" font-family="Calibri, sans-serif">your belief</text>
+
+        <!-- Branch labels -->
+        <text x="180" y="80" font-size="11" font-weight="700" fill="#6B4F92" font-family="Calibri, sans-serif">+ positive</text>
+        <text x="180" y="200" font-size="11" font-weight="700" fill="#1B5E3F" font-family="Calibri, sans-serif">&minus; negative</text>
+
+        <!-- PPV circle (top right) -->
+        <circle cx="305" cy="80" r="38" fill="#F0F3F5" stroke="#6B4F92" stroke-width="2"/>
+        <rect id="ppv-fill" x="267" y="80" width="76" height="38" fill="#8B6FB0" clip-path="url(#clip-ppv)"/>
+        <circle cx="305" cy="80" r="38" fill="none" stroke="#6B4F92" stroke-width="2.5"/>
+        <text id="ppv-pct-text" x="305" y="85" font-size="17" font-weight="700" text-anchor="middle" fill="white" font-family="Calibri, sans-serif" style="paint-order:stroke; stroke:#6B4F92; stroke-width:0.6px;">90%</text>
+        <text x="305" y="135" font-size="11" font-weight="700" text-anchor="middle" fill="#6B4F92" font-family="Calibri, sans-serif">If POSITIVE: real disease</text>
+        <text x="305" y="148" font-size="10" font-style="italic" text-anchor="middle" fill="#6B4F92" font-family="Calibri, sans-serif">PPV</text>
+
+        <!-- NPV-inverse circle (bottom right) -->
+        <circle cx="305" cy="200" r="38" fill="#F0F3F5" stroke="#1B5E3F" stroke-width="2"/>
+        <rect id="npvi-fill" x="267" y="232" width="76" height="6" fill="#E8A7A0" clip-path="url(#clip-npvi)"/>
+        <circle cx="305" cy="200" r="38" fill="none" stroke="#1B5E3F" stroke-width="2.5"/>
+        <text id="npvi-pct-text" x="305" y="205" font-size="17" font-weight="700" text-anchor="middle" fill="#1B5E3F" font-family="Calibri, sans-serif">7%</text>
+        <text x="305" y="255" font-size="11" font-weight="700" text-anchor="middle" fill="#1B5E3F" font-family="Calibri, sans-serif">If NEGATIVE: still has disease</text>
+        <text x="305" y="268" font-size="10" font-style="italic" text-anchor="middle" fill="#1B5E3F" font-family="Calibri, sans-serif">1 &minus; NPV</text>
+      </svg>
+    </div>
+
+    <table class="contingency">
+      <thead>
+        <tr>
+          <th></th>
+          <th>PCR positive</th>
+          <th>PCR negative</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="row-label row-label-pos">Antigen positive</td>
+          <td class="cell-tp row-pos-hl" id="cell-tp">70</td>
+          <td class="cell-fp row-pos-hl" id="cell-fp">8</td>
+          <td class="group-total row-pos-hl" id="row-pos-total">78</td>
+        </tr>
+        <tr>
+          <td class="row-label row-label-neg">Antigen negative</td>
+          <td class="cell-fn row-neg-hl" id="cell-fn">30</td>
+          <td class="cell-tn row-neg-hl" id="cell-tn">392</td>
+          <td class="group-total row-neg-hl" id="row-neg-total">422</td>
+        </tr>
+        <tr>
+          <td class="row-label" style="background:#172940;">Total</td>
+          <td class="group-total" id="dpos-total">100</td>
+          <td class="group-total" id="dneg-total">400</td>
+          <td class="group-total" style="background:#FFC857;color:#172940;">500</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="table-caption"><span class="ppv-key">PPV uses the top row</span> (TP &amp; FP). <span class="npv-key">NPV uses the bottom row</span> (FN &amp; TN). Both are row-based.</p>
+
+    <div class="sliders locked" id="sliders-box">
+      <div class="lock-overlay">&#128274; Unlocks at Step 6</div>
+      <div class="sliders-header">
+        <span class="s-title">Live exploration</span>
+        <button class="reset-btn" onclick="resetSliders()">Reset to 20%</button>
+      </div>
+      <div class="slider-row">
+        <span class="s-label prev">Prevalence</span>
+        <input type="range" id="slider-prev" min="1" max="80" value="20" step="1" oninput="onSliderChange()">
+        <span class="s-value" id="slider-prev-val">20%</span>
+      </div>
+
+      <div class="live-stats">
+        <div class="live-stats-title">Recomputed live</div>
+        <div class="live-stats-grid">
+          <div class="live-stat ppv">
+            <div class="ls-label">PPV</div>
+            <div class="ls-value" id="live-ppv">0.90</div>
+          </div>
+          <div class="live-stat npv">
+            <div class="ls-label">NPV</div>
+            <div class="ls-value" id="live-npv">0.93</div>
+          </div>
+        </div>
+        <div class="live-stats-fixed">
+          <strong>Fixed:</strong> Sn = 0.70, Sp = 0.98 &mdash; the test itself doesn't change
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section-label">Calculated statistics (click in order)</div>
+    <div id="ppv-card" class="stat-card stat-card-ppv locked" onclick="revealPpv()">
+      <div class="label">Positive Predictive Value (PPV)</div>
+      <div class="value" id="ppv-value">? . ? ?</div>
+      <div class="ci" id="ppv-ci">95% CI not yet revealed</div>
+      <div class="hint">&#9656; Click to reveal PPV first</div>
+      <div class="formula" id="ppv-formula">PPV = 70 / (70 + 8) = 70 / 78 = 0.90</div>
+    </div>
+
+    <div id="npv-card" class="stat-card stat-card-npv locked locked-stage2" onclick="revealNpv()">
+      <div class="label">Negative Predictive Value (NPV)</div>
+      <div class="value" id="npv-value">? . ? ?</div>
+      <div class="ci" id="npv-ci">Reveal PPV first</div>
+      <div class="hint">&#9656; Click PPV above first</div>
+      <div class="formula" id="npv-formula">NPV = 392 / (30 + 392) = 392 / 422 = 0.93</div>
+    </div>
+
+    <div class="dual-scale-wrap" id="dual-scale-wrap" style="display:none;">
+      <div class="dual-scale-title">Where PPV and NPV land</div>
+      <div class="dual-scale-outer">
+        <div class="dual-scale">
+          <div class="ds-tick-70"></div>
+          <div class="ds-tick-70-pill">70%</div>
+          <div class="ds-marker ds-marker-ppv" id="ppv-marker-panel" style="left: 90%;">
+            <div class="ds-marker-pill ds-pill-ppv" id="ppv-marker-pill">PPV 0.90</div>
+          </div>
+          <div class="ds-marker ds-marker-npv" id="npv-marker-panel" style="left: 93%;">
+            <div class="ds-marker-pill ds-pill-npv" id="npv-marker-pill">NPV 0.93</div>
+          </div>
+        </div>
+        <div class="ds-axis-labels">
+          <span>0%</span><span>50%</span><span>70%</span><span>100%</span>
+        </div>
+      </div>
+      <div class="ds-readout-bar high" id="ds-readout-bar">
+        Both PPV and NPV above 70% &mdash; strong patient meaning at this prevalence.
+      </div>
+    </div>
+
+  </aside>
+
+  <section class="right-panel">
+
+    <div class="step" style="border-left-color:#FFC857; background: linear-gradient(135deg, #172940 0%, #2A1F40 100%);">
+      <div class="step-header">
+        <div class="step-number" style="background:#FFC857; color:#172940;">&#9733;</div>
+        <div class="step-title" style="color: white;">Orientation</div>
+      </div>
+      <div class="step-body" style="color: #F0F3F5;">
+        <p><strong style="color:#B79AD0;">PPV and NPV</strong> answer <em>the patient's question</em>. Sensitivity and specificity describe the test in the abstract, but a patient who's just received a result wants to know one thing: <em>"is my result right?"</em></p>
+        <div style="background: rgba(183,154,208,0.15); border-left: 3px solid #B79AD0; padding: 14px 18px; border-radius: 6px; margin: 14px 0; font-size: 16px;">
+          <strong style="color:#B79AD0;">Sn and Sp tell you about the test. PPV and NPV tell you what a specific result means for a specific patient.</strong> They translate the test's column-based behavior (Sn, Sp) into the row-based, patient-relevant probabilities clinicians and patients actually need. <strong style="color:#FFC857;">That's the patient's question &mdash; finally answered.</strong>
+        </div>
+        <p>The article reports PPV = 0.90 and NPV = 0.93 &mdash; both well above the 70% threshold for the population studied. The catch you'll learn here: those numbers shift with prevalence, so they don't always travel cleanly from one clinical setting to another.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">1</div>
+        <div class="step-title">Find the four pieces in the article</div>
+      </div>
+      <div class="step-body">
+        <p>The article reports both stats with their CIs in one stretch of prose. Click each button to spotlight one piece and read what it means for the patient.</p>
+        <div class="article-excerpt">
+          <div class="article-meta">From the Results section</div>
+          Among patients testing positive, the test correctly identified disease in 70 of 78 (<span class="hi-target" id="hi-1">PPV = 0.90</span>, <span class="hi-target" id="hi-2">95% CI [0.81, 0.95]</span>). Among patients testing negative, the test correctly cleared disease in 392 of 422 (<span class="hi-target" id="hi-3">NPV = 0.93</span>, <span class="hi-target" id="hi-4">95% CI [0.90, 0.95]</span>).
+        </div>
+        <div class="reveal-row">
+          <button class="reveal-btn" id="hi-btn-1" onclick="highlight(1)">&#9312; Spotlight PPV value</button>
+          <button class="reveal-btn" id="hi-btn-2" onclick="highlight(2)">&#9313; Spotlight PPV CI</button>
+          <button class="reveal-btn" id="hi-btn-3" onclick="highlight(3)">&#9314; Spotlight NPV value</button>
+          <button class="reveal-btn" id="hi-btn-4" onclick="highlight(4)">&#9315; Spotlight NPV CI</button>
+        </div>
+        <div class="annot-line" id="annot-1"><span class="a-tag">PPV = 0.90</span>Of every 10 patients who tested positive in this study, about 9 actually had COVID. That's the answer to "is my positive result real?" &mdash; one of the two questions every patient asks after a test.</div>
+        <div class="annot-line" id="annot-2"><span class="a-tag">PPV CI [0.81, 0.95]</span>This is wider than Sp's CI [0.96, 0.99] because PPV's denominator (the 78 positive tests) is much smaller than Sp's denominator (400 disease-free patients). Smaller subgroup, more uncertainty about the true PPV. Plausibly anywhere from 0.81 to 0.95.</div>
+        <div class="annot-line" id="annot-3" style="border-left-color:#1B5E3F;"><span class="a-tag npv">NPV = 0.93</span>Of every 100 patients who tested negative in this study, about 93 truly didn't have COVID; about 7 had a false negative. That's the answer to "is my negative result real?" &mdash; the other question every patient asks.</div>
+        <div class="annot-line" id="annot-4" style="border-left-color:#1B5E3F;"><span class="a-tag npv">NPV CI [0.90, 0.95]</span>Tighter than PPV's because the "tested negative" subgroup is much larger (422 patients vs. 78 positives). Larger denominator, more precise estimate &mdash; the true NPV is plausibly between 0.90 and 0.95.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">2</div>
+        <div class="step-title">The patient's question &mdash; finally answered</div>
+      </div>
+      <div class="step-body">
+        <p>Look at the 2 &times; 2 table on the left panel. It hasn't changed since Part 5 &mdash; same TP, FP, FN, TN. What changes is which slice of the table you read.</p>
+        <ul style="padding-left: 22px; margin: 10px 0 14px; line-height: 1.7;">
+          <li><strong>Sn</strong> answers "of all the truly diseased patients, how many does the test catch?" &mdash; uses the <strong>disease+ column</strong>.</li>
+          <li><strong>Sp</strong> answers "of all the truly disease-free patients, how many does the test correctly clear?" &mdash; uses the <strong>disease&minus; column</strong>.</li>
+          <li><strong>But a patient asks something different:</strong> "I just got my result. Is it right?"</li>
+          <li>That question is answered by <strong>PPV</strong> (if the result was positive) or <strong>NPV</strong> (if the result was negative).</li>
+          <li>PPV and NPV depend on the cells in the <strong>row</strong> of the patient's result &mdash; <em>and</em> on prevalence, because the row totals depend on prevalence.</li>
+        </ul>
+
+        <div class="concept-wrap">
+          <div class="concept-title">Columns vs. Rows</div>
+          <p class="concept-body">Sn and Sp live in the <strong>columns</strong> of the 2 &times; 2 (truth columns). PPV and NPV live in the <strong>rows</strong> (test-result rows). On the left panel, the antigen-positive row is outlined in <strong style="color:#B79AD0;">purple (PPV)</strong>; the antigen-negative row is outlined in <strong style="color:#6FCF97;">green (NPV)</strong>.</p>
+          <div class="concept-reveal-row">
+            <button class="reveal-btn" id="concept-btn" onclick="revealConcept()">&#9656; Why does that matter?</button>
+          </div>
+          <div class="concept-reveal-msg" id="concept-msg">
+            Same 2 &times; 2 table. <strong>Sn and Sp use the columns. PPV and NPV use the rows.</strong> That's why they behave differently when prevalence changes &mdash; column proportions stay locked (Sn and Sp don't move), but row totals shift, which changes PPV and NPV. <strong>For example, the article's PPV = 0.90 only holds at the studied prevalence of 0.20</strong> &mdash; you'll see it crater at low prevalence and climb at high prevalence in Q4 and Q5.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">3</div>
+        <div class="step-title">Compute both, then click the cards in order</div>
+      </div>
+      <div class="step-body">
+        <p>Both formulas come straight from the rows of the 2 &times; 2. PPV uses the top (test-positive) row; NPV uses the bottom (test-negative) row.</p>
+
+        <div class="calc-box">
+          <div class="calc-stat ppv">PPV &mdash; top row</div>
+          <div class="calc-step">PPV = TP / (TP + FP)</div>
+          <div class="calc-step" style="margin-top:6px;">PPV = 70 / (70 + 8) = 70 / 78 = <span class="calc-result ppv" id="calc-result-ppv">0.897 &asymp; 0.90</span></div>
+          <div class="calc-divider"></div>
+          <div class="calc-stat npv">NPV &mdash; bottom row</div>
+          <div class="calc-step">NPV = TN / (FN + TN)</div>
+          <div class="calc-step" style="margin-top:6px;">NPV = 392 / (30 + 392) = 392 / 422 = <span class="calc-result npv" id="calc-result-npv">0.929 &asymp; 0.93</span><span class="calc-cursor" id="calc-cursor">|</span></div>
+          <div class="calc-action">
+            <button class="reveal-btn" id="calc-btn" onclick="showCalcResult()">&#9656; Show me both answers</button>
+          </div>
+        </div>
+
+        <p>Now <strong>click the dashed PPV card on the left first</strong> to confirm the PPV value and see its 95% CI. <strong>Then click the NPV card</strong> to do the same for NPV. After both are revealed, the dual-marker scale will appear below them.</p>
+
+        <div style="margin-top: 14px; text-align: center;">
+          <button class="reveal-btn" id="sowhat-btn" onclick="revealSoWhat()">&#9733; Reveal: So what do PPV = 0.90 and NPV = 0.93 mean?</button>
+        </div>
+        <div class="so-what" id="sowhat-box" style="display:none;">
+          <div class="sw-label">&#9733; So what do PPV = 0.90 and NPV = 0.93 mean?</div>
+          <p>For the patient population studied: <strong>about 9 of every 10 positive antigen tests are real COVID, and about 93 of every 100 negative tests truly don't have COVID.</strong> That's a strong test for translating results into patient-relevant probabilities &mdash; both above the 70% threshold. The catch is that these numbers depend on this study's prevalence (0.20). In a different setting (rare disease, busy outbreak ward), the same test would produce different PPV and NPV. The slider below lets you see exactly how that works.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">4</div>
+        <div class="step-title">Four rules for reading PPV and NPV in any paper</div>
+      </div>
+      <div class="step-body">
+        <p>PPV and NPV appear on most diagnostic accuracy papers, often right next to Sn and Sp. These four rules carry through whatever test you're reading about:</p>
+        <p style="padding-left: 14px;">
+          &bull; <strong>PPV = TP / (TP + FP). NPV = TN / (FN + TN).</strong> PPV uses the test-positive row; NPV uses the test-negative row. Both are row-based.<br>
+          &bull; <strong>PPV and NPV translate test results into patient-relevant probabilities.</strong> They answer "given my result, what's the chance it's right?" &mdash; the question Sn and Sp can't answer directly.<br>
+          &bull; <strong>PPV and NPV depend on prevalence.</strong> Sn and Sp don't. That's the most important difference between the two pairs of statistics.<br>
+          &bull; <strong>A study's PPV and NPV apply directly only when your population's prevalence matches the study's.</strong> If it doesn't, recompute or generalize cautiously &mdash; the same test will give you different patient-meaning numbers.
+        </p>
+        <div style="margin-top: 14px; text-align: center;">
+          <button class="reveal-btn" id="habit-btn" onclick="revealHabit()">&#9656; Reveal the most important habit</button>
+        </div>
+        <div class="annot-line" id="habit-msg" style="border-left-color:#8B6FB0;">
+          <span class="a-tag">The most important habit</span>Whenever you see a study's PPV or NPV, <strong>ask "what was the prevalence in the study, and does my clinical setting look like that?"</strong> If yes, the numbers transfer. If no, the same test will produce a different PPV and NPV in your population &mdash; sometimes dramatically different.
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-6">
+      <div class="step-header">
+        <div class="step-number">5</div>
+        <div class="step-title">Now explore &mdash; drag the prevalence slider</div>
+      </div>
+      <div class="step-body">
+        <p>After you click both stat cards in Step 3 and answer Q3 below, <strong>the prevalence slider on the left panel will unlock</strong>. As you drag it, the 2 &times; 2 cells will recalculate, the post-test probability circles will update, and the live PPV and NPV will shift. Sn and Sp won't move &mdash; we're not changing the test itself, only how common the disease is in the population.</p>
+        <p>Use the slider to answer Q4&ndash;Q6 below. The <strong>Reset</strong> button returns to the article's prevalence of 20% whenever you want.</p>
+      </div>
+    </div>
+
+    <div id="mc1-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q1.</span> A patient just tested positive on the antigen test and asks: "What's the chance I really have COVID?" Given PPV = 0.90, what's the cleanest answer?</div>
+      <div class="mc-options" id="mc1-options">
+        <button class="mc-option" onclick="answerMC(1, 'a', false)"><span class="marker">A.</span> "Specificity is 0.98, so your positive is 98% likely to be correct."</button>
+        <button class="mc-option" onclick="answerMC(1, 'b', true)"><span class="marker">B.</span> "About 9 of every 10 patients in this study who tested positive really had COVID, so your positive is very likely real."</button>
+        <button class="mc-option" onclick="answerMC(1, 'c', false)"><span class="marker">C.</span> "Accuracy is 0.92, so there's about a 92% chance your positive result is right."</button>
+        <button class="mc-option" onclick="answerMC(1, 'd', false)"><span class="marker">D.</span> "Sensitivity is 0.70, so there's about a 70% chance your positive is real."</button>
+      </div>
+      <div class="mc-feedback" id="mc1-feedback"></div>
+    </div>
+
+    <div id="mc2-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q2.</span> The article reports PPV = 0.90 with 95% CI [0.81, 0.95]. Which interpretation is correct?</div>
+      <div class="mc-options" id="mc2-options">
+        <button class="mc-option" onclick="answerMC(2, 'a', true)"><span class="marker">A.</span> The 95% CI gives the plausible range for the true PPV; it's wider than Sp's CI because PPV's denominator (78) is much smaller.</button>
+        <button class="mc-option" onclick="answerMC(2, 'b', false)"><span class="marker">B.</span> 95% of positive patients had a personal PPV between 0.81 and 0.95.</button>
+        <button class="mc-option" onclick="answerMC(2, 'c', false)"><span class="marker">C.</span> Between 81% and 95% of all patients in the study tested positive.</button>
+        <button class="mc-option" onclick="answerMC(2, 'd', false)"><span class="marker">D.</span> A wider CI means the test itself is unreliable in this clinical setting.</button>
+      </div>
+      <div class="mc-feedback" id="mc2-feedback"></div>
+    </div>
+
+    <div id="mc3-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q3.</span> Which statement about PPV and NPV is true?</div>
+      <div class="mc-options" id="mc3-options">
+        <button class="mc-option" onclick="answerMC(3, 'a', false)"><span class="marker">A.</span> PPV and NPV are calculated from the disease+ and disease&minus; columns of the 2 &times; 2.</button>
+        <button class="mc-option" onclick="answerMC(3, 'b', false)"><span class="marker">B.</span> PPV equals sensitivity exactly when prevalence reaches 50% in any population.</button>
+        <button class="mc-option" onclick="answerMC(3, 'c', false)"><span class="marker">C.</span> NPV is always equal to 1 &minus; PPV in any 2 &times; 2 contingency table.</button>
+        <button class="mc-option" onclick="answerMC(3, 'd', true)"><span class="marker">D.</span> PPV and NPV are derived from the rows of the 2 &times; 2 and depend on prevalence, so they only apply directly when the patient population matches the studied one.</button>
+      </div>
+      <div class="mc-feedback" id="mc3-feedback"></div>
+    </div>
+
+    <div id="mc4-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q4.</span> Use the slider to explore what happens to PPV when the disease becomes rare.</div>
+      <div class="explore-prompt">
+        <span class="e-label">&#9656; Try this on the left panel</span>
+        Drag the <strong>prevalence slider down to 1%</strong>. Watch the post-test PPV circle and the live PPV readout fall sharply. <strong>What happened to PPV, and what does it mean for ruling in disease?</strong>
+      </div>
+      <div class="mc-options" id="mc4-options">
+        <button class="mc-option" onclick="answerMC(4, 'a', false)"><span class="marker">A.</span> PPV stayed at 0.90 because Sp = 0.98 hasn't changed.</button>
+        <button class="mc-option" onclick="answerMC(4, 'b', false)"><span class="marker">B.</span> PPV climbed because the disease is now rarer in the population.</button>
+        <button class="mc-option" onclick="answerMC(4, 'c', true)"><span class="marker">C.</span> PPV crashed to about 0.29 &mdash; now most positive results are wrong, even though Sp = 0.98 hasn't moved.</button>
+        <button class="mc-option" onclick="answerMC(4, 'd', false)"><span class="marker">D.</span> PPV became negative because there were too few true positives left.</button>
+      </div>
+      <div class="mc-feedback" id="mc4-feedback"></div>
+    </div>
+
+    <div id="mc5-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q5.</span> Now slide prevalence the other way &mdash; up to 50%.</div>
+      <div class="explore-prompt">
+        <span class="e-label">&#9656; Try this on the left panel</span>
+        Click <strong>Reset</strong>, then drag the <strong>prevalence slider up to 50%</strong>. <strong>What happened to PPV and NPV, and what does the trade-off mean clinically?</strong>
+      </div>
+      <div class="mc-options" id="mc5-options">
+        <button class="mc-option" onclick="answerMC(5, 'a', false)"><span class="marker">A.</span> Both PPV and NPV climbed because the test became more accurate.</button>
+        <button class="mc-option" onclick="answerMC(5, 'b', true)"><span class="marker">B.</span> PPV climbed to about 0.97 while NPV dropped to about 0.77 &mdash; positives are nearly certain, but negatives now carry more residual risk.</button>
+        <button class="mc-option" onclick="answerMC(5, 'c', false)"><span class="marker">C.</span> PPV and NPV stayed about the same because Sn and Sp didn't move.</button>
+        <button class="mc-option" onclick="answerMC(5, 'd', false)"><span class="marker">D.</span> NPV climbed and PPV dropped &mdash; the inverse of what the article reports.</button>
+      </div>
+      <div class="mc-feedback" id="mc5-feedback"></div>
+    </div>
+
+    <div id="mc6-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q6.</span> The conceptual punchline &mdash; what's the right way to use PPV and NPV from a paper?</div>
+      <div class="explore-prompt">
+        <span class="e-label">&#9656; Try this on the left panel</span>
+        Slide prevalence between 1%, 20%, and 50%, watching how PPV and NPV move while Sn and Sp stay fixed. <strong>What's the clearest takeaway for your own clinical reasoning?</strong>
+      </div>
+      <div class="mc-options" id="mc6-options">
+        <button class="mc-option" onclick="answerMC(6, 'a', false)"><span class="marker">A.</span> A study's PPV and NPV apply directly to any clinic, regardless of how common the disease is locally.</button>
+        <button class="mc-option" onclick="answerMC(6, 'b', false)"><span class="marker">B.</span> Sn and Sp depend on prevalence in exactly the same way PPV and NPV do, so all four numbers shift together.</button>
+        <button class="mc-option" onclick="answerMC(6, 'c', false)"><span class="marker">C.</span> PPV is always more clinically useful than NPV because positive results are what drive treatment decisions.</button>
+        <button class="mc-option" onclick="answerMC(6, 'd', true)"><span class="marker">D.</span> PPV and NPV are population-specific &mdash; quote them only when your patient population's prevalence resembles the study's, otherwise recompute or generalize cautiously.</button>
+      </div>
+      <div class="mc-feedback" id="mc6-feedback"></div>
+    </div>
+
+    <div class="takeaways" id="takeaways" style="display:none;">
+      <h3>Big takeaways</h3>
+      <h2>What PPV and NPV will tell you in any paper</h2>
+      <ul>
+        <li><strong>PPV = TP / (TP + FP).</strong> Among patients who test positive, the fraction who actually have the disease. The test-positive row only.</li>
+        <li><strong>NPV = TN / (FN + TN).</strong> Among patients who test negative, the fraction who actually don't have the disease. The test-negative row only.</li>
+        <li><strong>Both answer the patient's actual question:</strong> "given my result, what's the chance it's right?" Sn and Sp can't answer that directly &mdash; PPV and NPV do.</li>
+        <li><strong>Both depend on prevalence.</strong> Same test, different population, different PPV and NPV. Sn and Sp stay locked while PPV and NPV move.</li>
+        <li><strong>Don't quote a study's PPV or NPV to your patient unless your clinical setting matches theirs in prevalence.</strong> When it doesn't, recompute from the 2 &times; 2 or generalize cautiously.</li>
+      </ul>
+    </div>
+
+    <div class="nav-bar">
+      <a href="part5.html" class="nav-btn secondary">&larr; Back to Part 5</a>
+      <span class="completion-msg" id="completion-msg"></span>
+      <a href="part7.html" class="nav-btn" id="next-btn" style="pointer-events:none; opacity:0.5;">Continue to Part 7 &rarr;</a>
+    </div>
+
+  </section>
+</main>
+
+<script>
+  var SN = 0.70;
+  var SP = 0.98;
+  var TOTAL = 500;
+  var ORIG = { tp: 70, fn: 30, fp: 8, tn: 392, dpos: 100, dneg: 400, total: 500, prev: 20 };
+
+  var state = {
+    ppvRevealed: false,
+    npvRevealed: false,
+    calcShown: false,
+    conceptRevealed: false,
+    answered: { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false },
+    correct:  { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false },
+    highlighted: { 1: false, 2: false, 3: false, 4: false }
+  };
+
+  function highlight(n) {
+    state.highlighted[n] = true;
+    var clsMap = { 1: 'on-ppv-val', 2: 'on-ppv-ci', 3: 'on-npv-val', 4: 'on-npv-ci' };
+    document.getElementById('hi-' + n).classList.add(clsMap[n]);
+    document.getElementById('annot-' + n).classList.add('show');
+    var btn = document.getElementById('hi-btn-' + n);
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '✓ Revealed';
+    updateStepCounter();
+  }
+
+  function revealConcept() {
+    if (state.conceptRevealed) return;
+    state.conceptRevealed = true;
+    var btn = document.getElementById('concept-btn');
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '✓ Revealed';
+    document.getElementById('concept-msg').classList.add('show');
+    updateStepCounter();
+  }
+
+  function revealSoWhat() {
+    var btn = document.getElementById('sowhat-btn');
+    if (btn.classList.contains('done')) return;
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '✓ Revealed';
+    var box = document.getElementById('sowhat-box');
+    box.style.display = 'block';
+    box.style.animation = 'fadeIn 0.4s ease-out';
+  }
+
+  function revealHabit() {
+    var btn = document.getElementById('habit-btn');
+    if (btn.classList.contains('done')) return;
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '✓ Revealed';
+    document.getElementById('habit-msg').classList.add('show');
+  }
+
+  function showCalcResult() {
+    if (state.calcShown) return;
+    state.calcShown = true;
+    document.getElementById('calc-result-ppv').classList.add('show');
+    document.getElementById('calc-result-npv').classList.add('show');
+    document.getElementById('calc-cursor').style.display = 'none';
+    var btn = document.getElementById('calc-btn');
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '✓ Shown';
+    updateStepCounter();
+  }
+
+  function revealPpv() {
+    if (state.ppvRevealed) return;
+    state.ppvRevealed = true;
+    var card = document.getElementById('ppv-card');
+    card.classList.remove('locked');
+    card.classList.add('revealed');
+    document.getElementById('ppv-value').textContent = '0.90';
+    document.getElementById('ppv-ci').textContent = '95% CI [0.81, 0.95]';
+
+    // Unlock NPV card stage 2
+    var npvCard = document.getElementById('npv-card');
+    npvCard.classList.remove('locked-stage2');
+    document.getElementById('npv-ci').textContent = '95% CI not yet revealed';
+    document.querySelector('#npv-card .hint').innerHTML = '▸ Now click to reveal NPV';
+
+    updateStepCounter();
+    if (state.npvRevealed) showDualScale();
+  }
+
+  function revealNpv() {
+    if (!state.ppvRevealed) return; // must reveal PPV first
+    if (state.npvRevealed) return;
+    state.npvRevealed = true;
+    var card = document.getElementById('npv-card');
+    card.classList.remove('locked');
+    card.classList.add('revealed');
+    document.getElementById('npv-value').textContent = '0.93';
+    document.getElementById('npv-ci').textContent = '95% CI [0.90, 0.95]';
+
+    showDualScale();
+    updateStepCounter();
+    unlockMC(1);
+  }
+
+  function showDualScale() {
+    document.getElementById('dual-scale-wrap').style.display = 'block';
+    updateDualScale(0.90, 0.93);
+  }
+
+  function unlockSliders() {
+    document.getElementById('sliders-box').classList.remove('locked');
+  }
+
+  function onSliderChange() {
+    var prevPct = parseInt(document.getElementById('slider-prev').value, 10);
+    var prev = prevPct / 100;
+    document.getElementById('slider-prev-val').textContent = prevPct + '%';
+
+    var dpos = Math.round(TOTAL * prev);
+    var dneg = TOTAL - dpos;
+    var tp = Math.round(dpos * SN);
+    var fn = dpos - tp;
+    var fp = Math.round(dneg * (1 - SP));
+    var tn = dneg - fp;
+
+    // Update 2x2 cells
+    document.getElementById('cell-tp').textContent = tp;
+    document.getElementById('cell-fn').textContent = fn;
+    document.getElementById('cell-fp').textContent = fp;
+    document.getElementById('cell-tn').textContent = tn;
+    document.getElementById('row-pos-total').textContent = tp + fp;
+    document.getElementById('row-neg-total').textContent = fn + tn;
+    document.getElementById('dpos-total').textContent = dpos;
+    document.getElementById('dneg-total').textContent = dneg;
+
+    // Compute PPV / NPV
+    var ppv = (tp + fp) > 0 ? tp / (tp + fp) : 0;
+    var npv = (fn + tn) > 0 ? tn / (fn + tn) : 0;
+
+    document.getElementById('live-ppv').textContent = ppv.toFixed(2);
+    document.getElementById('live-npv').textContent = npv.toFixed(2);
+
+    // Update card values (always live-update once revealed)
+    if (state.ppvRevealed) {
+      document.getElementById('ppv-value').textContent = ppv.toFixed(2);
+      document.getElementById('ppv-formula').textContent = 'PPV = ' + tp + ' / (' + tp + ' + ' + fp + ') = ' + ppv.toFixed(2);
+    }
+    if (state.npvRevealed) {
+      document.getElementById('npv-value').textContent = npv.toFixed(2);
+      document.getElementById('npv-formula').textContent = 'NPV = ' + tn + ' / (' + fn + ' + ' + tn + ') = ' + npv.toFixed(2);
+    }
+
+    // CI swap
+    if (prevPct === ORIG.prev) {
+      document.getElementById('ppv-ci').textContent = '95% CI [0.81, 0.95]';
+      document.getElementById('npv-ci').textContent = '95% CI [0.90, 0.95]';
+    } else {
+      document.getElementById('ppv-ci').textContent = '(exploration mode — CI applies to article values)';
+      document.getElementById('npv-ci').textContent = '(exploration mode — CI applies to article values)';
+    }
+
+    // Update SVG circles (locked sizes — only fill rect changes)
+    updateCircleFill('pre-fill', 70, 125, 50, prev);
+    updateCircleFill('ppv-fill', 305, 80, 38, ppv);
+    updateCircleFill('npvi-fill', 305, 200, 38, 1 - npv);
+    document.getElementById('pre-pct-text').textContent = prevPct + '%';
+    document.getElementById('ppv-pct-text').textContent = Math.round(ppv * 100) + '%';
+    document.getElementById('npvi-pct-text').textContent = Math.round((1 - npv) * 100) + '%';
+
+    if (state.ppvRevealed && state.npvRevealed) updateDualScale(ppv, npv);
+  }
+
+  function updateCircleFill(rectId, cx, cy, r, pct) {
+    if (pct < 0) pct = 0;
+    if (pct > 1) pct = 1;
+    var top = cy - r;
+    var bottom = cy + r;
+    var fillH = (bottom - top) * pct;
+    var fillY = bottom - fillH;
+    var rect = document.getElementById(rectId);
+    if (!rect) return;
+    rect.setAttribute('y', fillY);
+    rect.setAttribute('height', fillH);
+  }
+
+  function updateDualScale(ppv, npv) {
+    var ppvPct = ppv * 100;
+    var npvPct = npv * 100;
+    if (ppvPct < 0) ppvPct = 0; if (ppvPct > 100) ppvPct = 100;
+    if (npvPct < 0) npvPct = 0; if (npvPct > 100) npvPct = 100;
+    document.getElementById('ppv-marker-panel').style.left = ppvPct + '%';
+    document.getElementById('ppv-marker-pill').textContent = 'PPV ' + ppv.toFixed(2);
+    document.getElementById('npv-marker-panel').style.left = npvPct + '%';
+    document.getElementById('npv-marker-pill').textContent = 'NPV ' + npv.toFixed(2);
+
+    var bar = document.getElementById('ds-readout-bar');
+    bar.classList.remove('high', 'mixed', 'low');
+    if (ppv >= 0.70 && npv >= 0.70) {
+      bar.classList.add('high');
+      bar.innerHTML = 'Both PPV and NPV above 70% &mdash; strong patient meaning at this prevalence.';
+    } else if (ppv >= 0.70 || npv >= 0.70) {
+      bar.classList.add('mixed');
+      bar.innerHTML = 'One of PPV / NPV is above 70%, the other is not &mdash; trustworthy in one direction only.';
+    } else {
+      bar.classList.add('low');
+      bar.innerHTML = 'Both below 70% &mdash; results carry too much uncertainty for confident clinical use.';
+    }
+  }
+
+  function resetSliders() {
+    document.getElementById('slider-prev').value = ORIG.prev;
+    onSliderChange();
+  }
+
+  var feedbackText = {
+    1: {
+      correct: "<strong>Correct.</strong> That's the patient-friendly translation of PPV. PPV = 0.90 means that, in the population the article studied, about 9 of every 10 positive antigen tests turned out to be real COVID. So a positive result here is very likely correct &mdash; though confirmatory PCR may still be useful before treatment decisions, the patient already has strong evidence.",
+      a: "<strong>Not quite.</strong> Specificity tells us how the test performs on healthy people, not how often a positive result is real. Sp = 0.98 only means the test rarely flags a healthy person; it doesn't directly say what fraction of positive tests are correct. Those two numbers can differ depending on how common the disease is in the population. <strong>The correct answer is B.</strong> PPV = 0.90 means that, in the population the article studied, about 9 of every 10 positive antigen tests turned out to be real COVID. So a positive result here is very likely correct &mdash; though confirmatory PCR may still be useful before treatment decisions, the patient already has strong evidence.",
+      c: "<strong>Not quite.</strong> Accuracy is an overall, whole-population number that mixes positives and negatives together. It doesn't directly answer the question \"given that I tested positive, what's my chance the result is right?\" That specific question is what PPV is for. <strong>The correct answer is B.</strong> PPV = 0.90 means that, in the population the article studied, about 9 of every 10 positive antigen tests turned out to be real COVID. So a positive result here is very likely correct &mdash; though confirmatory PCR may still be useful before treatment decisions, the patient already has strong evidence.",
+      d: "<strong>Not quite.</strong> Sensitivity is about disease+ patients, not positive tests. Sn = 0.70 means the test catches 70 of every 100 truly infected people; it doesn't say what fraction of positive tests are right. The patient's question is about positive tests specifically, which is the PPV. <strong>The correct answer is B.</strong> PPV = 0.90 means that, in the population the article studied, about 9 of every 10 positive antigen tests turned out to be real COVID. So a positive result here is very likely correct &mdash; though confirmatory PCR may still be useful before treatment decisions, the patient already has strong evidence."
+    },
+    2: {
+      correct: "<strong>Correct.</strong> A 95% CI describes the range of plausible values for the population PPV &mdash; here, the true PPV is plausibly between 0.81 and 0.95. The CI is wider than for Sp [0.96, 0.99] because PPV's denominator is the 78 patients who tested positive, while Sp's denominator is the 400 disease-free patients. Smaller subgroup, more uncertainty. NPV's denominator (422 negative tests) is much larger, which is why NPV's CI [0.90, 0.95] is tighter.",
+      b: "<strong>Not quite.</strong> A confidence interval doesn't describe a range across patients. Each individual patient is either correctly classified by the test or not; they don't have personal PPV values. The CI tells us how confident we are in the test's PPV for the population as a whole. <strong>The correct answer is A.</strong> A 95% CI describes the range of plausible values for the population PPV &mdash; here, the true PPV is plausibly between 0.81 and 0.95. The CI is wider than for Sp because PPV's denominator (78 positives) is much smaller than Sp's (400). Smaller subgroup, more uncertainty.",
+      c: "<strong>Not quite.</strong> The CI describes uncertainty in the PPV value, not how often patients tested positive. The fraction of patients testing positive is a separate descriptive number (78 of 500 in this study). The CI tells us where the true PPV plausibly falls, not who tested positive. <strong>The correct answer is A.</strong> A 95% CI describes the range of plausible values for the population PPV &mdash; here, the true PPV is plausibly between 0.81 and 0.95. The CI is wider than for Sp because PPV's denominator (78 positives) is much smaller than Sp's (400). Smaller subgroup, more uncertainty.",
+      d: "<strong>Not quite.</strong> A wider CI doesn't mean the test is unreliable. It means the estimate of the true PPV is less precise, usually because the relevant subgroup (here, the 78 people who tested positive) is small. The test itself is the same; we just have less data to pin down its PPV exactly. <strong>The correct answer is A.</strong> A 95% CI describes the range of plausible values for the population PPV &mdash; here, the true PPV is plausibly between 0.81 and 0.95. The CI is wider than for Sp because PPV's denominator (78 positives) is much smaller than Sp's (400). Smaller subgroup, more uncertainty."
+    },
+    3: {
+      correct: "<strong>Correct.</strong> This is the central conceptual difference between (Sn, Sp) and (PPV, NPV). PPV uses the test-positive row of the 2 &times; 2; NPV uses the test-negative row. Because rows mix disease+ and disease&minus; patients in proportions that depend on prevalence, the resulting PPV and NPV depend on prevalence too. That's also why a study's PPV and NPV only translate cleanly to your clinic when your patient population's prevalence resembles the study's.",
+      a: "<strong>Not quite.</strong> Columns are where Sn and Sp live. Sn uses just the disease+ column; Sp uses just the disease&minus; column. PPV and NPV instead use the rows of the 2 &times; 2 &mdash; the test-positive row for PPV and the test-negative row for NPV. That's why the two pairs of statistics behave so differently when prevalence changes. <strong>The correct answer is D.</strong> PPV and NPV are derived from the rows of the 2 &times; 2 and depend on prevalence, so they only apply directly when the patient population matches the studied one.",
+      b: "<strong>Not quite.</strong> PPV and Sn are mathematically different statistics with different denominators. PPV uses the test-positive row (TP + FP); Sn uses the disease+ column (TP + FN). They don't become equal at any specific prevalence, regardless of the population. <strong>The correct answer is D.</strong> PPV and NPV are derived from the rows of the 2 &times; 2 and depend on prevalence, so they only apply directly when the patient population matches the studied one.",
+      c: "<strong>Not quite.</strong> PPV and NPV are not simple inverses of each other. They use different rows of the 2 &times; 2, and their values can both be high (as in this article: 0.90 and 0.93), both low, or split &mdash; one high and one low &mdash; depending on prevalence. The test-positive row and the test-negative row are independent slices of the table. <strong>The correct answer is D.</strong> PPV and NPV are derived from the rows of the 2 &times; 2 and depend on prevalence, so they only apply directly when the patient population matches the studied one."
+    },
+    4: {
+      correct: "<strong>Correct.</strong> At 1% prevalence the math collapses: about 5 patients out of 500 truly have COVID, so Sn = 0.70 catches roughly 4 of them. Meanwhile Sp = 0.98 still produces about 10 false positives among the 495 disease-free patients. PPV = 4 / (4 + 10) &asymp; 0.29. <strong>Now most positive results are wrong</strong>, even though Sp = 0.98 is unchanged &mdash; that's the prevalence-dependence of PPV in action.",
+      a: "<strong>Not quite.</strong> Sp staying constant is exactly the point &mdash; Sn and Sp don't move with prevalence. But PPV does. PPV combines disease+ patients (now very rare) with the test's false-positive rate, and when the disease becomes rare, false positives swamp the few true positives. PPV plummets even though the test itself hasn't changed. <strong>The correct answer is C.</strong> At 1% prevalence, PPV crashes to about 0.29 &mdash; now most positive results are wrong, even though Sp = 0.98 hasn't moved.",
+      b: "<strong>Not quite.</strong> When the disease becomes rare, the few positive results that come back are more likely to be false alarms (because there are so few true positives left in the population). So PPV falls, not rises. The same test that's strong at 20% prevalence becomes much less trustworthy at 1%. <strong>The correct answer is C.</strong> At 1% prevalence, PPV crashes to about 0.29 &mdash; now most positive results are wrong, even though Sp = 0.98 hasn't moved.",
+      d: "<strong>Not quite.</strong> PPV is bounded between 0 and 1, like any proportion. It can't go negative; the lowest possible value is 0, which would mean no positive result is ever real. At 1% prevalence the value is around 0.29 &mdash; low but still positive. <strong>The correct answer is C.</strong> At 1% prevalence, PPV crashes to about 0.29 &mdash; now most positive results are wrong, even though Sp = 0.98 hasn't moved."
+    },
+    5: {
+      correct: "<strong>Correct.</strong> At 50% prevalence, the disease is much more common, so a positive result is much more likely to be real (PPV climbs toward 0.97). But the same shift means many more disease+ patients exist, and a 70%-sensitive test misses 30% of them &mdash; so a negative result now leaves real residual risk. NPV falls to about 0.77. <strong>This is the inverse trade-off</strong>: PPV and NPV move in opposite directions as prevalence climbs. The test architecture (Sn = 0.70, Sp = 0.98) hasn't changed at all.",
+      a: "<strong>Not quite.</strong> The test itself didn't change &mdash; Sn = 0.70 and Sp = 0.98 stay locked. What changed is the population (more disease+ patients). PPV did improve, but NPV worsened: with more disease+ patients in the pool, the 30% the test misses become more numerous in absolute terms. <strong>The correct answer is B.</strong> PPV climbed to about 0.97 while NPV dropped to about 0.77 &mdash; positives are nearly certain, but negatives now carry more residual risk.",
+      c: "<strong>Not quite.</strong> Sn and Sp didn't move (that's the point of holding them fixed), but PPV and NPV are not the same as Sn and Sp. PPV and NPV depend on prevalence, even when Sn and Sp don't &mdash; that's the entire lesson of this part. So PPV and NPV definitely shifted at 50% prevalence. <strong>The correct answer is B.</strong> PPV climbed to about 0.97 while NPV dropped to about 0.77 &mdash; positives are nearly certain, but negatives now carry more residual risk.",
+      d: "<strong>Not quite.</strong> The direction is flipped. At higher prevalence, positives become more trustworthy (PPV rises) and negatives less trustworthy (NPV falls). At lower prevalence, it's the opposite. The article's pattern (PPV 0.90, NPV 0.93) holds at the studied prevalence of 20%; at 50% the trade-off shifts decisively toward PPV. <strong>The correct answer is B.</strong> PPV climbed to about 0.97 while NPV dropped to about 0.77 &mdash; positives are nearly certain, but negatives now carry more residual risk."
+    },
+    6: {
+      correct: "<strong>Correct.</strong> This is the central lesson of Part 6. PPV and NPV are population-specific because they depend on prevalence, while Sn and Sp are properties of the test itself. When you read a study's PPV or NPV, your first question should always be \"what was the prevalence in the study, and does my clinical setting look like that?\" If yes, the numbers transfer. If no, the same test will produce different patient-meaning numbers in your population &mdash; sometimes dramatically different, as Q4 showed.",
+      a: "<strong>Not quite.</strong> Studies measure PPV and NPV in a specific population at a specific prevalence. When you take the test to a different setting (a memory clinic, a screening program, a low-prevalence community), the prevalence shifts and so do PPV and NPV. The math you just explored shows this directly &mdash; PPV moved from 0.90 down to 0.29 just by changing prevalence. <strong>The correct answer is D.</strong> PPV and NPV are population-specific &mdash; quote them only when your patient population's prevalence resembles the study's, otherwise recompute or generalize cautiously.",
+      b: "<strong>Not quite.</strong> Sn and Sp don't depend on prevalence &mdash; that's exactly what makes them useful as test properties. They live in the columns of the 2 &times; 2 (disease+ for Sn, disease&minus; for Sp), and the within-column ratios stay constant regardless of how common the disease is. PPV and NPV are different: they use rows, which mix disease+ and disease&minus; in proportions that shift with prevalence. <strong>The correct answer is D.</strong> PPV and NPV are population-specific &mdash; quote them only when your patient population's prevalence resembles the study's, otherwise recompute or generalize cautiously.",
+      c: "<strong>Not quite.</strong> Both PPV and NPV matter, depending on the clinical question. PPV answers \"is my positive real?\" &mdash; useful when a positive triggers treatment or further workup. NPV answers \"is my negative real?\" &mdash; critical when ruling out a serious condition. Neither is universally more important than the other; they answer different patient questions. <strong>The correct answer is D.</strong> PPV and NPV are population-specific &mdash; quote them only when your patient population's prevalence resembles the study's, otherwise recompute or generalize cautiously."
+    }
+  };
+
+  function answerMC(qNum, choice, isCorrect) {
+    if (state.answered[qNum]) return;
+    state.answered[qNum] = true;
+    state.correct[qNum] = isCorrect;
+
+    var buttons = document.querySelectorAll('#mc' + qNum + '-options .mc-option');
+    buttons.forEach(function(btn) { btn.disabled = true; });
+
+    var chosenBtn = Array.prototype.find.call(buttons, function(btn) {
+      return btn.getAttribute('onclick').indexOf("'" + choice + "'") !== -1;
+    });
+    if (chosenBtn) chosenBtn.classList.add(isCorrect ? 'selected-correct' : 'selected-wrong');
+    if (!isCorrect) {
+      buttons.forEach(function(btn) {
+        var onClick = btn.getAttribute('onclick');
+        if (onClick.indexOf('true') !== -1) btn.classList.add('show-correct');
+      });
+    }
+
+    var fb = document.getElementById('mc' + qNum + '-feedback');
+    fb.classList.remove('correct', 'incorrect');
+    fb.classList.add(isCorrect ? 'correct' : 'incorrect');
+    fb.innerHTML = isCorrect ? feedbackText[qNum].correct : feedbackText[qNum][choice];
+
+    if (qNum < 6) {
+      unlockMC(qNum + 1);
+      if (qNum === 3) unlockSliders();
+    } else {
+      finalize();
+    }
+    updateStepCounter();
+  }
+
+  function unlockMC(qNum) {
+    var block = document.getElementById('mc' + qNum + '-block');
+    if (block) block.classList.add('unlocked');
+  }
+
+  function finalize() {
+    var allCorrect = state.correct[1] && state.correct[2] && state.correct[3] && state.correct[4] && state.correct[5] && state.correct[6];
+    var msg = document.getElementById('completion-msg');
+    msg.textContent = allCorrect ? '✓ All six correct — excellent work.' : '✓ Section complete. Review feedback as needed.';
+    document.getElementById('takeaways').style.display = 'block';
+    var nextBtn = document.getElementById('next-btn');
+    nextBtn.style.pointerEvents = 'auto';
+    nextBtn.style.opacity = '1';
+    try { localStorage.setItem('unit8_part6_done', '1'); } catch (e) {}
+  }
+
+  function updateStepCounter() {
+    var step = 1;
+    var anyHi = state.highlighted[1] || state.highlighted[2] || state.highlighted[3] || state.highlighted[4];
+    if (anyHi) step = 2;
+    if (state.conceptRevealed) step = 3;
+    if (state.calcShown) step = 4;
+    if (state.ppvRevealed && state.npvRevealed) step = 5;
+    if (state.answered[3]) step = 6;
+    document.getElementById('step-counter').textContent = step;
+  }
+
+  // Initialize SVG fills to article values
+  updateCircleFill('pre-fill', 70, 125, 50, 0.20);
+  updateCircleFill('ppv-fill', 305, 80, 38, 0.90);
+  updateCircleFill('npvi-fill', 305, 200, 38, 0.07);
+</script>
+</body>
+</html>

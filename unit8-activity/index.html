@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit 8: Diagnostic Accuracy Activity</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Calibri, "Segoe UI", Tahoma, sans-serif; background: #F0F3F5; color: #172940; line-height: 1.55; min-height: 100vh; font-size: 16.5px; }
+
+  /* Header */
+  .header { background: #172940; color: white; padding: 22px 32px; border-bottom: 4px solid #FFC857; }
+  .header-inner { max-width: 1200px; margin: 0 auto; }
+  .header .eyebrow { color: #FFC857; font-size: 13px; text-transform: uppercase; letter-spacing: 1.6px; font-weight: 700; margin-bottom: 6px; }
+  .header h1 { font-size: 26px; font-weight: 700; margin-bottom: 8px; line-height: 1.25; }
+  .header .subtitle { color: #F0F3F5; font-size: 16px; margin-bottom: 12px; opacity: 0.92; }
+  .header .description { color: #d8dde2; font-size: 15px; line-height: 1.6; max-width: 760px; }
+
+  /* Container */
+  .container { max-width: 1200px; margin: 0 auto; padding: 28px 32px 60px; }
+
+  /* Progress section */
+  .progress-section {
+    background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08);
+    padding: 18px 24px; margin-bottom: 24px; border-left: 5px solid #FFC857;
+    display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  }
+  .progress-text { font-size: 15px; color: #172940; font-weight: 700; min-width: 165px; }
+  .progress-text .count { color: #2E8FAF; }
+  .progress-text.complete .count { color: #2D8659; }
+  .progress-bar-track {
+    flex-grow: 1; min-width: 200px; height: 12px; background: #F0F3F5;
+    border-radius: 8px; overflow: hidden; border: 1px solid #d8dde2;
+  }
+  .progress-bar-fill {
+    height: 100%; background: linear-gradient(90deg, #2E8FAF 0%, #246F89 100%);
+    width: 0%; transition: width 0.5s ease; border-radius: 8px;
+  }
+  .progress-bar-fill.complete { background: linear-gradient(90deg, #2D8659 0%, #1B5E3F 100%); }
+  .progress-percent { font-size: 14px; color: #616467; font-weight: 600; min-width: 42px; text-align: right; }
+
+  /* Cards grid */
+  .cards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+
+  /* Card base */
+  .card {
+    background: white; border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08);
+    padding: 22px 24px; position: relative;
+    border-left: 5px solid #d8dde2;
+    transition: all 0.2s ease;
+    text-decoration: none; color: inherit;
+    display: flex; flex-direction: column;
+    cursor: pointer; min-height: 175px;
+  }
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 22px rgba(23, 41, 64, 0.13);
+    border-left-color: #2E8FAF;
+  }
+
+  /* Part badge */
+  .part-badge {
+    display: inline-block; background: #FFC857; color: #172940;
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 1px; padding: 4px 12px; border-radius: 14px;
+    align-self: flex-start; margin-bottom: 10px;
+  }
+
+  .card-title {
+    font-size: 17px; font-weight: 700; color: #172940;
+    margin-bottom: 8px; line-height: 1.3;
+  }
+  .card-desc {
+    font-size: 14px; color: #616467; line-height: 1.55;
+    flex-grow: 1; margin-bottom: 12px;
+  }
+  .card-status {
+    font-size: 12.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    color: #8B9098;
+    display: flex; align-items: center; gap: 6px;
+    margin-top: auto;
+  }
+  .card-status .arrow {
+    margin-left: auto; color: #2E8FAF; font-size: 16px; font-weight: 700;
+    transition: transform 0.2s ease;
+  }
+  .card:hover .card-status .arrow { transform: translateX(3px); }
+
+  /* DONE state */
+  .card.done {
+    border-left-color: #2D8659;
+  }
+  .card.done .check-corner {
+    position: absolute; top: 14px; right: 14px;
+    background: #2D8659; color: white;
+    width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+    box-shadow: 0 2px 6px rgba(45, 134, 89, 0.35);
+  }
+  .card.done .card-status {
+    color: #2D8659;
+  }
+  .card.done .card-status .arrow { color: #2D8659; }
+
+  /* LOCKED state */
+  .card.locked {
+    opacity: 0.55; cursor: not-allowed;
+    border-left-color: #c5cdd3;
+  }
+  .card.locked:hover {
+    transform: none; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08);
+    border-left-color: #c5cdd3;
+  }
+  .card.locked .part-badge {
+    background: #c5cdd3; color: #5a5e63;
+  }
+  .card.locked .card-status {
+    color: #8B9098;
+  }
+  .card.locked .card-status .arrow { display: none; }
+  .card.locked .lock-icon { font-size: 14px; }
+
+  /* AVAILABLE state (no extra class — base styling applies) */
+  .card.available .card-status { color: #2E8FAF; }
+
+  /* Tooltip on locked cards */
+  .card.locked[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute; bottom: -32px; left: 50%; transform: translateX(-50%);
+    background: #172940; color: white;
+    padding: 6px 12px; border-radius: 6px;
+    font-size: 12px; white-space: nowrap;
+    z-index: 10; opacity: 0.95;
+    text-transform: none; letter-spacing: normal; font-weight: 400;
+  }
+
+  /* Footer */
+  .footer {
+    margin-top: 32px; padding-top: 24px;
+    border-top: 1px solid #d8dde2;
+    display: flex; justify-content: space-between; align-items: center;
+    flex-wrap: wrap; gap: 14px;
+  }
+  .footer-note {
+    font-size: 13px; color: #8B9098; font-style: italic;
+  }
+  .reset-btn {
+    background: white; color: #C0504D; border: 2px solid #C0504D;
+    padding: 9px 18px; border-radius: 8px;
+    font-size: 13px; font-weight: 700;
+    cursor: pointer; font-family: inherit;
+    transition: all 0.2s ease;
+  }
+  .reset-btn:hover {
+    background: #FBEAE7; transform: translateY(-1px);
+  }
+
+  /* Responsive */
+  @media (max-width: 1000px) {
+    .cards-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 600px) {
+    .cards-grid { grid-template-columns: 1fr; }
+    .header { padding: 18px 20px; }
+    .header h1 { font-size: 22px; }
+    .header .subtitle { font-size: 15px; }
+    .container { padding: 18px 18px 50px; }
+    .progress-section { padding: 14px 18px; }
+    .progress-text { min-width: auto; width: 100%; }
+    .progress-percent { width: 100%; text-align: left; }
+    .footer { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-inner">
+    <div class="eyebrow">ASHS 6400 &middot; Methods of Data Analysis</div>
+    <h1>Unit 8: Diagnostic Accuracy Activity</h1>
+    <div class="subtitle">Reading and interpreting diagnostic accuracy reporting in clinical literature</div>
+    <div class="description">Work through 10 short interactive parts. Each builds on the last. Save your progress as you go.</div>
+  </div>
+</header>
+
+<main class="container">
+
+  <!-- Progress indicator -->
+  <section class="progress-section" id="progress-section">
+    <div class="progress-text" id="progress-text">
+      <span class="count" id="progress-count">0</span> of 10 parts complete
+    </div>
+    <div class="progress-bar-track">
+      <div class="progress-bar-fill" id="progress-bar-fill"></div>
+    </div>
+    <div class="progress-percent" id="progress-percent">0%</div>
+  </section>
+
+  <!-- Cards grid -->
+  <section class="cards-grid" id="cards-grid">
+    <!-- Cards injected by JS -->
+  </section>
+
+  <!-- Footer with reset -->
+  <div class="footer">
+    <div class="footer-note">Instructor utility &mdash; clears all saved progress on this device.</div>
+    <button class="reset-btn" id="reset-btn" onclick="confirmReset()">Reset all progress</button>
+  </div>
+
+</main>
+
+<script>
+  // ---- Card definitions (in order) ----
+  var CARDS = [
+    {
+      n: '1a', label: 'Part 1a',
+      title: 'Welcome + Orientation',
+      desc: 'Welcome to the activity. Meet the gold standard concept and see how it applies to OT and AuD.',
+      href: 'part1a.html',
+      doneKey: 'unit8_part1a_done',
+      requires: null
+    },
+    {
+      n: '1b', label: 'Part 1b',
+      title: 'The 2×2 Foundation',
+      desc: "Learn the four cells (TP, FP, FN, TN) and why they're the building blocks of every diagnostic accuracy statistic.",
+      href: 'part1b.html',
+      doneKey: 'unit8_part1b_done',
+      requires: 'unit8_part1a_done',
+      requiresLabel: 'Part 1a'
+    },
+    {
+      n: '1c', label: 'Part 1c',
+      title: 'Mock Article + Confidence Check',
+      desc: "Read the antigen test article you'll work with throughout the unit. Rate your starting confidence on each statistic.",
+      href: 'part1c.html',
+      doneKey: 'unit8_part1c_done',
+      requires: 'unit8_part1b_done',
+      requiresLabel: 'Part 1b'
+    },
+    {
+      n: '2', label: 'Part 2',
+      title: 'Overall Accuracy',
+      desc: 'Your first statistic. Why a 92% accurate test can hide a serious problem.',
+      href: 'part2.html',
+      doneKey: 'unit8_part2_done',
+      requires: 'unit8_part1c_done',
+      requiresLabel: 'Part 1c'
+    },
+    {
+      n: '3', label: 'Part 3',
+      title: 'Prevalence',
+      desc: 'Same test, three populations. Watch how prevalence bends every interpretation.',
+      href: 'part3.html',
+      doneKey: 'unit8_part3_done',
+      requires: 'unit8_part2_done',
+      requiresLabel: 'Part 2'
+    },
+    {
+      n: '4', label: 'Part 4',
+      title: 'Sensitivity',
+      desc: 'The rule-out engine. Meet 100 truly infected patients and see what a 70% sensitivity costs.',
+      href: 'part4.html',
+      doneKey: 'unit8_part4_done',
+      requires: 'unit8_part3_done',
+      requiresLabel: 'Part 3'
+    },
+    {
+      n: '5', label: 'Part 5',
+      title: 'Specificity',
+      desc: 'The rule-in engine. Meet 100 truly disease-free patients and learn why a 98% specific test is excellent.',
+      href: 'part5.html',
+      doneKey: 'unit8_part5_done',
+      requires: 'unit8_part4_done',
+      requiresLabel: 'Part 4'
+    },
+    {
+      n: '6', label: 'Part 6',
+      title: 'PPV & NPV',
+      desc: "The patient's question — finally answered. What does my actual result mean for me?",
+      href: 'part6.html',
+      doneKey: 'unit8_part6_done',
+      requires: 'unit8_part5_done',
+      requiresLabel: 'Part 5'
+    },
+    {
+      n: '7', label: 'Part 7',
+      title: 'Apply It',
+      desc: 'A new scenario: brief cognitive screen for early dementia. Same framework, different test. Synthesize everything.',
+      href: 'part7.html',
+      doneKey: 'unit8_part7_done',
+      requires: 'unit8_part6_done',
+      requiresLabel: 'Part 6'
+    },
+    {
+      n: '8', label: 'Part 8',
+      title: 'Reflection + Certificate',
+      desc: "Re-rate your confidence, reflect on what you've learned, and generate your completion certificate to upload to Canvas.",
+      href: 'part8.html',
+      doneKey: 'unit8_part8_done',
+      requires: 'unit8_part7_done',
+      requiresLabel: 'Part 7'
+    }
+  ];
+
+  // ---- Read localStorage state safely ----
+  function getKey(k) {
+    try { return localStorage.getItem(k); } catch (e) { return null; }
+  }
+
+  function isDone(card) {
+    return getKey(card.doneKey) === '1';
+  }
+
+  function isAvailable(card) {
+    if (card.requires === null) return true;
+    return getKey(card.requires) === '1';
+  }
+
+  // ---- Render cards ----
+  function renderCards() {
+    var grid = document.getElementById('cards-grid');
+    grid.innerHTML = '';
+    var doneCount = 0;
+
+    for (var i = 0; i < CARDS.length; i++) {
+      var card = CARDS[i];
+      var done = isDone(card);
+      var available = isAvailable(card);
+      if (done) doneCount++;
+
+      var stateClass, stateText, statusIcon;
+      if (done) {
+        stateClass = 'done';
+        stateText = 'Completed';
+        statusIcon = '✓';
+      } else if (available) {
+        stateClass = 'available';
+        stateText = 'Start';
+        statusIcon = '';
+      } else {
+        stateClass = 'locked';
+        stateText = 'Complete ' + card.requiresLabel + ' to unlock';
+        statusIcon = '🔒'; // lock emoji
+      }
+
+      var html = '';
+      html += '<a class="card ' + stateClass + '" ';
+      if (available || done) {
+        html += 'href="' + card.href + '"';
+      } else {
+        html += 'href="#" onclick="return showLockedTooltip(event, \'' + card.requiresLabel + '\')" ';
+        html += 'data-tooltip="Complete ' + card.requiresLabel + ' first"';
+      }
+      html += '>';
+
+      if (done) {
+        html += '<div class="check-corner">✓</div>';
+      }
+      html += '<span class="part-badge">' + card.label + '</span>';
+      html += '<div class="card-title">' + card.title + '</div>';
+      html += '<div class="card-desc">' + card.desc + '</div>';
+      html += '<div class="card-status">';
+      if (done) {
+        html += '<span>✓ ' + stateText + '</span>';
+      } else if (available) {
+        html += '<span>' + stateText + '</span><span class="arrow">→</span>';
+      } else {
+        html += '<span class="lock-icon">🔒</span><span>' + stateText + '</span>';
+      }
+      html += '</div>';
+      html += '</a>';
+
+      grid.insertAdjacentHTML('beforeend', html);
+    }
+
+    updateProgress(doneCount);
+  }
+
+  // ---- Progress bar ----
+  function updateProgress(doneCount) {
+    var percent = Math.round((doneCount / CARDS.length) * 100);
+    document.getElementById('progress-count').textContent = doneCount;
+    document.getElementById('progress-percent').textContent = percent + '%';
+    var fill = document.getElementById('progress-bar-fill');
+    fill.style.width = percent + '%';
+
+    var progressText = document.getElementById('progress-text');
+    if (doneCount === CARDS.length) {
+      progressText.classList.add('complete');
+      fill.classList.add('complete');
+      progressText.innerHTML = '<span class="count">✓ All 10 parts complete</span>';
+    } else {
+      progressText.classList.remove('complete');
+      fill.classList.remove('complete');
+      progressText.innerHTML = '<span class="count" id="progress-count">' + doneCount + '</span> of 10 parts complete';
+    }
+  }
+
+  // ---- Locked tooltip click handler (no-op; CSS shows tooltip on hover) ----
+  function showLockedTooltip(e, requiresLabel) {
+    e.preventDefault();
+    return false;
+  }
+
+  // ---- Reset all progress ----
+  function confirmReset() {
+    var ok = window.confirm(
+      'Reset all progress for Unit 8?\n\n' +
+      'This clears every saved answer, slider position, and completion flag for this activity on this device. ' +
+      'It cannot be undone.'
+    );
+    if (!ok) return;
+
+    try {
+      var keysToRemove = [];
+      for (var i = 0; i < localStorage.length; i++) {
+        var key = localStorage.key(i);
+        if (key && key.indexOf('unit8_') === 0) {
+          keysToRemove.push(key);
+        }
+      }
+      for (var j = 0; j < keysToRemove.length; j++) {
+        localStorage.removeItem(keysToRemove[j]);
+      }
+    } catch (e) {
+      alert('Could not access localStorage: ' + e.message);
+      return;
+    }
+
+    // Reload to re-render fresh state
+    window.location.reload();
+  }
+
+  // ---- Initialize on load ----
+  renderCards();
+</script>
+
+</body>
+</html>

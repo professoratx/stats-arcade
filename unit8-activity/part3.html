@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit 8 Activity — Part 3: Prevalence</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Calibri, "Segoe UI", Tahoma, sans-serif; background: #F0F3F5; color: #172940; line-height: 1.55; min-height: 100vh; font-size: 16.5px; }
+  .header { background: #172940; color: white; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid #FFC857; }
+  .header-left { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .header h1 { font-size: 23px; font-weight: 700; }
+  .header .part-label { font-size: 13.5px; color: #FFC857; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+  .progress-pill { background: rgba(255,255,255,0.12); padding: 6px 14px; border-radius: 20px; font-size: 13.5px; color: #F0F3F5; }
+  .progress-pill strong { color: #FFC857; }
+
+  .container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 24px 32px 60px; max-width: 1500px; margin: 0 auto; }
+
+  .left-panel { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 26px 26px 22px; position: sticky; top: 24px; height: fit-content; max-height: calc(100vh - 48px); overflow-y: auto; }
+  .left-panel h2 { font-size: 19px; color: #172940; margin-bottom: 4px; font-weight: 700; }
+  .left-panel .subtitle { color: #616467; font-size: 14px; margin-bottom: 18px; }
+  .panel-section-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: #8B6914; font-weight: 700; margin-bottom: 8px; margin-top: 18px; }
+
+  .funnel-wrap { background: #F8FAFB; border: 1px solid #d8dde2; border-radius: 10px; padding: 16px 18px; }
+  .funnel-title { font-size: 13px; font-weight: 700; color: #172940; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 14px; text-align: center; }
+  .funnel-svg-wrap { width: 100%; }
+  .funnel-svg-wrap svg { width: 100%; height: auto; display: block; }
+
+  .contingency { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; margin-bottom: 6px; margin-top: 4px; }
+  .contingency th, .contingency td { padding: 9px 6px; text-align: center; border: 1px solid #d8dde2; }
+  .contingency th { background: #172940; color: white; font-weight: 600; font-size: 12px; }
+  .contingency th:first-child { background: transparent; border: none; }
+  .contingency .row-label { background: #2E8FAF; color: white; font-weight: 600; text-align: left; padding: 9px 8px; font-size: 12.5px; }
+  .contingency .group-total { background: #F0F3F5; font-weight: 700; color: #172940; }
+  .contingency .cell-tp { background: #E8F4EC; font-weight: 700; font-size: 16px; color: #1B5E3F; transition: background 0.3s ease; }
+  .contingency .cell-fp { background: #FBEAE7; font-weight: 700; font-size: 16px; color: #8B2B1F; transition: background 0.3s ease; }
+  .contingency .cell-fn { background: #FBEAE7; font-weight: 700; font-size: 16px; color: #8B2B1F; transition: background 0.3s ease; }
+  .contingency .cell-tn { background: #E8F4EC; font-weight: 700; font-size: 16px; color: #1B5E3F; transition: background 0.3s ease; }
+  .table-caption { text-align: center; color: #616467; font-size: 12px; margin-top: 4px; font-style: italic; }
+
+  .sliders { background: #F8FAFB; border: 1px solid #d8dde2; border-radius: 10px; padding: 14px 16px; margin-top: 14px; position: relative; transition: opacity 0.3s ease; }
+  .sliders.locked { opacity: 0.55; pointer-events: none; }
+  .sliders-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .sliders-header .s-title { font-size: 13px; font-weight: 700; color: #172940; text-transform: uppercase; letter-spacing: 0.8px; }
+  .reset-btn { background: white; border: 1.5px solid #FFC857; color: #8B6914; padding: 4px 10px; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.18s ease; }
+  .reset-btn:hover { background: #FFF8E1; }
+  .lock-overlay { position: absolute; top: 6px; right: 12px; font-size: 12px; color: #8B9098; font-style: italic; }
+  .sliders.locked .lock-overlay { display: block; }
+  .sliders:not(.locked) .lock-overlay { display: none; }
+
+  .slider-row { display: grid; grid-template-columns: 110px 1fr 60px; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .slider-row:last-of-type { margin-bottom: 0; }
+  .slider-row .s-label { font-size: 13px; font-weight: 600; color: #172940; }
+  .slider-row .s-label.prev { color: #8B6914; }
+  .slider-row input[type="range"] { width: 100%; accent-color: #FFC857; }
+  .slider-row .s-value { text-align: right; font-size: 13.5px; font-weight: 700; color: #172940; font-variant-numeric: tabular-nums; }
+
+  .live-stats { margin-top: 14px; padding: 12px 14px; background: white; border: 1px solid #d8dde2; border-radius: 8px; }
+  .live-stats-title { font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px; color: #616467; font-weight: 700; margin-bottom: 10px; text-align: center; }
+  .live-stats-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+  .live-stat { background: #F8FAFB; border-radius: 6px; padding: 10px 6px; text-align: center; }
+  .live-stat .ls-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: #616467; font-weight: 700; margin-bottom: 3px; }
+  .live-stat .ls-value { font-size: 18px; font-weight: 700; color: #172940; font-variant-numeric: tabular-nums; }
+  .live-stat.ppv .ls-value { color: #6B4F92; }
+  .live-stat.npv .ls-value { color: #1B5E3F; }
+  .live-stat.acc .ls-value { color: #2E8FAF; }
+
+  .live-stats-fixed { margin-top: 8px; padding: 8px 10px; background: #F0F3F5; border-radius: 6px; font-size: 12px; color: #616467; text-align: center; line-height: 1.45; }
+  .live-stats-fixed strong { color: #172940; }
+
+  .stat-card { border: 2px solid #FFC857; border-radius: 10px; padding: 18px 20px; text-align: center; cursor: pointer; transition: all 0.25s ease; background: white; user-select: none; margin-top: 16px; }
+  .stat-card.locked { background: #F0F3F5; border-style: dashed; border-color: #b8c2c8; }
+  .stat-card.locked:hover { background: #FFF8E1; border-color: #FFC857; transform: translateY(-1px); }
+  .stat-card.revealed { background: linear-gradient(135deg, #FFC857 0%, #D89D24 100%); color: #172940; border-color: #8B6914; cursor: default; }
+  .stat-card .label { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #616467; margin-bottom: 6px; font-weight: 600; }
+  .stat-card.revealed .label { color: #172940; opacity: 0.85; }
+  .stat-card .value { font-size: 42px; font-weight: 700; line-height: 1; margin-bottom: 6px; color: #172940; font-variant-numeric: tabular-nums; }
+  .stat-card.revealed .value { color: #172940; }
+  .stat-card .ci { font-size: 13px; color: #616467; }
+  .stat-card.revealed .ci { color: #5a4a10; }
+  .stat-card .hint { font-size: 13px; color: #8B6914; font-weight: 600; margin-top: 6px; }
+  .stat-card.revealed .hint { display: none; }
+  .stat-card .formula { font-size: 13.5px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(23, 41, 64, 0.25); font-family: "Cambria Math", Cambria, serif; color: #5a4a10; display: none; font-variant-numeric: tabular-nums; }
+  .stat-card.revealed .formula { display: block; }
+
+  .prev-scale-wrap { margin-top: 16px; background: white; border: 1px solid #d8dde2; border-radius: 10px; padding: 16px 18px; }
+  .prev-scale-title { font-size: 13px; font-weight: 700; color: #172940; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 22px; text-align: center; }
+  .prev-scale-outer { position: relative; padding-top: 38px; }
+  .prev-scale { position: relative; height: 30px; background: linear-gradient(90deg, #E8F0F5 0%, #FFE9A6 35%, #FFC857 60%, #D89D24 100%); border-radius: 15px; }
+  .prev-marker-group { position: absolute; top: -34px; transform: translateX(-50%); transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 5; }
+  .prev-marker-pill { background: #172940; color: white; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 700; text-align: center; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.15); font-variant-numeric: tabular-nums; }
+  .prev-marker-dot { width: 22px; height: 22px; background: white; border: 3px solid #172940; border-radius: 50%; margin: 4px auto 0; position: relative; top: 24px; }
+  .prev-axis-labels { display: flex; justify-content: space-between; margin-top: 12px; font-size: 12px; color: #172940; font-weight: 600; padding: 0 2px; }
+  .prev-readout-bar { margin-top: 14px; padding: 10px 14px; border-radius: 6px; font-size: 13.5px; font-weight: 600; text-align: center; line-height: 1.5; transition: background 0.4s ease, color 0.4s ease; }
+  .prev-readout-bar.rare { background: #DFEDF4; color: #246F89; border-left: 3px solid #2E8FAF; }
+  .prev-readout-bar.moderate { background: #FFF8E1; color: #8B6914; border-left: 3px solid #FFC857; }
+  .prev-readout-bar.high { background: #FBEAE7; color: #8B2B1F; border-left: 3px solid #C0504D; }
+
+  .right-panel { display: flex; flex-direction: column; gap: 18px; }
+
+  .step { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 24px 26px; border-left: 5px solid #FFC857; }
+  .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .step-number { background: #FFC857; color: #172940; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+  .step-title { font-size: 18.5px; font-weight: 700; color: #172940; }
+  .step-body { color: #2c3e50; font-size: 16px; line-height: 1.7; }
+  .step-body p { margin-bottom: 12px; }
+  .step-body p:last-child { margin-bottom: 0; }
+  .step-body strong { color: #172940; }
+
+  .article-excerpt { background: #F8FAFB; border: 1px solid #d8dde2; border-left: 4px solid #172940; border-radius: 6px; padding: 18px 22px; margin: 14px 0; font-family: Georgia, "Times New Roman", serif; color: #2c3e50; font-size: 16.5px; line-height: 1.75; }
+  .article-excerpt .article-meta { font-size: 13px; font-family: Calibri, sans-serif; color: #616467; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .hi-target { background: transparent; transition: background 0.5s ease; padding: 1px 3px; border-radius: 2px; }
+  .hi-target.on { background: #DFEDF4; }
+  .hi-target.on-2 { background: #FFE9A6; }
+  .hi-target.on-3 { background: #C9E4D5; }
+
+  .reveal-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .reveal-btn { background: white; color: #8B6914; border: 2px solid #FFC857; padding: 10px 18px; border-radius: 7px; font-size: 14.5px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.18s ease; }
+  .reveal-btn:hover { background: #FFF8E1; transform: translateY(-1px); }
+  .reveal-btn.done { background: #8B6914; color: white; border-color: #8B6914; cursor: default; }
+  .reveal-btn.done:hover { transform: none; }
+
+  .annot-line { margin-top: 10px; padding: 12px 18px; background: #fff; border-radius: 6px; border-left: 3px solid #FFC857; font-family: Calibri, sans-serif; font-size: 15.5px; color: #172940; display: none; animation: fadeIn 0.4s ease-out; line-height: 1.6; }
+  .annot-line.show { display: block; }
+  .annot-line .a-tag { display: inline-block; font-weight: 700; color: #8B6914; margin-right: 6px; text-transform: uppercase; font-size: 12.5px; letter-spacing: 1px; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .three-pops-wrap { background: #F8FAFB; border: 1px solid #d8dde2; border-radius: 10px; padding: 18px 20px; margin: 14px 0; }
+  .three-pops-instruct { font-size: 13.5px; color: #616467; text-align: center; margin-bottom: 14px; font-style: italic; }
+  .three-pops-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .pop-card { background: white; border-radius: 8px; padding: 14px 12px; border: 1px solid #d8dde2; text-align: center; }
+  .pop-card.rare { border-top: 3px solid #2E8FAF; }
+  .pop-card.moderate { border-top: 3px solid #FFC857; }
+  .pop-card.high { border-top: 3px solid #C0504D; }
+  .pop-name { font-size: 13px; font-weight: 700; color: #172940; margin-bottom: 4px; line-height: 1.3; }
+  .pop-context { font-size: 11.5px; color: #616467; margin-bottom: 10px; line-height: 1.4; font-style: italic; }
+  .pop-prev { font-size: 22px; font-weight: 700; color: #172940; font-variant-numeric: tabular-nums; line-height: 1; margin-bottom: 4px; }
+  .pop-card.rare .pop-prev { color: #2E8FAF; }
+  .pop-card.moderate .pop-prev { color: #8B6914; }
+  .pop-card.high .pop-prev { color: #8B2B1F; }
+  .pop-prev-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.7px; color: #616467; font-weight: 600; margin-bottom: 12px; }
+  .pop-stats { text-align: left; padding-top: 10px; border-top: 1px dashed #d8dde2; font-size: 12.5px; line-height: 1.6; }
+  .pop-stats .pop-stat-row { display: flex; justify-content: space-between; padding: 1px 0; }
+  .pop-stats .ps-name { color: #616467; font-weight: 600; }
+  .pop-stats .ps-val { color: #172940; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  .three-pops-reveal-row { text-align: center; margin-top: 14px; }
+  .three-pops-reveal-msg { background: #172940; color: white; border-radius: 6px; padding: 14px 18px; margin-top: 14px; font-size: 15.5px; line-height: 1.65; display: none; animation: fadeIn 0.4s ease; }
+  .three-pops-reveal-msg.show { display: block; }
+  .three-pops-reveal-msg strong { color: #FFC857; }
+
+  .calc-box { background: #F8FAFB; border-radius: 10px; border: 1px solid #d8dde2; padding: 20px 22px; margin: 14px 0; text-align: center; font-family: "Cambria Math", Cambria, serif; font-size: 19px; color: #172940; }
+  .calc-box .calc-step { margin: 6px 0; transition: opacity 0.4s ease; }
+  .calc-box .calc-result { color: #8B6914; font-weight: 700; font-size: 24px; opacity: 0; transition: opacity 0.6s ease; display: inline-block; }
+  .calc-box .calc-result.show { opacity: 1; }
+  .calc-box .calc-action { margin-top: 12px; }
+  .calc-cursor { display: inline-block; width: 10px; color: #8B6914; animation: blink 1s infinite; }
+  @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+
+  .so-what { background: #FFF8E1; border: 1px solid #F4D77A; border-radius: 8px; padding: 15px 19px; margin-top: 12px; }
+  .so-what .sw-label { color: #8B6914; font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .so-what p { color: #5a4a10; font-size: 16px; line-height: 1.65; margin: 0; }
+  .so-what p strong { color: #172940; }
+
+  .mc-block { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 24px 26px; border-top: 5px solid #FFC857; opacity: 0.45; pointer-events: none; transition: opacity 0.4s ease; }
+  .mc-block.unlocked { opacity: 1; pointer-events: auto; }
+  .mc-question { font-size: 17px; font-weight: 700; color: #172940; margin-bottom: 14px; line-height: 1.5; }
+  .mc-question .q-num { color: #8B6914; margin-right: 6px; }
+  .mc-options { display: flex; flex-direction: column; gap: 10px; }
+  .mc-option { background: #F8FAFB; border: 2px solid #d8dde2; border-radius: 8px; padding: 13px 17px; cursor: pointer; font-size: 16px; color: #2c3e50; text-align: left; transition: all 0.18s ease; font-family: inherit; width: 100%; line-height: 1.6; }
+  .mc-option:hover:not(:disabled) { border-color: #FFC857; background: #FFF8E1; }
+  .mc-option:disabled { cursor: default; }
+  .mc-option.selected-correct { background: #E8F4EC; border-color: #2D8B5A; color: #1B5E3F; font-weight: 600; }
+  .mc-option.selected-wrong { background: #FBEAE7; border-color: #C0504D; color: #8B2B1F; }
+  .mc-option.show-correct { background: #E8F4EC; border-color: #2D8B5A; color: #1B5E3F; font-weight: 600; }
+  .mc-option .marker { display: inline-block; font-weight: 700; margin-right: 8px; color: #8B6914; }
+  .mc-feedback { margin-top: 14px; padding: 15px 17px; border-radius: 8px; font-size: 15.5px; line-height: 1.65; display: none; }
+  .mc-feedback.correct { background: #E8F4EC; border-left: 4px solid #2D8B5A; color: #1B5E3F; display: block; }
+  .mc-feedback.incorrect { background: #FBEAE7; border-left: 4px solid #C0504D; color: #8B2B1F; display: block; }
+  .mc-feedback strong { display: block; margin-bottom: 4px; font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .explore-prompt { background: #FFF8E1; border: 1px solid #F4D77A; border-radius: 8px; padding: 13px 17px; margin-bottom: 14px; font-size: 15.5px; color: #5a4a10; line-height: 1.6; }
+  .explore-prompt strong { color: #172940; }
+  .explore-prompt .e-label { color: #8B6914; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block; }
+
+  .takeaways { background: #172940; color: white; border-radius: 12px; padding: 28px 30px; border-left: 5px solid #FFC857; }
+  .takeaways h3 { color: #FFC857; font-size: 13.5px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; font-weight: 700; }
+  .takeaways h2 { font-size: 23px; color: white; margin-bottom: 18px; font-weight: 700; }
+  .takeaways ul { list-style: none; padding: 0; margin: 0; }
+  .takeaways li { padding: 13px 0 13px 38px; border-bottom: 1px solid rgba(255,255,255,0.12); position: relative; font-size: 16px; line-height: 1.7; color: #F0F3F5; }
+  .takeaways li:last-child { border-bottom: none; }
+  .takeaways li::before { content: "\2713"; position: absolute; left: 0; top: 13px; width: 24px; height: 24px; border-radius: 50%; background: #FFC857; color: #172940; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 13.5px; }
+  .takeaways li strong { color: white; }
+
+  .nav-bar { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 18px 0 0; margin-top: 8px; }
+  .nav-btn { background: #FFC857; color: #172940; border: none; padding: 14px 30px; border-radius: 8px; font-size: 15.5px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s ease; text-decoration: none; display: inline-block; }
+  .nav-btn:hover { background: #D89D24; transform: translateY(-1px); }
+  .nav-btn.secondary { background: white; color: #8B6914; border: 2px solid #FFC857; }
+  .nav-btn.secondary:hover { background: #FFF8E1; }
+  .completion-msg { color: #2D8659; font-size: 14.5px; font-weight: 600; text-align: center; flex-grow: 1; margin: 0 20px; }
+
+  @media (max-width: 1100px) { .container { grid-template-columns: 1fr; } .left-panel { position: relative; top: auto; max-height: none; } }
+  @media (max-width: 600px) { .header { padding: 14px 18px; flex-direction: column; gap: 8px; align-items: flex-start; } .container { padding: 16px; } .three-pops-grid { grid-template-columns: 1fr; } .live-stats-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <h1>Unit 8: Diagnostic Accuracy Activity</h1>
+    <span class="part-label">Part 3 of 10 &middot; Prevalence</span>
+  </div>
+  <div class="progress-pill">Step <strong id="step-counter">1</strong> of 6</div>
+</header>
+
+<main class="container">
+
+  <aside class="left-panel">
+    <h2>Population funnel</h2>
+    <p class="subtitle">1,000 patients flowing through the test &middot; Sn = 0.70, Sp = 0.98</p>
+
+    <div class="funnel-wrap">
+      <div class="funnel-title">How prevalence shapes the cells</div>
+      <div class="funnel-svg-wrap">
+        <svg viewBox="0 0 380 270" xmlns="http://www.w3.org/2000/svg">
+          <rect x="80" y="10" width="220" height="36" fill="#172940" rx="4"/>
+          <text x="190" y="33" fill="#FFC857" text-anchor="middle" font-size="13" font-weight="700" font-family="Calibri, sans-serif">1,000 PATIENTS TESTED</text>
+
+          <line x1="190" y1="46" x2="85" y2="86" stroke="#8B9098" stroke-width="1.5" stroke-dasharray="3,3"/>
+          <line x1="190" y1="46" x2="295" y2="86" stroke="#8B9098" stroke-width="1.5" stroke-dasharray="3,3"/>
+
+          <rect id="dpos-rect" x="15" y="86" width="140" height="40" fill="#2D8659" rx="4"/>
+          <text id="dpos-label" x="85" y="105" fill="white" text-anchor="middle" font-size="12" font-weight="700" font-family="Calibri, sans-serif">TRULY INFECTED</text>
+          <text id="dpos-count" x="85" y="120" fill="#FFC857" text-anchor="middle" font-size="14" font-weight="700" font-family="Calibri, sans-serif">200</text>
+
+          <rect id="dneg-rect" x="225" y="86" width="140" height="40" fill="#246F89" rx="4"/>
+          <text id="dneg-label" x="295" y="105" fill="white" text-anchor="middle" font-size="12" font-weight="700" font-family="Calibri, sans-serif">TRULY NOT INFECTED</text>
+          <text id="dneg-count" x="295" y="120" fill="#FFC857" text-anchor="middle" font-size="14" font-weight="700" font-family="Calibri, sans-serif">800</text>
+
+          <line x1="85" y1="126" x2="55" y2="166" stroke="#1B5E3F" stroke-width="1.5"/>
+          <line x1="85" y1="126" x2="135" y2="166" stroke="#8B2B1F" stroke-width="1.5"/>
+          <line x1="295" y1="126" x2="245" y2="166" stroke="#8B2B1F" stroke-width="1.5"/>
+          <line x1="295" y1="126" x2="325" y2="166" stroke="#1B5E3F" stroke-width="1.5"/>
+
+          <rect x="20" y="166" width="70" height="50" fill="#E8F4EC" stroke="#2D8659" stroke-width="2" rx="4"/>
+          <text x="55" y="184" fill="#1B5E3F" text-anchor="middle" font-size="11" font-weight="700" font-family="Calibri, sans-serif">TP</text>
+          <text id="tp-count" x="55" y="205" fill="#1B5E3F" text-anchor="middle" font-size="17" font-weight="700" font-family="Calibri, sans-serif">140</text>
+
+          <rect x="100" y="166" width="70" height="50" fill="#FBEAE7" stroke="#C0504D" stroke-width="2" rx="4"/>
+          <text x="135" y="184" fill="#8B2B1F" text-anchor="middle" font-size="11" font-weight="700" font-family="Calibri, sans-serif">FN</text>
+          <text id="fn-count" x="135" y="205" fill="#8B2B1F" text-anchor="middle" font-size="17" font-weight="700" font-family="Calibri, sans-serif">60</text>
+
+          <rect x="210" y="166" width="70" height="50" fill="#FBEAE7" stroke="#C0504D" stroke-width="2" rx="4"/>
+          <text x="245" y="184" fill="#8B2B1F" text-anchor="middle" font-size="11" font-weight="700" font-family="Calibri, sans-serif">FP</text>
+          <text id="fp-count" x="245" y="205" fill="#8B2B1F" text-anchor="middle" font-size="17" font-weight="700" font-family="Calibri, sans-serif">16</text>
+
+          <rect x="290" y="166" width="70" height="50" fill="#E8F4EC" stroke="#2D8659" stroke-width="2" rx="4"/>
+          <text x="325" y="184" fill="#1B5E3F" text-anchor="middle" font-size="11" font-weight="700" font-family="Calibri, sans-serif">TN</text>
+          <text id="tn-count" x="325" y="205" fill="#1B5E3F" text-anchor="middle" font-size="17" font-weight="700" font-family="Calibri, sans-serif">784</text>
+
+          <text x="55" y="234" fill="#1B5E3F" text-anchor="middle" font-size="10" font-weight="600" font-family="Calibri, sans-serif">test caught</text>
+          <text x="135" y="234" fill="#8B2B1F" text-anchor="middle" font-size="10" font-weight="600" font-family="Calibri, sans-serif">missed</text>
+          <text x="245" y="234" fill="#8B2B1F" text-anchor="middle" font-size="10" font-weight="600" font-family="Calibri, sans-serif">false alarm</text>
+          <text x="325" y="234" fill="#1B5E3F" text-anchor="middle" font-size="10" font-weight="600" font-family="Calibri, sans-serif">cleared</text>
+
+          <text x="190" y="258" fill="#616467" text-anchor="middle" font-size="11" font-style="italic" font-family="Calibri, sans-serif">Sn (0.70) and Sp (0.98) stay constant &mdash; only column widths change</text>
+        </svg>
+      </div>
+    </div>
+
+    <table class="contingency">
+      <thead>
+        <tr>
+          <th></th>
+          <th>PCR positive</th>
+          <th>PCR negative</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="row-label">Antigen positive</td>
+          <td class="cell-tp" id="cell-tp">140</td>
+          <td class="cell-fp" id="cell-fp">16</td>
+          <td class="group-total" id="row-pos-total">156</td>
+        </tr>
+        <tr>
+          <td class="row-label">Antigen negative</td>
+          <td class="cell-fn" id="cell-fn">60</td>
+          <td class="cell-tn" id="cell-tn">784</td>
+          <td class="group-total" id="row-neg-total">844</td>
+        </tr>
+        <tr>
+          <td class="row-label" style="background:#172940;">Total</td>
+          <td class="group-total" id="dpos-total-tbl">200</td>
+          <td class="group-total" id="dneg-total-tbl">800</td>
+          <td class="group-total" style="background:#FFC857;color:#172940;">1,000</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="table-caption">Live recalculation &middot; n = 1,000 (scaled for clean math)</p>
+
+    <div class="sliders locked" id="sliders-box">
+      <div class="lock-overlay">&#128274; Unlocks at Step 6</div>
+      <div class="sliders-header">
+        <span class="s-title">Live exploration</span>
+        <button class="reset-btn" onclick="resetSliders()">Reset to 20%</button>
+      </div>
+      <div class="slider-row">
+        <span class="s-label prev">Prevalence</span>
+        <input type="range" id="slider-prev" min="1" max="80" value="20" step="1" oninput="onSliderChange()">
+        <span class="s-value" id="slider-prev-val">20%</span>
+      </div>
+
+      <div class="live-stats">
+        <div class="live-stats-title">Recomputed live</div>
+        <div class="live-stats-grid">
+          <div class="live-stat ppv">
+            <div class="ls-label">PPV</div>
+            <div class="ls-value" id="live-ppv">0.90</div>
+          </div>
+          <div class="live-stat npv">
+            <div class="ls-label">NPV</div>
+            <div class="ls-value" id="live-npv">0.93</div>
+          </div>
+          <div class="live-stat acc">
+            <div class="ls-label">Accuracy</div>
+            <div class="ls-value" id="live-acc">0.92</div>
+          </div>
+        </div>
+        <div class="live-stats-fixed">
+          <strong>Fixed:</strong> Sn = 0.70, Sp = 0.98 &mdash; the test itself doesn't change
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section-label">Calculated statistic</div>
+    <div id="prev-card" class="stat-card locked" onclick="revealPrev()">
+      <div class="label">Prevalence</div>
+      <div class="value" id="prev-value">? . ? ?</div>
+      <div class="ci" id="prev-ci">95% CI not yet revealed</div>
+      <div class="hint">&#9656; Click to reveal the value</div>
+      <div class="formula" id="prev-formula">Prevalence = 100 / 500 = 0.20</div>
+    </div>
+
+    <div class="prev-scale-wrap" id="prev-scale-wrap" style="display:none;">
+      <div class="prev-scale-title">Where this prevalence sits</div>
+      <div class="prev-scale-outer">
+        <div class="prev-scale">
+          <div class="prev-marker-group" id="prev-marker-panel" style="left: 25%;">
+            <div class="prev-marker-pill" id="prev-marker-pill-panel">0.20</div>
+            <div class="prev-marker-dot"></div>
+          </div>
+        </div>
+        <div class="prev-axis-labels">
+          <span>0%</span><span>20%</span><span>50%</span><span>80%</span>
+        </div>
+      </div>
+      <div class="prev-readout-bar moderate" id="prev-readout-bar-panel">
+        Moderate prevalence &mdash; symptomatic urgent-care population during transmission.
+      </div>
+    </div>
+
+  </aside>
+
+  <section class="right-panel">
+
+    <div class="step" style="border-left-color:#FFC857; background: #172940;">
+      <div class="step-header">
+        <div class="step-number" style="background:#FFC857; color:#172940;">&#9733;</div>
+        <div class="step-title" style="color: white;">Orientation</div>
+      </div>
+      <div class="step-body" style="color: #F0F3F5;">
+        <p><strong style="color:#FFC857;">Prevalence</strong> doesn't measure the test &mdash; it measures the population the test is being used in. It's the proportion of patients who actually have the condition.</p>
+        <div style="background: rgba(255,200,87,0.12); border-left: 3px solid #FFC857; padding: 14px 18px; border-radius: 6px; margin: 14px 0; font-size: 16px;">
+          But here's the catch that surprises most clinicians: even though the test itself hasn't changed at all &mdash; same antigen kit, same Sn, same Sp &mdash; use it in a low-prevalence setting and a high-prevalence setting and a positive result means very different things in each. <strong style="color:#FFC857;">Prevalence bends every interpretation of the test result.</strong>
+        </div>
+        <p>That's the lever this part is about.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">1</div>
+        <div class="step-title">Find the key pieces in the article</div>
+      </div>
+      <div class="step-body">
+        <p>The article reports the prevalence of COVID in the urgent-care population it studied. Click each button to spotlight a piece.</p>
+        <div class="article-excerpt">
+          <div class="article-meta">From the Results section</div>
+          Of 500 symptomatic patients tested, <span class="hi-target" id="hi-1">100 (20.0%) were positive on RT-PCR</span>, indicating a study prevalence of <span class="hi-target" id="hi-2">prevalence = 0.20</span>, <span class="hi-target" id="hi-3">95% CI [0.17, 0.24]</span>.
+        </div>
+        <div class="reveal-row">
+          <button class="reveal-btn" id="hi-btn-1" onclick="highlight(1)">&#9312; Spotlight the count</button>
+          <button class="reveal-btn" id="hi-btn-2" onclick="highlight(2)">&#9313; Spotlight the value</button>
+          <button class="reveal-btn" id="hi-btn-3" onclick="highlight(3)">&#9314; Spotlight the CI</button>
+        </div>
+        <div class="annot-line" id="annot-1"><span class="a-tag">The count</span>100 of 500 patients in this study had COVID, confirmed by PCR. This is the count that goes into the prevalence numerator.</div>
+        <div class="annot-line" id="annot-2"><span class="a-tag">Prevalence = 0.20</span>20% &mdash; in this specific population (symptomatic urgent-care adults during active community transmission), 1 in 5 patients had COVID. This isn't a property of the antigen test. It's a property of <em>who walked through the door.</em></div>
+        <div class="annot-line" id="annot-3"><span class="a-tag">CI [0.17, 0.24]</span>The interval reflects sampling uncertainty: the true prevalence in this kind of urgent-care population during active transmission is plausibly between 17% and 24%. In a different population (e.g., asymptomatic college students during a calm period), prevalence would be much lower.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">2</div>
+        <div class="step-title">Same test, three populations &mdash; watch what shifts</div>
+      </div>
+      <div class="step-body">
+        <p>Below are three different settings where you might use the exact same antigen test &mdash; same Sn = 0.70, same Sp = 0.98. The only thing that changes is who's being tested. Notice what stays fixed and what moves.</p>
+
+        <div class="three-pops-wrap">
+          <div class="three-pops-instruct">Same test &middot; same Sn &middot; same Sp &middot; three populations</div>
+
+          <div class="three-pops-grid">
+            <div class="pop-card rare">
+              <div class="pop-name">Asymptomatic screening</div>
+              <div class="pop-context">e.g., a workplace return-to-office program during a calm period</div>
+              <div class="pop-prev-label">Prevalence</div>
+              <div class="pop-prev">1%</div>
+              <div class="pop-stats">
+                <div class="pop-stat-row"><span class="ps-name">Sn</span><span class="ps-val">0.70</span></div>
+                <div class="pop-stat-row"><span class="ps-name">Sp</span><span class="ps-val">0.98</span></div>
+                <div class="pop-stat-row"><span class="ps-name">PPV</span><span class="ps-val" style="color:#8B2B1F;">0.26</span></div>
+                <div class="pop-stat-row"><span class="ps-name">NPV</span><span class="ps-val" style="color:#1B5E3F;">1.00</span></div>
+              </div>
+            </div>
+
+            <div class="pop-card moderate">
+              <div class="pop-name">Urgent-care during transmission</div>
+              <div class="pop-context">our article's setting &mdash; symptomatic adults at a community urgent-care</div>
+              <div class="pop-prev-label">Prevalence</div>
+              <div class="pop-prev">20%</div>
+              <div class="pop-stats">
+                <div class="pop-stat-row"><span class="ps-name">Sn</span><span class="ps-val">0.70</span></div>
+                <div class="pop-stat-row"><span class="ps-name">Sp</span><span class="ps-val">0.98</span></div>
+                <div class="pop-stat-row"><span class="ps-name">PPV</span><span class="ps-val" style="color:#8B6914;">0.90</span></div>
+                <div class="pop-stat-row"><span class="ps-name">NPV</span><span class="ps-val" style="color:#1B5E3F;">0.93</span></div>
+              </div>
+            </div>
+
+            <div class="pop-card high">
+              <div class="pop-name">Outbreak ward</div>
+              <div class="pop-context">e.g., a long-term care facility with confirmed active outbreak</div>
+              <div class="pop-prev-label">Prevalence</div>
+              <div class="pop-prev">50%</div>
+              <div class="pop-stats">
+                <div class="pop-stat-row"><span class="ps-name">Sn</span><span class="ps-val">0.70</span></div>
+                <div class="pop-stat-row"><span class="ps-name">Sp</span><span class="ps-val">0.98</span></div>
+                <div class="pop-stat-row"><span class="ps-name">PPV</span><span class="ps-val" style="color:#1B5E3F;">0.97</span></div>
+                <div class="pop-stat-row"><span class="ps-name">NPV</span><span class="ps-val" style="color:#8B6914;">0.77</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="three-pops-reveal-row">
+            <button class="reveal-btn" id="three-pops-btn" onclick="revealThreePops()">&#9656; What's the pattern here?</button>
+          </div>
+          <div class="three-pops-reveal-msg" id="three-pops-msg">
+            <p style="margin-bottom: 10px;">Sn and Sp <strong>don't move</strong> &mdash; they're properties of the test itself, not the population. But PPV and NPV swing wildly:</p>
+            <ul style="padding-left: 22px; margin: 0 0 12px; line-height: 1.6;">
+              <li style="margin-bottom: 8px;">In the <strong>asymptomatic screening setting (1% prevalence)</strong>, a positive antigen result is wrong about three-quarters of the time (PPV = 0.26) &mdash; even though the test has 98% specificity.</li>
+              <li>In the <strong>outbreak ward (50% prevalence)</strong>, a negative result is wrong almost a quarter of the time (NPV = 0.77) &mdash; even though the test has 70% sensitivity.</li>
+            </ul>
+            <p style="margin: 0;"><strong>Same test. Same Sn and Sp. Completely different real-world meaning.</strong> That's the central lesson of Part 3: a test's accuracy values must be read in context of who's being tested.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">3</div>
+        <div class="step-title">Compute prevalence from the article, then click the card</div>
+      </div>
+      <div class="step-body">
+        <p>Prevalence is just the proportion of patients with the disease in your study sample. Use the article's numbers: 100 patients had PCR-confirmed COVID, out of 500 total.</p>
+
+        <div class="calc-box">
+          <div class="calc-step">
+            Prevalence = (Patients with disease) / Total tested
+          </div>
+          <div class="calc-step" style="margin-top:10px;">
+            Prevalence = 100 / 500 = <span class="calc-result" id="calc-result">0.20</span><span class="calc-cursor" id="calc-cursor">|</span>
+          </div>
+          <div class="calc-action">
+            <button class="reveal-btn" id="calc-btn" onclick="showCalcResult()">&#9656; Show me the answer</button>
+          </div>
+        </div>
+
+        <p>Now <strong>click the dashed Prevalence card on the left side</strong> to confirm the value and see the 95% CI.</p>
+
+        <div style="margin-top: 14px; text-align: center;">
+          <button class="reveal-btn" id="sowhat-btn" onclick="revealSoWhat()">&#9733; Reveal: So what does Prevalence = 0.20 mean?</button>
+        </div>
+        <div class="so-what" id="sowhat-box" style="display:none;">
+          <div class="sw-label">&#9733; So what does Prevalence = 0.20 mean?</div>
+          <p>Of the symptomatic adults walking into this urgent-care during an active community surge, about 1 in 5 actually had COVID. That's <strong>not a forecast for your clinic</strong>: prevalence depends on the population you're seeing, the time period, and the symptoms you're screening on. Use this study's PPV and NPV as a guide only when your clinical setting matches theirs &mdash; or recalculate them when it doesn't.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">4</div>
+        <div class="step-title">Four rules for reading prevalence in any paper</div>
+      </div>
+      <div class="step-body">
+        <p>Prevalence shows up early in nearly every diagnostic accuracy paper. These four rules let you spot when an author's PPV/NPV claims will translate to your clinic, and when they won't:</p>
+        <p style="padding-left: 14px;">
+          &bull; <strong>Prevalence = (truly positive) / (total tested).</strong> A simple proportion describing the study population, not the test.<br>
+          &bull; <strong>Prevalence is local.</strong> A study's prevalence is shaped by who they recruited (symptomatic vs. asymptomatic, age, setting, time period). Your clinic's prevalence may be very different.<br>
+          &bull; <strong>Sn and Sp don't change with prevalence.</strong> They're test properties &mdash; what proportion of <em>truly positive</em> patients the test catches, and what proportion of <em>truly negative</em> patients it correctly clears.<br>
+          &bull; <strong>PPV and NPV always change with prevalence.</strong> Even with the same test. That's why journal-reported PPV and NPV always come with the study's prevalence attached &mdash; without that anchor, the numbers don't transfer.
+        </p>
+        <div style="margin-top: 14px; text-align: center;">
+          <button class="reveal-btn" id="habit-btn" onclick="revealHabit()">&#9656; Reveal the most important habit</button>
+        </div>
+        <div class="annot-line" id="habit-msg" style="border-left-color:#FFC857;">
+          <span class="a-tag">The most important habit</span>Before you trust an article's PPV or NPV in your own setting, ask: is the prevalence in my population similar? If not, the same test will perform differently for you.
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-6">
+      <div class="step-header">
+        <div class="step-number">5</div>
+        <div class="step-title">Now explore &mdash; drag the prevalence slider</div>
+      </div>
+      <div class="step-body">
+        <p>After you click the Prevalence card in Step 3 and answer Q3 below, <strong>the prevalence slider on the left panel will unlock</strong>. As you drag it from 1% to 80%, the population funnel will redraw, the 2 &times; 2 cells will recalculate, and the live readout will show how PPV, NPV, and Accuracy shift &mdash; while Sn and Sp stay locked at the test's true values.</p>
+        <p>Use the slider to answer Q4&ndash;Q6 below. There's a <strong>Reset</strong> button to return to the article's prevalence (20%) whenever you want.</p>
+      </div>
+    </div>
+
+    <div id="mc1-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q1.</span> A patient asks what "prevalence = 0.20" means. Which is the cleanest patient-friendly explanation?</div>
+      <div class="mc-options" id="mc1-options">
+        <button class="mc-option" onclick="answerMC(1, 'a', false)"><span class="marker">A.</span> "It means the test correctly detects COVID 20% of the time."</button>
+        <button class="mc-option" onclick="answerMC(1, 'b', true)"><span class="marker">B.</span> "Among the symptomatic adults at this urgent-care clinic during the study, about 1 in 5 actually had COVID. Prevalence describes how common the disease was in this population."</button>
+        <button class="mc-option" onclick="answerMC(1, 'c', false)"><span class="marker">C.</span> "It means the chance of getting COVID this year is 20%."</button>
+        <button class="mc-option" onclick="answerMC(1, 'd', false)"><span class="marker">D.</span> "It means the antigen test missed about 20% of cases."</button>
+      </div>
+      <div class="mc-feedback" id="mc1-feedback"></div>
+    </div>
+
+    <div id="mc2-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q2.</span> The article reports prevalence = 0.20 in symptomatic adults at urgent-care during active transmission. Your clinic does asymptomatic pre-procedure screening on a Tuesday morning when community transmission is low. Which is most likely true about the prevalence in your setting?</div>
+      <div class="mc-options" id="mc2-options">
+        <button class="mc-option" onclick="answerMC(2, 'a', true)"><span class="marker">A.</span> Your prevalence will be substantially lower &mdash; possibly 1% or less.</button>
+        <button class="mc-option" onclick="answerMC(2, 'b', false)"><span class="marker">B.</span> Your prevalence will also be about 20% because you're using the same test.</button>
+        <button class="mc-option" onclick="answerMC(2, 'c', false)"><span class="marker">C.</span> Your prevalence will be higher because you're screening more patients.</button>
+        <button class="mc-option" onclick="answerMC(2, 'd', false)"><span class="marker">D.</span> Prevalence is fixed by the test, so it'll be 20% regardless of setting.</button>
+      </div>
+      <div class="mc-feedback" id="mc2-feedback"></div>
+    </div>
+
+    <div id="mc3-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q3.</span> Which statement about prevalence and the other accuracy statistics is correct?</div>
+      <div class="mc-options" id="mc3-options">
+        <button class="mc-option" onclick="answerMC(3, 'a', false)"><span class="marker">A.</span> Prevalence affects Sn and Sp but not PPV or NPV.</button>
+        <button class="mc-option" onclick="answerMC(3, 'b', false)"><span class="marker">B.</span> Prevalence affects all six accuracy statistics equally.</button>
+        <button class="mc-option" onclick="answerMC(3, 'c', false)"><span class="marker">C.</span> Prevalence and Sn always equal each other.</button>
+        <button class="mc-option" onclick="answerMC(3, 'd', true)"><span class="marker">D.</span> Sn and Sp are properties of the test and don't depend on prevalence, while PPV and NPV both shift with prevalence.</button>
+      </div>
+      <div class="mc-feedback" id="mc3-feedback"></div>
+    </div>
+
+    <div id="mc4-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q4.</span> Use the slider to explore what happens to PPV at low prevalence.</div>
+      <div class="explore-prompt">
+        <span class="e-label">&#9656; Try this on the left panel</span>
+        Drag the <strong>prevalence slider down to 1%</strong>. Watch the funnel and the live PPV value. Notice that Sn and Sp don't move. <strong>What happens to PPV, and why?</strong>
+      </div>
+      <div class="mc-options" id="mc4-options">
+        <button class="mc-option" onclick="answerMC(4, 'a', false)"><span class="marker">A.</span> PPV stays at 0.90 because Sn and Sp didn't change.</button>
+        <button class="mc-option" onclick="answerMC(4, 'b', false)"><span class="marker">B.</span> PPV goes up because the test is more accurate at low prevalence.</button>
+        <button class="mc-option" onclick="answerMC(4, 'c', true)"><span class="marker">C.</span> PPV craters to about 0.26 &mdash; most positive results are now wrong, even though the test didn't change.</button>
+        <button class="mc-option" onclick="answerMC(4, 'd', false)"><span class="marker">D.</span> PPV becomes undefined because there are too few cases.</button>
+      </div>
+      <div class="mc-feedback" id="mc4-feedback"></div>
+    </div>
+
+    <div id="mc5-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q5.</span> Now slide prevalence the other way &mdash; up to 50%.</div>
+      <div class="explore-prompt">
+        <span class="e-label">&#9656; Try this on the left panel</span>
+        Click <strong>Reset</strong>, then move the <strong>prevalence slider up to 50%</strong>. Watch PPV and NPV. <strong>Which one improves and which one gets worse, and why?</strong>
+      </div>
+      <div class="mc-options" id="mc5-options">
+        <button class="mc-option" onclick="answerMC(5, 'a', false)"><span class="marker">A.</span> Both PPV and NPV improve.</button>
+        <button class="mc-option" onclick="answerMC(5, 'b', true)"><span class="marker">B.</span> PPV improves (climbs to ~0.97) but NPV gets worse (drops to ~0.77).</button>
+        <button class="mc-option" onclick="answerMC(5, 'c', false)"><span class="marker">C.</span> PPV gets worse and NPV improves &mdash; opposite of what just happened.</button>
+        <button class="mc-option" onclick="answerMC(5, 'd', false)"><span class="marker">D.</span> Both stay the same because Sn and Sp didn't change.</button>
+      </div>
+      <div class="mc-feedback" id="mc5-feedback"></div>
+    </div>
+
+    <div id="mc6-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q6.</span> The conceptual punchline &mdash; what does this mean for clinical practice?</div>
+      <div class="explore-prompt">
+        <span class="e-label">&#9656; Try this on the left panel</span>
+        Slide prevalence between 1%, 20%, and 50%, watching PPV and NPV change while Sn and Sp stay locked. <strong>Which statement best captures the practical implication of what you're seeing?</strong>
+      </div>
+      <div class="mc-options" id="mc6-options">
+        <button class="mc-option" onclick="answerMC(6, 'a', false)"><span class="marker">A.</span> Tests should be redesigned for each prevalence level.</button>
+        <button class="mc-option" onclick="answerMC(6, 'b', false)"><span class="marker">B.</span> Sn and Sp are useless because they don't account for prevalence.</button>
+        <button class="mc-option" onclick="answerMC(6, 'c', false)"><span class="marker">C.</span> Prevalence only matters for screening tests, not for symptomatic patients.</button>
+        <button class="mc-option" onclick="answerMC(6, 'd', true)"><span class="marker">D.</span> The same test can perform very differently in different settings &mdash; not because the test changed, but because the population did.</button>
+      </div>
+      <div class="mc-feedback" id="mc6-feedback"></div>
+    </div>
+
+    <div class="takeaways" id="takeaways" style="display:none;">
+      <h3>Big takeaways</h3>
+      <h2>What prevalence will tell you in any paper</h2>
+      <ul>
+        <li><strong>Prevalence = (truly positive) / (total tested).</strong> The proportion of patients in the study sample with the condition. Always reported early in a diagnostic accuracy paper because it shapes everything else.</li>
+        <li><strong>Prevalence describes the population, not the test.</strong> A test's prevalence will look different in different settings &mdash; symptomatic vs. asymptomatic, surge vs. calm, primary care vs. specialty clinic.</li>
+        <li><strong>Sn and Sp don't move with prevalence.</strong> They're test properties. The same antigen kit catches 70% of true cases whether it's used in an outbreak or a workplace screening program.</li>
+        <li><strong>PPV and NPV always move with prevalence.</strong> Same test, different population, different PPV and NPV. That's why these numbers always travel with the study's prevalence.</li>
+        <li><strong>Match the article's setting to yours, or recalculate.</strong> Before applying a study's PPV or NPV to your patients, ask whether your population's prevalence is similar. If not, the headline numbers won't transfer.</li>
+      </ul>
+    </div>
+
+    <div class="nav-bar">
+      <a href="part2.html" class="nav-btn secondary">&larr; Back to Part 2</a>
+      <span class="completion-msg" id="completion-msg"></span>
+      <a href="part4.html" class="nav-btn" id="next-btn" style="pointer-events:none; opacity:0.5;">Continue to Part 4 &rarr;</a>
+    </div>
+
+  </section>
+</main>
+
+<script>
+  var SN = 0.70;
+  var SP = 0.98;
+  var TOTAL = 1000;
+
+  var state = {
+    prevRevealed: false,
+    calcShown: false,
+    threePopsRevealed: false,
+    answered: { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false },
+    correct:  { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false },
+    highlighted: { 1: false, 2: false, 3: false }
+  };
+
+  function highlight(n) {
+    state.highlighted[n] = true;
+    var cls = n === 1 ? 'on' : (n === 2 ? 'on-2' : 'on-3');
+    document.getElementById('hi-' + n).classList.add(cls);
+    document.getElementById('annot-' + n).classList.add('show');
+    var btn = document.getElementById('hi-btn-' + n);
+    btn.classList.add('done');
+    btn.disabled = true;
+    updateStepCounter();
+  }
+
+  function revealSoWhat() {
+    var btn = document.getElementById('sowhat-btn');
+    if (btn.classList.contains('done')) return;
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '✓ Revealed';
+    var box = document.getElementById('sowhat-box');
+    box.style.display = 'block';
+    box.style.animation = 'fadeIn 0.4s ease-out';
+  }
+
+  function revealHabit() {
+    var btn = document.getElementById('habit-btn');
+    if (btn.classList.contains('done')) return;
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '✓ Revealed';
+    document.getElementById('habit-msg').classList.add('show');
+  }
+
+  function revealThreePops() {
+    if (state.threePopsRevealed) return;
+    state.threePopsRevealed = true;
+    var btn = document.getElementById('three-pops-btn');
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '\u2713 Revealed';
+    document.getElementById('three-pops-msg').classList.add('show');
+    updateStepCounter();
+  }
+
+  function showCalcResult() {
+    if (state.calcShown) return;
+    state.calcShown = true;
+    document.getElementById('calc-result').classList.add('show');
+    document.getElementById('calc-cursor').style.display = 'none';
+    var btn = document.getElementById('calc-btn');
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '\u2713 Shown';
+    updateStepCounter();
+  }
+
+  function revealPrev() {
+    if (state.prevRevealed) return;
+    state.prevRevealed = true;
+    var card = document.getElementById('prev-card');
+    card.classList.remove('locked');
+    card.classList.add('revealed');
+    document.getElementById('prev-value').textContent = '0.20';
+    document.getElementById('prev-ci').textContent = '95% CI [0.17, 0.24]';
+    document.getElementById('prev-scale-wrap').style.display = 'block';
+    updatePrevScale(0.20);
+    updateStepCounter();
+    unlockMC(1);
+  }
+
+  function unlockSliders() {
+    document.getElementById('sliders-box').classList.remove('locked');
+  }
+
+  function onSliderChange() {
+    var prevPct = parseInt(document.getElementById('slider-prev').value, 10);
+    var prev = prevPct / 100;
+    document.getElementById('slider-prev-val').textContent = prevPct + '%';
+
+    var dpos = Math.round(TOTAL * prev);
+    var dneg = TOTAL - dpos;
+    var tp = Math.round(dpos * SN);
+    var fn = dpos - tp;
+    var fp = Math.round(dneg * (1 - SP));
+    var tn = dneg - fp;
+
+    // Funnel boxes are locked to a fixed size — only the count text updates.
+    document.getElementById('dpos-count').textContent = dpos;
+    document.getElementById('dneg-count').textContent = dneg;
+
+    document.getElementById('tp-count').textContent = tp;
+    document.getElementById('fn-count').textContent = fn;
+    document.getElementById('fp-count').textContent = fp;
+    document.getElementById('tn-count').textContent = tn;
+
+    document.getElementById('cell-tp').textContent = tp;
+    document.getElementById('cell-fp').textContent = fp;
+    document.getElementById('cell-fn').textContent = fn;
+    document.getElementById('cell-tn').textContent = tn;
+    document.getElementById('row-pos-total').textContent = tp + fp;
+    document.getElementById('row-neg-total').textContent = fn + tn;
+    document.getElementById('dpos-total-tbl').textContent = dpos;
+    document.getElementById('dneg-total-tbl').textContent = dneg;
+
+    var ppv = (tp + fp) > 0 ? tp / (tp + fp) : 0;
+    var npv = (fn + tn) > 0 ? tn / (fn + tn) : 0;
+    var acc = (tp + tn) / TOTAL;
+
+    document.getElementById('live-ppv').textContent = ppv.toFixed(2);
+    document.getElementById('live-npv').textContent = npv.toFixed(2);
+    document.getElementById('live-acc').textContent = acc.toFixed(2);
+
+    document.getElementById('prev-value').textContent = prev.toFixed(2);
+    document.getElementById('prev-formula').textContent = 'Prevalence = ' + dpos + ' / ' + TOTAL + ' = ' + prev.toFixed(2);
+
+    if (Math.abs(prev - 0.20) < 0.005) {
+      document.getElementById('prev-ci').textContent = '95% CI [0.17, 0.24]';
+    } else {
+      document.getElementById('prev-ci').textContent = '(exploration mode \u2014 CI applies to article values)';
+    }
+
+    if (state.prevRevealed) updatePrevScale(prev);
+  }
+
+  function updatePrevScale(prev) {
+    var pct = (prev / 0.80) * 100;
+    if (pct < 0) pct = 0;
+    if (pct > 100) pct = 100;
+    document.getElementById('prev-marker-panel').style.left = pct + '%';
+    document.getElementById('prev-marker-pill-panel').textContent = prev.toFixed(2);
+
+    var readout = document.getElementById('prev-readout-bar-panel');
+    readout.classList.remove('rare', 'moderate', 'high');
+    if (prev < 0.05) {
+      readout.classList.add('rare');
+      readout.innerHTML = 'Rare condition or low-suspicion screening &mdash; positive results often false.';
+    } else if (prev < 0.30) {
+      readout.classList.add('moderate');
+      readout.innerHTML = 'Moderate prevalence &mdash; symptomatic urgent-care population during transmission.';
+    } else {
+      readout.classList.add('high');
+      readout.innerHTML = 'High-prevalence setting &mdash; positives mostly true, negatives less reliable.';
+    }
+  }
+
+  function resetSliders() {
+    document.getElementById('slider-prev').value = 20;
+    onSliderChange();
+  }
+
+  var feedbackText = {
+    1: {
+      correct: "<strong>Correct.</strong> That's the cleanest read of prevalence: it describes the disease frequency in a specific population during a specific period. It doesn't measure the test, doesn't predict any individual's risk, and doesn't generalize beyond the studied population without thought.",
+      a: "<strong>Not quite.</strong> 0.20 isn't a property of the test &mdash; it's the proportion of the studied population who actually had COVID. The test's detection rate (sensitivity) is a different number entirely (Sn = 0.70 in this study). Prevalence and sensitivity answer different questions. <strong>The correct answer is B.</strong> That's the cleanest read of prevalence: it describes the disease frequency in a specific population during a specific period. It doesn't measure the test, doesn't predict any individual's risk, and doesn't generalize beyond the studied population without thought.",
+      c: "<strong>Not quite.</strong> Prevalence is a snapshot of how common the disease is right now in this population &mdash; not a forecast of risk over time. &ldquo;What's the chance one person will get COVID this year?&rdquo; is incidence, a different epidemiologic concept. <strong>The correct answer is B.</strong> That's the cleanest read of prevalence: it describes the disease frequency in a specific population during a specific period. It doesn't measure the test, doesn't predict any individual's risk, and doesn't generalize beyond the studied population without thought.",
+      d: "<strong>Not quite.</strong> &ldquo;Missed cases&rdquo; describes the false-negative rate, which is related to sensitivity. Prevalence is about how common the condition is in the study population, not about test errors. The two answer completely different questions. <strong>The correct answer is B.</strong> That's the cleanest read of prevalence: it describes the disease frequency in a specific population during a specific period. It doesn't measure the test, doesn't predict any individual's risk, and doesn't generalize beyond the studied population without thought."
+    },
+    2: {
+      correct: "<strong>Correct.</strong> Prevalence is shaped by who walks through the door. Symptomatic patients during a community surge are pre-selected for higher likelihood of having COVID. Asymptomatic patients during a calm period are not. Same test, but the very different populations mean PPV and NPV will look different in your clinic than in the article.",
+      b: "<strong>Not quite.</strong> Prevalence has nothing to do with which test you use &mdash; it's a property of the population you're testing, not the test itself. The test could have any Sn or Sp and the population's prevalence wouldn't change. <strong>The correct answer is A.</strong> Prevalence is shaped by who walks through the door. Symptomatic patients during a community surge are pre-selected for higher likelihood of having COVID. Asymptomatic patients during a calm period are not. Same test, but the very different populations mean PPV and NPV will look different in your clinic than in the article.",
+      c: "<strong>Not quite.</strong> Total volume of testing doesn't drive prevalence. What matters is the proportion of patients who truly have the disease. Asymptomatic patients during low transmission means a lower proportion will be positive, regardless of how many people you screen. <strong>The correct answer is A.</strong> Prevalence is shaped by who walks through the door. Symptomatic patients during a community surge are pre-selected for higher likelihood of having COVID. Asymptomatic patients during a calm period are not. Same test, but the very different populations mean PPV and NPV will look different in your clinic than in the article.",
+      d: "<strong>Not quite.</strong> Prevalence isn't a property of the test &mdash; it's a property of the population. The test doesn't &ldquo;set&rdquo; prevalence in any way; it just gets used in a population that already has whatever prevalence it has. <strong>The correct answer is A.</strong> Prevalence is shaped by who walks through the door. Symptomatic patients during a community surge are pre-selected for higher likelihood of having COVID. Asymptomatic patients during a calm period are not. Same test, but the very different populations mean PPV and NPV will look different in your clinic than in the article."
+    },
+    3: {
+      correct: "<strong>Correct.</strong> This is the central pattern of diagnostic accuracy. Sn = TP / (TP + FN) and Sp = TN / (TN + FP) &mdash; both formulas only use cells from <em>one</em> column of the 2&times;2 (disease+ for Sn, disease&minus; for Sp). Changing prevalence changes the column totals but not the within-column proportions. PPV and NPV use cells from <em>different rows</em>, so they're sensitive to how many disease+ vs. disease&minus; patients are in the sample.",
+      a: "<strong>Not quite.</strong> It's actually the opposite. Sn and Sp are stable across prevalence because they only use cells from one column of the 2&times;2; PPV and NPV cross both columns, so they shift when the population mix changes. The slider exploration in Q4&ndash;Q6 will show this directly. <strong>The correct answer is D.</strong> Sn and Sp only use cells from one column of the 2&times;2 (disease+ for Sn, disease&minus; for Sp), so changing prevalence changes column totals but not within-column proportions. PPV and NPV use cells from different rows, so they're sensitive to how many disease+ vs. disease&minus; patients are in the sample.",
+      b: "<strong>Not quite.</strong> The four don't move equally. Sn and Sp are anchored to single columns of the 2&times;2 and don't shift with prevalence. PPV and NPV cross both columns and are pulled by the column-total ratio &mdash; so they shift with prevalence. Different stats, different behavior. <strong>The correct answer is D.</strong> Sn and Sp only use cells from one column of the 2&times;2 (disease+ for Sn, disease&minus; for Sp), so changing prevalence changes column totals but not within-column proportions. PPV and NPV use cells from different rows, so they're sensitive to how many disease+ vs. disease&minus; patients are in the sample.",
+      c: "<strong>Not quite.</strong> Prevalence and Sn measure different things from different cells of the 2&times;2. Sn = TP / (TP + FN); prevalence = (TP + FN) / Total. They share denominator terms but they're computing different ratios. They almost never equal each other. <strong>The correct answer is D.</strong> Sn and Sp only use cells from one column of the 2&times;2 (disease+ for Sn, disease&minus; for Sp), so changing prevalence changes column totals but not within-column proportions. PPV and NPV use cells from different rows, so they're sensitive to how many disease+ vs. disease&minus; patients are in the sample."
+    },
+    4: {
+      correct: "<strong>Correct.</strong> At 1% prevalence: of 1,000 patients, only 10 are truly infected. Sn = 0.70 means the test catches 7 of them (TP = 7) and misses 3 (FN = 3). Of the 990 disease-free patients, 2% test positive anyway: about 20 false positives (FP). So total positives = 27, of which only 7 are real &mdash; PPV = 7/27 = 0.26. <strong>Three-quarters of all positive results are false alarms</strong>, even though the test is 98% specific. The test didn't change &mdash; the population did.",
+      a: "<strong>Not quite.</strong> PPV isn't a function of Sn and Sp alone. PPV also depends on prevalence &mdash; specifically, the ratio of disease+ to disease&minus; patients in the sample. Same Sn, same Sp, completely different PPV at different prevalence levels. <strong>The correct answer is C.</strong> At 1% prevalence, almost everyone in the population is disease-free, so even a small false-positive rate produces many more FPs than TPs. PPV = 7/27 = 0.26 &mdash; three-quarters of positive results are false alarms even though the test is 98% specific. The test didn't change; the population did.",
+      b: "<strong>Not quite.</strong> The test's accuracy values (Sn, Sp) are unchanged when you move the prevalence slider. What changes is the meaning of a positive result &mdash; and at low prevalence, that meaning gets worse, not better. <strong>The correct answer is C.</strong> At 1% prevalence, almost everyone in the population is disease-free, so even a small false-positive rate produces many more FPs than TPs. PPV = 7/27 = 0.26 &mdash; three-quarters of positive results are false alarms even though the test is 98% specific. The test didn't change; the population did.",
+      d: "<strong>Not quite.</strong> PPV is well-defined as long as someone tests positive (TP + FP > 0). At 1% prevalence with our test, plenty of patients still test positive &mdash; just mostly disease-free ones. PPV is calculable; it's just very low. <strong>The correct answer is C.</strong> At 1% prevalence, almost everyone in the population is disease-free, so even a small false-positive rate produces many more FPs than TPs. PPV = 7/27 = 0.26 &mdash; three-quarters of positive results are false alarms even though the test is 98% specific. The test didn't change; the population did."
+    },
+    5: {
+      correct: "<strong>Correct.</strong> At 50% prevalence: 500 disease+ and 500 disease&minus; patients. TP = 500 \u00d7 0.70 = 350; FN = 150. FP = 500 \u00d7 0.02 = 10; TN = 490. PPV = 350 / (350 + 10) = 0.97. NPV = 490 / (150 + 490) = 0.77. <strong>The same test that was great for ruling out at 20% prevalence is now mediocre at it (NPV 0.77 means about 1 in 4 negative results is wrong)</strong>, while it became excellent for ruling in. The trade-off works in opposite directions for PPV and NPV.",
+      a: "<strong>Not quite.</strong> PPV and NPV move in opposite directions as prevalence rises. The disease+ pool grows, which is great for PPV (positive results are more likely to be real) but bad for NPV (more truly infected patients end up in the FN cell). <strong>The correct answer is B.</strong> At 50% prevalence, the same test that was great for ruling out at 20% prevalence is now mediocre at it (NPV drops to ~0.77, meaning about 1 in 4 negative results is wrong), while it became excellent for ruling in (PPV climbs to ~0.97). The trade-off works in opposite directions for PPV and NPV.",
+      c: "<strong>Not quite.</strong> Look at the live readout. PPV climbs (toward 0.97) and NPV drops (to about 0.77) as prevalence rises &mdash; that's the opposite pattern from what you'd see at low prevalence. <strong>The correct answer is B.</strong> At 50% prevalence, the same test that was great for ruling out at 20% prevalence is now mediocre at it (NPV drops to ~0.77, meaning about 1 in 4 negative results is wrong), while it became excellent for ruling in (PPV climbs to ~0.97). The trade-off works in opposite directions for PPV and NPV.",
+      d: "<strong>Not quite.</strong> Sn and Sp didn't change &mdash; they stayed at 0.70 and 0.98 the whole time. But PPV and NPV both moved noticeably, in opposite directions. That's the prevalence effect: same test, different population, different post-test interpretation. <strong>The correct answer is B.</strong> At 50% prevalence, the same test that was great for ruling out at 20% prevalence is now mediocre at it (NPV drops to ~0.77, meaning about 1 in 4 negative results is wrong), while it became excellent for ruling in (PPV climbs to ~0.97). The trade-off works in opposite directions for PPV and NPV."
+    },
+    6: {
+      correct: "<strong>Correct &mdash; this is the central lesson of Part 3.</strong> Diagnostic accuracy values published in journals only describe the test's behavior in <em>that study's population</em>. Sn and Sp generally transfer to your setting; PPV and NPV often don't. Before quoting an article's PPV or NPV to a patient, ask: is the population I'm seeing similar in prevalence to the studied one? When the answer is no, the headline numbers won't reflect what your patients will actually experience.",
+      a: "<strong>Not quite.</strong> Tests don't get redesigned for prevalence &mdash; their Sn and Sp travel with them unchanged. What needs adjustment is your <em>interpretation</em> of PPV and NPV in your specific setting. The test's behavior on healthy and infected patients is what it is; the population shapes the post-test meaning. <strong>The correct answer is D.</strong> Diagnostic accuracy values published in journals only describe the test's behavior in that study's population. Sn and Sp generally transfer to your setting; PPV and NPV often don't. Before quoting an article's PPV or NPV to a patient, ask: is the population I'm seeing similar in prevalence to the studied one?",
+      b: "<strong>Not quite.</strong> Sn and Sp are very useful precisely because they're stable across prevalence. They tell you about the test itself, regardless of which population you use it in. They just don't tell you everything &mdash; which is why we also need PPV and NPV (and prevalence to interpret them). <strong>The correct answer is D.</strong> Diagnostic accuracy values published in journals only describe the test's behavior in that study's population. Sn and Sp generally transfer to your setting; PPV and NPV often don't. Before quoting an article's PPV or NPV to a patient, ask: is the population I'm seeing similar in prevalence to the studied one?",
+      c: "<strong>Not quite.</strong> Prevalence matters in any setting &mdash; symptomatic urgent-care, screening, outbreak ward. The article's setting was symptomatic adults, and changing prevalence still changed PPV and NPV dramatically. Symptomatic populations aren't immune to the prevalence effect. <strong>The correct answer is D.</strong> Diagnostic accuracy values published in journals only describe the test's behavior in that study's population. Sn and Sp generally transfer to your setting; PPV and NPV often don't. Before quoting an article's PPV or NPV to a patient, ask: is the population I'm seeing similar in prevalence to the studied one?"
+    }
+  };
+
+  function answerMC(qNum, choice, isCorrect) {
+    if (state.answered[qNum]) return;
+    state.answered[qNum] = true;
+    state.correct[qNum] = isCorrect;
+
+    var buttons = document.querySelectorAll('#mc' + qNum + '-options .mc-option');
+    buttons.forEach(function(btn) { btn.disabled = true; });
+
+    var chosenBtn = Array.prototype.find.call(buttons, function(btn) {
+      return btn.getAttribute('onclick').indexOf("'" + choice + "'") !== -1;
+    });
+    if (chosenBtn) chosenBtn.classList.add(isCorrect ? 'selected-correct' : 'selected-wrong');
+    if (!isCorrect) {
+      buttons.forEach(function(btn) {
+        var onClick = btn.getAttribute('onclick');
+        if (onClick.indexOf('true') !== -1) btn.classList.add('show-correct');
+      });
+    }
+
+    var fb = document.getElementById('mc' + qNum + '-feedback');
+    fb.classList.remove('correct', 'incorrect');
+    fb.classList.add(isCorrect ? 'correct' : 'incorrect');
+    fb.innerHTML = isCorrect ? feedbackText[qNum].correct : feedbackText[qNum][choice];
+
+    if (qNum < 6) {
+      unlockMC(qNum + 1);
+      if (qNum === 3) unlockSliders();
+    } else {
+      finalize();
+    }
+    updateStepCounter();
+  }
+
+  function unlockMC(qNum) {
+    var block = document.getElementById('mc' + qNum + '-block');
+    if (block) block.classList.add('unlocked');
+  }
+
+  function finalize() {
+    var allCorrect = state.correct[1] && state.correct[2] && state.correct[3] && state.correct[4] && state.correct[5] && state.correct[6];
+    var msg = document.getElementById('completion-msg');
+    msg.textContent = allCorrect ? '\u2713 All six correct \u2014 excellent work.' : '\u2713 Section complete. Review feedback as needed.';
+    document.getElementById('takeaways').style.display = 'block';
+    var nextBtn = document.getElementById('next-btn');
+    nextBtn.style.pointerEvents = 'auto';
+    nextBtn.style.opacity = '1';
+    try { localStorage.setItem('unit8_part3_done', '1'); } catch (e) {}
+  }
+
+  function updateStepCounter() {
+    var step = 1;
+    if (state.highlighted[1] || state.highlighted[2] || state.highlighted[3]) step = 2;
+    if (state.threePopsRevealed) step = 3;
+    if (state.calcShown) step = 4;
+    if (state.prevRevealed) step = 5;
+    if (state.answered[3]) step = 6;
+    document.getElementById('step-counter').textContent = step;
+  }
+
+  resetSliders();
+</script>
+</body>
+</html>

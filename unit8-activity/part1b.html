@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit 8 Activity — Part 1b: The 2 × 2 Table</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Calibri, "Segoe UI", Tahoma, sans-serif; background: #F0F3F5; color: #172940; line-height: 1.55; min-height: 100vh; font-size: 16.5px; }
+  .header { background: #172940; color: white; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid #2E8FAF; }
+  .header-left { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .header h1 { font-size: 23px; font-weight: 700; }
+  .header .part-label { font-size: 13.5px; color: #FFC857; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+  .progress-pill { background: rgba(255,255,255,0.12); padding: 6px 14px; border-radius: 20px; font-size: 13.5px; color: #F0F3F5; }
+  .progress-pill strong { color: #FFC857; }
+
+  .container { max-width: 920px; margin: 0 auto; padding: 28px 32px 60px; display: flex; flex-direction: column; gap: 22px; }
+
+  .panel { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 26px 30px; border-left: 5px solid #2E8FAF; }
+  .panel h2 { color: #172940; font-size: 21px; font-weight: 700; margin-bottom: 12px; }
+  .panel p { color: #2c3e50; font-size: 16.5px; line-height: 1.7; margin-bottom: 12px; }
+  .panel p:last-child { margin-bottom: 0; }
+  .panel p strong { color: #172940; }
+
+  /* Recap header */
+  .recap { background: #172940; color: white; border-left: 5px solid #FFC857; padding: 26px 32px; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); }
+  .recap .subtitle { color: #FFC857; font-size: 13px; text-transform: uppercase; letter-spacing: 1.6px; font-weight: 700; margin-bottom: 6px; }
+  .recap h1 { color: white; font-size: 25px; font-weight: 700; margin-bottom: 12px; line-height: 1.3; }
+  .recap p { color: #F0F3F5; font-size: 16px; line-height: 1.7; margin: 0; }
+  .recap strong { color: #FFC857; }
+
+  /* Six values preview */
+  .six-preview { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 14px 0 4px; }
+  .preview-card { background: white; border: 1px solid #d8dde2; border-radius: 10px; padding: 14px 16px; transition: transform 0.18s ease, box-shadow 0.18s ease; }
+  .preview-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(23, 41, 64, 0.10); }
+  .preview-card.acc { border-top: 4px solid #2E8FAF; }
+  .preview-card.prev { border-top: 4px solid #FFC857; }
+  .preview-card.sn { border-top: 4px solid #2E8FAF; }
+  .preview-card.sp { border-top: 4px solid #246F89; }
+  .preview-card.ppv { border-top: 4px solid #246F89; }
+  .preview-card.npv { border-top: 4px solid #2D8659; }
+  .preview-card .pc-name { font-family: "Cambria Math", Cambria, serif; font-size: 20px; font-weight: 700; color: #172940; margin-bottom: 3px; }
+  .preview-card.acc .pc-name { color: #2E8FAF; }
+  .preview-card.prev .pc-name { color: #8B6914; }
+  .preview-card.sn .pc-name { color: #2E8FAF; }
+  .preview-card.sp .pc-name { color: #246F89; }
+  .preview-card.ppv .pc-name { color: #246F89; }
+  .preview-card.npv .pc-name { color: #1B5E3F; }
+  .preview-card .pc-full { font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.7px; color: #616467; font-weight: 700; margin-bottom: 8px; }
+  .preview-card .pc-desc { font-size: 14.5px; color: #2c3e50; line-height: 1.55; }
+  .preview-card .pc-meet { font-size: 12.5px; color: #2E8FAF; font-weight: 600; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #d8dde2; }
+
+  /* The foundational 2x2 explanation */
+  .foundation-section { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 26px 30px; border-left: 5px solid #FFC857; }
+  .foundation-section h2 { color: #172940; font-size: 21px; font-weight: 700; margin-bottom: 6px; }
+  .foundation-section .lens-subhead { font-size: 13.5px; text-transform: uppercase; letter-spacing: 1.2px; color: #2E8FAF; font-weight: 700; margin-bottom: 10px; }
+  .foundation-section > p { color: #2c3e50; font-size: 16px; line-height: 1.7; margin-bottom: 14px; }
+  .foundation-section > p strong { color: #172940; }
+
+  /* Cell mapper */
+  .cell-mapper-wrap { background: #F8FAFB; border: 1px solid #d8dde2; border-radius: 10px; padding: 18px 20px; margin: 16px 0 6px; }
+  .cell-mapper-instruct { font-size: 15.5px; color: #616467; text-align: center; margin-bottom: 14px; font-style: italic; line-height: 1.5; }
+  .cell-mapper-instruct strong { color: #172940; }
+
+  .cell-mapper { display: grid; grid-template-columns: 130px 1fr 1fr; gap: 4px; max-width: 620px; margin: 0 auto; }
+  .cm-corner { background: transparent; }
+  .cm-col-header {
+    background: #172940; color: white;
+    padding: 12px 8px; text-align: center;
+    font-weight: 700; font-size: 14px;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    border-radius: 6px 6px 0 0;
+  }
+  .cm-col-header .ch-label {
+    font-size: 12px; color: #FFC857;
+    text-transform: uppercase; letter-spacing: 1px;
+    font-weight: 700; display: block; margin-bottom: 3px;
+  }
+  .cm-row-header {
+    background: #2E8FAF; color: white;
+    padding: 14px 10px; text-align: center;
+    font-weight: 700; font-size: 13.5px;
+    text-transform: uppercase; letter-spacing: 0.7px;
+    display: flex; align-items: center; justify-content: center;
+    line-height: 1.4;
+  }
+  .cm-row-header .rh-label {
+    font-size: 11.5px; color: #FFE6A6;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    font-weight: 700; display: block; margin-bottom: 4px;
+  }
+  .cm-row-header.first { border-radius: 6px 0 0 0; }
+  .cm-row-header.last { border-radius: 0 0 0 6px; }
+
+  .cm-cell {
+    background: white; border: 2.5px dashed #b8c2c8;
+    border-radius: 8px; padding: 18px 14px;
+    cursor: pointer; transition: all 0.25s ease;
+    text-align: center; min-height: 140px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .cm-cell:not(.revealed):hover {
+    border-color: #2E8FAF; background: #EAF3F7; transform: translateY(-1px);
+  }
+  .cm-cell .cm-prompt {
+    font-size: 17px; color: #2E8FAF; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 1px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .cm-cell .cm-prompt::before {
+    content: "▸"; font-size: 19px; line-height: 1;
+  }
+
+  .cm-cell.revealed {
+    cursor: default;
+    border-style: solid; border-width: 2.5px;
+    animation: revealPop 0.4s ease;
+  }
+  .cm-cell.tp { border-color: #2D8659; }
+  .cm-cell.tp.revealed { background: #E8F4EC; }
+  .cm-cell.fp { border-color: #C0504D; }
+  .cm-cell.fp.revealed { background: #FBEAE7; }
+  .cm-cell.fn { border-color: #C0504D; }
+  .cm-cell.fn.revealed { background: #FBEAE7; }
+  .cm-cell.tn { border-color: #2D8659; }
+  .cm-cell.tn.revealed { background: #E8F4EC; }
+
+  @keyframes revealPop {
+    0% { transform: scale(0.96); opacity: 0.6; }
+    60% { transform: scale(1.02); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .cm-cell .cm-code {
+    font-family: "Cambria Math", Cambria, serif;
+    font-size: 38px; font-weight: 700;
+    line-height: 1; margin-bottom: 6px;
+  }
+  .cm-cell.tp .cm-code, .cm-cell.tn .cm-code { color: #1B5E3F; }
+  .cm-cell.fp .cm-code, .cm-cell.fn .cm-code { color: #8B2B1F; }
+  .cm-cell .cm-name {
+    font-size: 14px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.7px;
+    margin-bottom: 8px;
+  }
+  .cm-cell.tp .cm-name, .cm-cell.tn .cm-name { color: #1B5E3F; }
+  .cm-cell.fp .cm-name, .cm-cell.fn .cm-name { color: #8B2B1F; }
+  .cm-cell .cm-desc {
+    font-size: 14px; color: #2c3e50;
+    line-height: 1.5; margin-bottom: 8px;
+  }
+  .cm-cell .cm-mnemonic {
+    font-size: 13px; color: #616467;
+    font-style: italic; padding-top: 8px;
+    border-top: 1px dashed rgba(0,0,0,0.12);
+    width: 100%; line-height: 1.5;
+  }
+  .cm-cell.tp .cm-mnemonic, .cm-cell.tn .cm-mnemonic { color: #1B5E3F; }
+  .cm-cell.fp .cm-mnemonic, .cm-cell.fn .cm-mnemonic { color: #8B2B1F; }
+  .cm-cell .cm-mnemonic strong { color: #172940; font-style: normal; }
+
+  .cm-progress { font-size: 14.5px; color: #616467; text-align: center; margin-top: 14px; font-style: italic; transition: color 0.3s ease; }
+  .cm-progress.complete { color: #2D8659; font-weight: 600; }
+
+  /* Patient stories panel */
+  .stories-panel { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 26px 30px; border-left: 5px solid #246F89; opacity: 0; max-height: 0; overflow: hidden; transition: opacity 0.5s ease, max-height 0.6s ease, padding 0.4s ease; padding-top: 0; padding-bottom: 0; }
+  .stories-panel.shown { opacity: 1; max-height: 2400px; padding-top: 26px; padding-bottom: 26px; }
+  .stories-panel h2 { color: #172940; font-size: 21px; font-weight: 700; margin-bottom: 6px; }
+  .stories-panel .stories-subhead { font-size: 13.5px; text-transform: uppercase; letter-spacing: 1.2px; color: #246F89; font-weight: 700; margin-bottom: 10px; }
+  .stories-panel > p { color: #2c3e50; font-size: 15.5px; line-height: 1.65; margin-bottom: 14px; }
+  .stories-panel > p strong { color: #172940; }
+
+  .story-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .story-card { background: #F8FAFB; border-radius: 10px; padding: 16px 18px; border-left: 4px solid #2E8FAF; }
+  .story-card.tp { border-left-color: #2D8659; background: #F4FAF6; }
+  .story-card.fp { border-left-color: #C0504D; background: #FDF5F4; }
+  .story-card.fn { border-left-color: #C0504D; background: #FDF5F4; }
+  .story-card.tn { border-left-color: #2D8659; background: #F4FAF6; }
+  .story-card .story-tag {
+    display: inline-block; font-family: "Cambria Math", Cambria, serif;
+    font-size: 15px; font-weight: 700;
+    padding: 4px 11px; border-radius: 4px; margin-bottom: 8px;
+  }
+  .story-card.tp .story-tag, .story-card.tn .story-tag { background: #1B5E3F; color: white; }
+  .story-card.fp .story-tag, .story-card.fn .story-tag { background: #8B2B1F; color: white; }
+  .story-card .story-name { font-weight: 700; color: #172940; font-size: 16px; margin-bottom: 6px; }
+  .story-card .story-body { font-size: 15px; color: #2c3e50; line-height: 1.6; }
+  .story-card .story-body em { font-style: italic; color: #616467; }
+  .story-card .story-outcome { font-size: 14px; margin-top: 10px; padding-top: 10px; border-top: 1px dashed rgba(0,0,0,0.12); font-weight: 600; line-height: 1.5; }
+  .story-card.tp .story-outcome, .story-card.tn .story-outcome { color: #1B5E3F; }
+  .story-card.fp .story-outcome, .story-card.fn .story-outcome { color: #8B2B1F; }
+
+  /* Decisions panel */
+  .decisions-panel { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 26px 30px; border-left: 5px solid #2E8FAF; opacity: 0; max-height: 0; overflow: hidden; transition: opacity 0.5s ease, max-height 0.6s ease, padding 0.4s ease; padding-top: 0; padding-bottom: 0; }
+  .decisions-panel.shown { opacity: 1; max-height: 1200px; padding-top: 26px; padding-bottom: 26px; }
+  .decisions-panel h2 { color: #172940; font-size: 21px; font-weight: 700; margin-bottom: 6px; }
+  .decisions-panel .dec-subhead { font-size: 13.5px; text-transform: uppercase; letter-spacing: 1.2px; color: #2E8FAF; font-weight: 700; margin-bottom: 10px; }
+  .decisions-panel > p { color: #2c3e50; font-size: 15.5px; line-height: 1.65; margin-bottom: 14px; }
+  .decisions-panel > p strong { color: #172940; }
+
+  .decision-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 12px 0 4px; }
+  .decision-card { background: #F8FAFB; border-radius: 10px; padding: 16px 18px; border-top: 4px solid #2E8FAF; }
+  .decision-card.rule-out { border-top-color: #2E8FAF; }
+  .decision-card.rule-in { border-top-color: #246F89; }
+  .decision-card .dc-label { font-size: 12.5px; color: #616467; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; margin-bottom: 6px; }
+  .decision-card.rule-out .dc-label { color: #2E8FAF; }
+  .decision-card.rule-in .dc-label { color: #246F89; }
+  .decision-card .dc-title { font-size: 17px; font-weight: 700; color: #172940; margin-bottom: 10px; line-height: 1.35; }
+  .decision-card .dc-body { font-size: 14.5px; color: #2c3e50; line-height: 1.6; }
+  .decision-card .dc-body strong { color: #172940; }
+  .decision-card .dc-watch {
+    margin-top: 12px; padding-top: 12px; border-top: 1px dashed #d8dde2;
+    font-size: 14px; line-height: 1.55;
+  }
+  .decision-card.rule-out .dc-watch { color: #8B2B1F; }
+  .decision-card.rule-in .dc-watch { color: #8B2B1F; }
+  .decision-card .dc-watch strong { color: #172940; }
+
+  /* Quick check MC */
+  .check-section { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 26px 30px; border-top: 5px solid #FFC857; opacity: 0; max-height: 0; overflow: hidden; transition: opacity 0.5s ease, max-height 0.6s ease, padding 0.4s ease; padding-top: 0; padding-bottom: 0; }
+  .check-section.shown { opacity: 1; max-height: 1800px; padding-top: 26px; padding-bottom: 26px; }
+  .check-section h2 { color: #172940; font-size: 21px; font-weight: 700; margin-bottom: 6px; }
+  .check-section .check-subhead { font-size: 13.5px; text-transform: uppercase; letter-spacing: 1.2px; color: #8B6914; font-weight: 700; margin-bottom: 10px; }
+  .check-section > p { color: #2c3e50; font-size: 15.5px; line-height: 1.6; margin-bottom: 16px; }
+
+  .mc-block { margin-bottom: 18px; opacity: 0.45; pointer-events: none; transition: opacity 0.4s ease; }
+  .mc-block.first-unlocked, .mc-block.unlocked { opacity: 1; pointer-events: auto; }
+  .mc-question { font-size: 16.5px; font-weight: 700; color: #172940; margin-bottom: 12px; line-height: 1.5; }
+  .mc-question .q-num { color: #2E8FAF; margin-right: 6px; }
+  .mc-options { display: flex; flex-direction: column; gap: 8px; }
+  .mc-option {
+    background: #F8FAFB; border: 2px solid #d8dde2; border-radius: 8px;
+    padding: 13px 17px; cursor: pointer; font-size: 16px;
+    color: #2c3e50; text-align: left; transition: all 0.18s ease;
+    font-family: inherit; width: 100%; line-height: 1.55;
+  }
+  .mc-option:hover:not(:disabled) { border-color: #2E8FAF; background: #EAF3F7; }
+  .mc-option:disabled { cursor: default; }
+  .mc-option.selected-correct { background: #E8F4EC; border-color: #2D8B5A; color: #1B5E3F; font-weight: 600; }
+  .mc-option.selected-wrong { background: #FBEAE7; border-color: #C0504D; color: #8B2B1F; }
+  .mc-option.show-correct { background: #E8F4EC; border-color: #2D8B5A; color: #1B5E3F; font-weight: 600; }
+  .mc-option .marker { display: inline-block; font-weight: 700; margin-right: 8px; color: #2E8FAF; }
+  .mc-feedback { margin-top: 14px; padding: 14px 17px; border-radius: 8px; font-size: 15.5px; line-height: 1.65; display: none; }
+  .mc-feedback.correct { background: #E8F4EC; border-left: 4px solid #2D8B5A; color: #1B5E3F; display: block; }
+  .mc-feedback.incorrect { background: #FBEAE7; border-left: 4px solid #C0504D; color: #8B2B1F; display: block; }
+  .mc-feedback strong { display: block; margin-bottom: 4px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Nav */
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 16px 0 0; gap: 12px; flex-wrap: wrap; }
+  .nav-btn { background: #2E8FAF; color: white; border: none; padding: 14px 32px; border-radius: 8px; font-size: 15.5px; font-weight: 700; cursor: pointer; font-family: inherit; transition: all 0.2s ease; text-decoration: none; display: inline-block; }
+  .nav-btn:hover { background: #246F89; transform: translateY(-1px); }
+  .nav-btn.locked { background: #c5cdd3; cursor: not-allowed; pointer-events: none; }
+  .nav-btn.secondary { background: white; color: #2E8FAF; border: 2px solid #2E8FAF; }
+  .nav-btn.secondary:hover { background: #EAF3F7; }
+  .nav-completion { color: #2D8659; font-size: 14.5px; font-weight: 600; flex-grow: 1; text-align: center; margin: 0 16px; }
+
+  @media (max-width: 720px) {
+    .six-preview { grid-template-columns: 1fr; }
+    .cell-mapper { grid-template-columns: 90px 1fr 1fr; }
+    .cm-cell { min-height: 120px; padding: 14px 10px; }
+    .cm-cell .cm-code { font-size: 32px; }
+    .story-grid, .decision-pair { grid-template-columns: 1fr; }
+    .header { padding: 14px 18px; flex-direction: column; gap: 8px; align-items: flex-start; }
+    .container { padding: 18px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <h1>Unit 8: Diagnostic Accuracy Activity</h1>
+    <span class="part-label">Part 1b of 10 &middot; The 2 &times; 2 Table</span>
+  </div>
+  <div class="progress-pill">Section <strong id="section-counter">1</strong> of 5</div>
+</header>
+
+<main class="container">
+
+  <!-- 1. Recap header -->
+  <section class="recap">
+    <div class="subtitle">Picking up where we left off</div>
+    <h1>From the gold standard to the foundation underneath every accuracy number</h1>
+    <p>You've just seen what a gold standard is and why we compare quick tests to it. Now let's look at <strong>where the six diagnostic accuracy values come from</strong> &mdash; a single small table that captures every patient's outcome on a test, set against what was actually true.</p>
+  </section>
+
+  <!-- 2. The six values preview -->
+  <section class="panel">
+    <h2>The six values you'll learn to read</h2>
+    <p>Every diagnostic accuracy paper reports some combination of these six statistics. You'll meet each one in detail in Parts 2&ndash;6. They all share one structure underneath, which we'll get to in a moment.</p>
+
+    <div class="six-preview">
+      <div class="preview-card acc">
+        <div class="pc-name">Accuracy</div>
+        <div class="pc-full">Overall Accuracy</div>
+        <div class="pc-desc">The fraction of all test results that are correct. Sounds great, but can mislead &mdash; especially in populations where disease is rare or common.</div>
+        <div class="pc-meet">&#9656; Part 2</div>
+      </div>
+      <div class="preview-card prev">
+        <div class="pc-name">Prevalence</div>
+        <div class="pc-full">How common the condition is</div>
+        <div class="pc-desc">The proportion of patients in a population who have the condition. Doesn't measure the test itself &mdash; but bends what its results mean.</div>
+        <div class="pc-meet">&#9656; Part 3</div>
+      </div>
+      <div class="preview-card sn">
+        <div class="pc-name">Sn</div>
+        <div class="pc-full">Sensitivity</div>
+        <div class="pc-desc">Of patients who truly have the condition, how many does the test catch? High Sn = trust a negative result (rule-out).</div>
+        <div class="pc-meet">&#9656; Part 4</div>
+      </div>
+      <div class="preview-card sp">
+        <div class="pc-name">Sp</div>
+        <div class="pc-full">Specificity</div>
+        <div class="pc-desc">Of patients who truly don't have the condition, how many does the test correctly clear? High Sp = trust a positive result (rule-in).</div>
+        <div class="pc-meet">&#9656; Part 5</div>
+      </div>
+      <div class="preview-card ppv">
+        <div class="pc-name">PPV</div>
+        <div class="pc-full">Positive Predictive Value</div>
+        <div class="pc-desc">Of patients who tested positive, how many actually have the condition? Answers the patient's question after a positive result.</div>
+        <div class="pc-meet">&#9656; Part 6</div>
+      </div>
+      <div class="preview-card npv">
+        <div class="pc-name">NPV</div>
+        <div class="pc-full">Negative Predictive Value</div>
+        <div class="pc-desc">Of patients who tested negative, how many are actually clear? Answers the patient's question after a negative result.</div>
+        <div class="pc-meet">&#9656; Part 6</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 3. The 2x2 foundation explanation -->
+  <section class="foundation-section">
+    <div class="lens-subhead">Before any of those six numbers</div>
+    <h2>The 2 &times; 2 table &mdash; the foundation</h2>
+    <p>All six diagnostic accuracy values come from one shared structure: a small table that compares <strong>what the test said</strong> to <strong>what's actually true</strong> &mdash; with truth established by the gold standard you just read about. Every patient ends up in exactly one of four cells:</p>
+
+    <p>The columns are what's <em>actually true</em> &mdash; does the patient have the condition or not? The rows are what the <em>test result</em> said &mdash; positive or negative. Where the row and column intersect tells you the kind of outcome that patient experienced.</p>
+
+    <div class="cell-mapper-wrap">
+      <div class="cell-mapper-instruct">
+        <strong>Click each of the four cells below</strong> to reveal what it represents. You'll need to visit all four to continue.
+      </div>
+
+      <div class="cell-mapper">
+        <div class="cm-corner"></div>
+        <div class="cm-col-header">
+          <span class="ch-label">Actually true</span>
+          Has the condition
+        </div>
+        <div class="cm-col-header">
+          <span class="ch-label">Actually true</span>
+          Does not have it
+        </div>
+
+        <div class="cm-row-header first">
+          <div>
+            <span class="rh-label">Test said</span>
+            Positive
+          </div>
+        </div>
+        <div class="cm-cell tp" id="cell-tp" onclick="revealCell('tp')">
+          <span class="cm-prompt">Tap to reveal</span>
+        </div>
+        <div class="cm-cell fp" id="cell-fp" onclick="revealCell('fp')">
+          <span class="cm-prompt">Tap to reveal</span>
+        </div>
+
+        <div class="cm-row-header last">
+          <div>
+            <span class="rh-label">Test said</span>
+            Negative
+          </div>
+        </div>
+        <div class="cm-cell fn" id="cell-fn" onclick="revealCell('fn')">
+          <span class="cm-prompt">Tap to reveal</span>
+        </div>
+        <div class="cm-cell tn" id="cell-tn" onclick="revealCell('tn')">
+          <span class="cm-prompt">Tap to reveal</span>
+        </div>
+      </div>
+
+      <div class="cm-progress" id="cm-progress">0 of 4 cells revealed</div>
+    </div>
+  </section>
+
+  <!-- 4. Patient stories -->
+  <section class="stories-panel" id="stories-panel">
+    <div class="stories-subhead">Same four cells &mdash; four real patients</div>
+    <h2>Four kinds of outcomes, one busy clinic</h2>
+    <p>Imagine a single afternoon at a community urgent-care clinic. Four patients come in with respiratory symptoms during flu season. Each gets a rapid antigen test for COVID. The results, set against what was actually true (confirmed later by PCR), look like this:</p>
+
+    <div class="story-grid">
+      <div class="story-card tp">
+        <span class="story-tag">TP</span>
+        <div class="story-name">Marcus, 28</div>
+        <div class="story-body">Came in with fever, body aches, and a cough that started two days ago. Antigen test was positive. PCR sent the next day confirmed COVID. <em>The test caught what was actually there.</em></div>
+        <div class="story-outcome">&rarr; Sent home to isolate, stayed away from his asthmatic mother. Outcome: appropriate.</div>
+      </div>
+      <div class="story-card fp">
+        <span class="story-tag">FP</span>
+        <div class="story-name">Eileen, 64</div>
+        <div class="story-body">Came in with a stuffy nose, mild sore throat, no fever. Antigen test was positive. PCR the next day was negative; a respiratory panel later confirmed she actually had a different (not-COVID) virus. <em>The test rang an alarm that wasn't there.</em></div>
+        <div class="story-outcome">&rarr; Cancelled her granddaughter's birthday trip; isolated for three days unnecessarily. Real cost, even though she was never sick with COVID.</div>
+      </div>
+      <div class="story-card fn">
+        <span class="story-tag">FN</span>
+        <div class="story-name">David, 41</div>
+        <div class="story-body">Came in feeling tired with a slight headache. Antigen test was negative, so he went back to work. Three days later he was much sicker; PCR came back positive. <em>The test missed what was actually there.</em></div>
+        <div class="story-outcome">&rarr; Two coworkers caught COVID from him before he knew he was contagious. The negative result felt like a green light, but it wasn't.</div>
+      </div>
+      <div class="story-card tn">
+        <span class="story-tag">TN</span>
+        <div class="story-name">Priya, 35</div>
+        <div class="story-body">Came in with seasonal allergies &mdash; itchy eyes, runny nose, no fever. Antigen test was negative. She didn't have COVID; she really did just have allergies. <em>The test correctly cleared her.</em></div>
+        <div class="story-outcome">&rarr; Skipped the unnecessary isolation, made it to her daughter's recital. Outcome: appropriate.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Decisions panel -->
+  <section class="decisions-panel" id="decisions-panel">
+    <div class="dec-subhead">The cells that keep clinicians up at night</div>
+    <h2>Which errors matter, and when?</h2>
+    <p>True positives (Marcus) and true negatives (Priya) are the cells you want &mdash; the test got it right. The two error cells (Eileen and David) are the ones that drive how clinicians actually use diagnostic tests. <strong>Different errors matter for different clinical decisions.</strong></p>
+
+    <div class="decision-pair">
+      <div class="decision-card rule-out">
+        <div class="dc-label">Ruling out &mdash; confirming a patient is clear</div>
+        <div class="dc-title">When you can't afford to miss the disease</div>
+        <div class="dc-body">When the consequence of missing a true case is severe (David walking around contagious, an early dementia case slipping through, an unsafe driver cleared as fine), you want to be sure that a <strong>negative result really means negative</strong>. The error you fear is the <strong>false negative</strong>.</div>
+        <div class="dc-watch">
+          <strong>Watch this cell:</strong> FN &mdash; and Sensitivity (Part 4) is the statistic that tells you how big this cell is.
+        </div>
+      </div>
+      <div class="decision-card rule-in">
+        <div class="dc-label">Ruling in &mdash; confirming the patient has it</div>
+        <div class="dc-title">When you can't afford to falsely alarm</div>
+        <div class="dc-body">When acting on a positive result is invasive, expensive, or distressing (Eileen cancelling her trip, sending a patient for a full neuropsychological battery, a difficult diagnostic conversation), you want to be sure that a <strong>positive result really means positive</strong>. The error you fear is the <strong>false positive</strong>.</div>
+        <div class="dc-watch">
+          <strong>Watch this cell:</strong> FP &mdash; and Specificity (Part 5) is the statistic that tells you how big this cell is.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. Quick check MC -->
+  <section class="check-section" id="check-section">
+    <div class="check-subhead">Quick check before moving on</div>
+    <h2>Two questions to lock in cell identification</h2>
+    <p>Two short questions to confirm the four cells make sense before you read the mock article in Part 1c. Slow down for these &mdash; they're the foundation everything else builds on.</p>
+
+    <div class="mc-block first-unlocked" id="mc1-block">
+      <div class="mc-question"><span class="q-num">Q1.</span> A patient comes in with no symptoms and is screened for an infection. The screening test reads negative. A more definitive lab test later confirms the patient actually has the infection. Which cell did this patient end up in?</div>
+      <div class="mc-options" id="mc1-options">
+        <button class="mc-option" onclick="answerMC(1, 'a', false)"><span class="marker">A.</span> True positive (TP) &mdash; the test correctly caught the infection.</button>
+        <button class="mc-option" onclick="answerMC(1, 'b', false)"><span class="marker">B.</span> False positive (FP) &mdash; the test alarmed when there was no infection.</button>
+        <button class="mc-option" onclick="answerMC(1, 'c', true)"><span class="marker">C.</span> False negative (FN) &mdash; the test missed an infection that was actually there.</button>
+        <button class="mc-option" onclick="answerMC(1, 'd', false)"><span class="marker">D.</span> True negative (TN) &mdash; the test correctly cleared the patient.</button>
+      </div>
+      <div class="mc-feedback" id="mc1-feedback"></div>
+    </div>
+
+    <div class="mc-block" id="mc2-block">
+      <div class="mc-question"><span class="q-num">Q2.</span> An OT is screening older adults for early cognitive impairment during home safety evaluations. She wants to be very sure that when she <em>doesn't</em> flag a patient for follow-up, the patient really is cognitively intact. Which cell is she most worried about minimizing?</div>
+      <div class="mc-options" id="mc2-options">
+        <button class="mc-option" onclick="answerMC(2, 'a', false)"><span class="marker">A.</span> True positives (TP) &mdash; flagging the patients who really are impaired.</button>
+        <button class="mc-option" onclick="answerMC(2, 'b', false)"><span class="marker">B.</span> False positives (FP) &mdash; flagging patients who are actually fine.</button>
+        <button class="mc-option" onclick="answerMC(2, 'c', true)"><span class="marker">C.</span> False negatives (FN) &mdash; telling a truly impaired patient that nothing is wrong.</button>
+        <button class="mc-option" onclick="answerMC(2, 'd', false)"><span class="marker">D.</span> True negatives (TN) &mdash; correctly clearing patients who are fine.</button>
+      </div>
+      <div class="mc-feedback" id="mc2-feedback"></div>
+    </div>
+  </section>
+
+  <!-- Nav -->
+  <div class="nav-bar">
+    <a href="part1a.html" class="nav-btn secondary">&larr; Back to Part 1a</a>
+    <span class="nav-completion" id="nav-msg">Reveal all four cells and answer both check questions to continue.</span>
+    <a href="part1c.html" class="nav-btn locked" id="next-btn">Continue to Part 1c &rarr;</a>
+  </div>
+
+</main>
+
+<script>
+  var state = {
+    revealed: { tp: false, fp: false, fn: false, tn: false },
+    storiesShown: false,
+    answered: { 1: false, 2: false },
+    correct: { 1: false, 2: false }
+  };
+
+  var cellContent = {
+    tp: {
+      code: 'TP',
+      name: 'True Positive',
+      desc: 'The test said <strong>positive</strong> AND the patient really has the condition.',
+      mnemonic: '<strong>The catch.</strong> The test correctly identified a patient who is actually sick.'
+    },
+    fp: {
+      code: 'FP',
+      name: 'False Positive',
+      desc: 'The test said <strong>positive</strong> BUT the patient does <em>not</em> have the condition.',
+      mnemonic: '<strong>The false alarm.</strong> The test rang the bell on someone who is actually fine.'
+    },
+    fn: {
+      code: 'FN',
+      name: 'False Negative',
+      desc: 'The test said <strong>negative</strong> BUT the patient really has the condition.',
+      mnemonic: '<strong>The miss.</strong> The test cleared someone who is actually sick.'
+    },
+    tn: {
+      code: 'TN',
+      name: 'True Negative',
+      desc: 'The test said <strong>negative</strong> AND the patient does <em>not</em> have the condition.',
+      mnemonic: '<strong>The all-clear.</strong> The test correctly cleared a patient who is actually fine.'
+    }
+  };
+
+  function revealCell(key) {
+    if (state.revealed[key]) return;
+    state.revealed[key] = true;
+
+    var cell = document.getElementById('cell-' + key);
+    var c = cellContent[key];
+    cell.classList.add('revealed');
+    cell.innerHTML =
+      '<div class="cm-code">' + c.code + '</div>' +
+      '<div class="cm-name">' + c.name + '</div>' +
+      '<div class="cm-desc">' + c.desc + '</div>' +
+      '<div class="cm-mnemonic">' + c.mnemonic + '</div>';
+
+    updateProgress();
+  }
+
+  function updateProgress() {
+    var revealedCount = 0;
+    Object.keys(state.revealed).forEach(function(k) { if (state.revealed[k]) revealedCount++; });
+    var progress = document.getElementById('cm-progress');
+    progress.textContent = revealedCount + ' of 4 cells revealed';
+
+    if (revealedCount === 4) {
+      progress.textContent = '\u2713 All four cells revealed \u2014 keep reading';
+      progress.classList.add('complete');
+
+      if (!state.storiesShown) {
+        state.storiesShown = true;
+        document.getElementById('stories-panel').classList.add('shown');
+        setTimeout(function() {
+          document.getElementById('decisions-panel').classList.add('shown');
+        }, 250);
+        setTimeout(function() {
+          document.getElementById('check-section').classList.add('shown');
+        }, 500);
+      }
+    }
+
+    updateGate();
+  }
+
+  var feedbackText = {
+    1: {
+      correct: "<strong>Correct.</strong> The patient actually has the infection (column = has the condition) and the test said negative (row = test said negative). That's the false-negative cell &mdash; the test missed a real case. In screening, this is the cell that haunts a clinician's nights, because the patient walked away thinking they were clear.",
+      a: "<strong>Not quite.</strong> A true positive requires the test to read positive AND the patient to actually have the condition. Here the test read negative &mdash; so this is the FN cell, not TP.",
+      b: "<strong>Not quite.</strong> A false positive is the opposite situation: the test reads positive in a patient who's actually fine. Here the test read negative in a patient who actually had the infection &mdash; the FN cell.",
+      d: "<strong>Not quite.</strong> A true negative is when the test correctly clears someone who's actually fine. Here the patient really did have the infection &mdash; so the negative result was wrong. That's a false negative."
+    },
+    2: {
+      correct: "<strong>Correct.</strong> When she clears a patient (test said negative), she wants that 'all clear' to be trustworthy. The error she fears is missing a truly impaired patient &mdash; a false negative. Tests that are good at avoiding false negatives are called <em>highly sensitive</em>. You'll meet sensitivity in Part 4.",
+      a: "<strong>Not quite.</strong> True positives are correctly-flagged patients &mdash; that's a desirable outcome, not an error to minimize. The error in this scenario is when she <em>doesn't</em> flag someone who really is impaired.",
+      b: "<strong>Not quite.</strong> False positives matter when the harm is in falsely alarming someone (extra testing, distress). But this OT specifically said her concern is when she <em>doesn't</em> flag someone &mdash; i.e., the negative result is wrong. That's a false negative concern.",
+      d: "<strong>Not quite.</strong> True negatives are correctly-cleared patients &mdash; that's a desirable outcome. Her concern is the cell that <em>looks like</em> a true negative but is actually a missed case (false negative)."
+    }
+  };
+
+  function answerMC(qNum, choice, isCorrect) {
+    if (state.answered[qNum]) return;
+    state.answered[qNum] = true;
+    state.correct[qNum] = isCorrect;
+
+    var buttons = document.querySelectorAll('#mc' + qNum + '-options .mc-option');
+    buttons.forEach(function(btn) { btn.disabled = true; });
+
+    var chosenBtn = Array.prototype.find.call(buttons, function(btn) {
+      return btn.getAttribute('onclick').indexOf("'" + choice + "'") !== -1;
+    });
+    if (chosenBtn) chosenBtn.classList.add(isCorrect ? 'selected-correct' : 'selected-wrong');
+    if (!isCorrect) {
+      buttons.forEach(function(btn) {
+        var onClick = btn.getAttribute('onclick');
+        if (onClick.indexOf('true') !== -1) btn.classList.add('show-correct');
+      });
+    }
+
+    var fb = document.getElementById('mc' + qNum + '-feedback');
+    fb.classList.remove('correct', 'incorrect');
+    fb.classList.add(isCorrect ? 'correct' : 'incorrect');
+    fb.innerHTML = isCorrect ? feedbackText[qNum].correct : feedbackText[qNum][choice];
+
+    if (qNum === 1) {
+      document.getElementById('mc2-block').classList.add('unlocked');
+    }
+    updateGate();
+  }
+
+  function updateGate() {
+    var cellsAllRevealed = state.revealed.tp && state.revealed.fp && state.revealed.fn && state.revealed.tn;
+    var bothAnswered = state.answered[1] && state.answered[2];
+    var allDone = cellsAllRevealed && bothAnswered;
+
+    var counter = document.getElementById('section-counter');
+    var section = 1;
+    var anyRevealed = state.revealed.tp || state.revealed.fp || state.revealed.fn || state.revealed.tn;
+    if (anyRevealed) section = 3;
+    if (cellsAllRevealed) section = 4;
+    if (state.answered[1]) section = 5;
+    counter.textContent = section;
+
+    var nextBtn = document.getElementById('next-btn');
+    var navMsg = document.getElementById('nav-msg');
+    if (allDone) {
+      nextBtn.classList.remove('locked');
+      try { localStorage.setItem('unit8_part1b_done', '1'); } catch (e) {}
+      navMsg.textContent = '\u2713 Ready \u2014 continue to Part 1c for the mock article and your baseline confidence check.';
+    } else if (!cellsAllRevealed) {
+      nextBtn.classList.add('locked');
+      var revealedCount = 0;
+      Object.keys(state.revealed).forEach(function(k) { if (state.revealed[k]) revealedCount++; });
+      var missing = 4 - revealedCount;
+      navMsg.textContent = 'Reveal ' + missing + ' more cell' + (missing === 1 ? '' : 's') + ' to continue.';
+    } else {
+      nextBtn.classList.add('locked');
+      var qMissing = (state.answered[1] ? 0 : 1) + (state.answered[2] ? 0 : 1);
+      navMsg.textContent = 'Answer ' + qMissing + ' more check question' + (qMissing === 1 ? '' : 's') + ' to continue.';
+    }
+  }
+
+  updateGate();
+</script>
+</body>
+</html>

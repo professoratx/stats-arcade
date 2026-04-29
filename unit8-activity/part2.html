@@ -1,0 +1,1224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit 8 Activity — Part 2: Overall Accuracy</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: Calibri, "Segoe UI", Tahoma, sans-serif;
+    background: #F0F3F5; color: #172940; line-height: 1.55;
+    min-height: 100vh; font-size: 16.5px;
+  }
+  .header {
+    background: #172940; color: white; padding: 18px 32px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 4px solid #2E8FAF;
+  }
+  .header-left { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .header h1 { font-size: 23px; font-weight: 700; }
+  .header .part-label {
+    font-size: 13.5px; color: #FFC857; text-transform: uppercase;
+    letter-spacing: 1.5px; font-weight: 600;
+  }
+  .progress-pill {
+    background: rgba(255,255,255,0.12); padding: 6px 14px;
+    border-radius: 20px; font-size: 13.5px; color: #F0F3F5;
+  }
+  .progress-pill strong { color: #FFC857; }
+
+  .container {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px;
+    padding: 24px 32px 60px; max-width: 1500px; margin: 0 auto;
+  }
+
+  .left-panel {
+    background: white; border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08);
+    padding: 26px 26px 22px; position: sticky; top: 24px;
+    height: fit-content; max-height: calc(100vh - 48px); overflow-y: auto;
+  }
+  .left-panel h2 { font-size: 19px; color: #172940; margin-bottom: 4px; font-weight: 700; }
+  .left-panel .subtitle { color: #616467; font-size: 14px; margin-bottom: 18px; }
+  .panel-section-label {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px;
+    color: #2E8FAF; font-weight: 700; margin-bottom: 8px; margin-top: 18px;
+  }
+
+  .contingency {
+    width: 100%; border-collapse: separate; border-spacing: 0;
+    font-size: 14px; margin-bottom: 6px;
+  }
+  .contingency th, .contingency td {
+    padding: 11px 8px; text-align: center; border: 1px solid #d8dde2;
+  }
+  .contingency th { background: #172940; color: white; font-weight: 600; font-size: 12.5px; }
+  .contingency th:first-child { background: transparent; border: none; }
+  .contingency .row-label {
+    background: #2E8FAF; color: white; font-weight: 600;
+    text-align: left; padding: 11px 10px; font-size: 13px;
+  }
+  .contingency .group-total { background: #F0F3F5; font-weight: 700; color: #172940; }
+  .contingency .cell-tp {
+    background: #E8F4EC; font-weight: 700; font-size: 18px;
+    color: #1B5E3F; transition: background 0.3s ease;
+  }
+  .contingency .cell-fp {
+    background: #FBEAE7; font-weight: 700; font-size: 18px;
+    color: #8B2B1F; transition: background 0.3s ease;
+  }
+  .contingency .cell-fn {
+    background: #FBEAE7; font-weight: 700; font-size: 18px;
+    color: #8B2B1F; transition: background 0.3s ease;
+  }
+  .contingency .cell-tn {
+    background: #E8F4EC; font-weight: 700; font-size: 18px;
+    color: #1B5E3F; transition: background 0.3s ease;
+  }
+  .table-caption {
+    text-align: center; color: #616467; font-size: 12px;
+    margin-top: 4px; font-style: italic;
+  }
+
+  .sliders {
+    background: #F8FAFB; border: 1px solid #d8dde2; border-radius: 10px;
+    padding: 14px 16px; margin-top: 14px; position: relative;
+    transition: opacity 0.3s ease;
+  }
+  .sliders.locked { opacity: 0.55; pointer-events: none; }
+  .sliders-header {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .sliders-header .s-title {
+    font-size: 13px; font-weight: 700; color: #172940;
+    text-transform: uppercase; letter-spacing: 0.8px;
+  }
+  .reset-btn {
+    background: white; border: 1.5px solid #2E8FAF; color: #2E8FAF;
+    padding: 4px 10px; border-radius: 5px; font-size: 12px;
+    font-weight: 600; cursor: pointer; font-family: inherit;
+    transition: all 0.18s ease;
+  }
+  .reset-btn:hover { background: #EAF3F7; }
+  .lock-overlay {
+    position: absolute; top: 6px; right: 12px;
+    font-size: 12px; color: #8B9098; font-style: italic;
+  }
+  .sliders.locked .lock-overlay { display: block; }
+  .sliders:not(.locked) .lock-overlay { display: none; }
+
+  .slider-row {
+    display: grid; grid-template-columns: 110px 1fr 60px;
+    align-items: center; gap: 10px; margin-bottom: 10px;
+  }
+  .slider-row:last-of-type { margin-bottom: 0; }
+  .slider-row .s-label { font-size: 13px; font-weight: 600; color: #172940; }
+  .slider-row .s-label.fn { color: #8B2B1F; }
+  .slider-row .s-label.fp { color: #8B2B1F; }
+  .slider-row input[type="range"] { width: 100%; accent-color: #2E8FAF; }
+  .slider-row .s-value {
+    text-align: right; font-size: 13.5px; font-weight: 700;
+    color: #172940; font-variant-numeric: tabular-nums;
+  }
+
+  .live-stats {
+    margin-top: 14px; padding: 12px 14px;
+    background: white; border: 1px solid #d8dde2; border-radius: 8px;
+  }
+  .live-stats-title {
+    font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px;
+    color: #616467; font-weight: 700; margin-bottom: 10px; text-align: center;
+  }
+  .live-stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+  }
+  .live-stat {
+    background: #F8FAFB; border-radius: 6px; padding: 10px 6px;
+    text-align: center;
+  }
+  .live-stat .ls-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: #616467; font-weight: 700; margin-bottom: 3px;
+  }
+  .live-stat .ls-value {
+    font-size: 18px; font-weight: 700; color: #172940;
+    font-variant-numeric: tabular-nums;
+  }
+  .live-stat.acc .ls-value { color: #2E8FAF; }
+  .live-stat.sn .ls-value { color: #2D8659; }
+  .live-stat.sp .ls-value { color: #246F89; }
+
+  .stat-card {
+    border: 2px solid #2E8FAF; border-radius: 10px; padding: 18px 20px;
+    text-align: center; cursor: pointer; transition: all 0.25s ease;
+    background: white; user-select: none; margin-top: 16px;
+  }
+  .stat-card.locked {
+    background: #F0F3F5; border-style: dashed; border-color: #b8c2c8;
+  }
+  .stat-card.locked:hover {
+    background: #E8EDF0; border-color: #2E8FAF; transform: translateY(-1px);
+  }
+  .stat-card.revealed {
+    background: linear-gradient(135deg, #2E8FAF 0%, #246F89 100%);
+    color: white; border-color: #246F89; cursor: default;
+  }
+  .stat-card .label {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 1px;
+    color: #616467; margin-bottom: 6px; font-weight: 600;
+  }
+  .stat-card.revealed .label { color: #FFC857; }
+  .stat-card .value {
+    font-size: 42px; font-weight: 700; line-height: 1;
+    margin-bottom: 6px; color: #172940; font-variant-numeric: tabular-nums;
+  }
+  .stat-card.revealed .value { color: white; }
+  .stat-card .ci { font-size: 13px; color: #616467; }
+  .stat-card.revealed .ci { color: #F0F3F5; }
+  .stat-card .hint {
+    font-size: 13px; color: #2E8FAF; font-weight: 600; margin-top: 6px;
+  }
+  .stat-card.revealed .hint { display: none; }
+  .stat-card .formula {
+    font-size: 13.5px; margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.25);
+    font-family: "Cambria Math", Cambria, serif;
+    color: #F0F3F5; display: none; font-variant-numeric: tabular-nums;
+  }
+  .stat-card.revealed .formula { display: block; }
+
+  .acc-scale-wrap {
+    margin-top: 16px; background: white;
+    border: 1px solid #d8dde2; border-radius: 10px;
+    padding: 16px 18px;
+  }
+  .acc-scale-title {
+    font-size: 13px; font-weight: 700; color: #172940;
+    text-transform: uppercase; letter-spacing: 0.8px;
+    margin-bottom: 22px; text-align: center;
+  }
+  .acc-scale-outer { position: relative; padding-top: 38px; }
+  .acc-scale {
+    position: relative; height: 30px;
+    background: linear-gradient(90deg, #C0504D 0%, #D89A92 35%, #FFC857 65%, #4A9BB7 80%, #2D8659 100%);
+    border-radius: 15px;
+  }
+  .acc-tick-70 {
+    position: absolute; top: -6px; bottom: -6px; left: 70%;
+    width: 2px; background: #172940; z-index: 2;
+  }
+  .acc-tick-70-pill {
+    position: absolute; top: -34px; left: 70%; transform: translateX(-50%);
+    background: #FFC857; color: #172940;
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 12px; font-weight: 700;
+    white-space: nowrap; z-index: 4;
+  }
+  .acc-marker-group {
+    position: absolute; top: -34px;
+    transform: translateX(-50%);
+    transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 5;
+  }
+  .acc-marker-pill {
+    background: #172940; color: white;
+    padding: 4px 10px; border-radius: 6px;
+    font-size: 13px; font-weight: 700;
+    text-align: center; white-space: nowrap;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    font-variant-numeric: tabular-nums;
+  }
+  .acc-marker-dot {
+    width: 22px; height: 22px;
+    background: white;
+    border: 3px solid #172940;
+    border-radius: 50%;
+    margin: 4px auto 0;
+    position: relative; top: 24px;
+  }
+  .acc-axis-labels {
+    display: flex; justify-content: space-between;
+    margin-top: 12px; font-size: 12px; color: #172940; font-weight: 600;
+    padding: 0 2px;
+  }
+  .acc-readout-bar {
+    margin-top: 14px; padding: 10px 14px;
+    border-radius: 6px;
+    font-size: 14px; font-weight: 700;
+    text-align: center; line-height: 1.4;
+    transition: background 0.4s ease, color 0.4s ease;
+  }
+  .acc-readout-bar.high {
+    background: #E8F4EC; color: #1B5E3F;
+    border-left: 3px solid #2D8659;
+  }
+  .acc-readout-bar.borderline {
+    background: #FFF8E1; color: #8B6914;
+    border-left: 3px solid #FFC857;
+  }
+  .acc-readout-bar.low {
+    background: #FBEAE7; color: #8B2B1F;
+    border-left: 3px solid #C0504D;
+  }
+
+  .right-panel { display: flex; flex-direction: column; gap: 18px; }
+
+  .step {
+    background: white; border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08);
+    padding: 24px 26px; border-left: 5px solid #2E8FAF;
+  }
+  .step-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 14px;
+  }
+  .step-number {
+    background: #2E8FAF; color: white; width: 34px; height: 34px;
+    border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0;
+  }
+  .step-title { font-size: 18.5px; font-weight: 700; color: #172940; }
+  .step-body { color: #2c3e50; font-size: 16px; line-height: 1.7; }
+  .step-body p { margin-bottom: 12px; }
+  .step-body p:last-child { margin-bottom: 0; }
+  .step-body strong { color: #172940; }
+
+  .article-excerpt {
+    background: #F8FAFB; border: 1px solid #d8dde2;
+    border-left: 4px solid #172940; border-radius: 6px;
+    padding: 18px 22px; margin: 14px 0;
+    font-family: Georgia, "Times New Roman", serif;
+    color: #2c3e50; font-size: 16.5px; line-height: 1.75;
+  }
+  .article-excerpt .article-meta {
+    font-size: 13px; font-family: Calibri, sans-serif;
+    color: #616467; margin-bottom: 8px; text-transform: uppercase;
+    letter-spacing: 1px; font-weight: 600;
+  }
+  .hi-target {
+    background: transparent; transition: background 0.5s ease;
+    padding: 1px 3px; border-radius: 2px;
+  }
+  .hi-target.on { background: #DFEDF4; }
+  .hi-target.on-2 { background: #FFE9A6; }
+  .hi-target.on-3 { background: #C9E4D5; }
+
+  .reveal-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .reveal-btn {
+    background: white; color: #2E8FAF; border: 2px solid #2E8FAF;
+    padding: 10px 18px; border-radius: 7px; font-size: 14.5px;
+    font-weight: 600; cursor: pointer; font-family: inherit;
+    transition: all 0.18s ease;
+  }
+  .reveal-btn:hover { background: #EAF3F7; transform: translateY(-1px); }
+  .reveal-btn.done {
+    background: #246F89; color: white; border-color: #246F89; cursor: default;
+  }
+  .reveal-btn.done:hover { transform: none; }
+
+  .annot-line {
+    margin-top: 10px; padding: 12px 18px; background: #fff;
+    border-radius: 6px; border-left: 3px solid #FFC857;
+    font-family: Calibri, sans-serif; font-size: 15.5px;
+    color: #172940; display: none; animation: fadeIn 0.4s ease-out;
+    line-height: 1.6;
+  }
+  .annot-line.show { display: block; }
+  .annot-line .a-tag {
+    display: inline-block; font-weight: 700; color: #2E8FAF;
+    margin-right: 6px; text-transform: uppercase;
+    font-size: 12.5px; letter-spacing: 1px;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .twotest-wrap {
+    background: #F8FAFB; border: 1px solid #d8dde2;
+    border-radius: 10px; padding: 18px 20px; margin: 14px 0;
+  }
+  .twotest-instruct {
+    font-size: 13.5px; color: #616467; text-align: center;
+    margin-bottom: 14px; font-style: italic;
+  }
+  .twotest-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+  }
+  .twotest-card {
+    background: white; border-radius: 8px; padding: 14px 14px;
+    border: 1px solid #d8dde2; text-align: center;
+  }
+  .twotest-card.test-a { border-top: 3px solid #2E8FAF; }
+  .twotest-card.test-b { border-top: 3px solid #C0504D; }
+  .twotest-name {
+    font-size: 13.5px; font-weight: 700; color: #172940;
+    margin-bottom: 4px;
+  }
+  .twotest-sub {
+    font-size: 12px; color: #616467; margin-bottom: 10px;
+  }
+  .twotest-mini-22 {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 4px; max-width: 180px; margin: 0 auto 10px;
+    font-size: 13px;
+  }
+  .twotest-mini-22 .m22-cell {
+    padding: 8px 6px; border-radius: 4px;
+    font-weight: 700; line-height: 1.2;
+  }
+  .twotest-mini-22 .m22-cell.tp { background: #E8F4EC; color: #1B5E3F; }
+  .twotest-mini-22 .m22-cell.fp { background: #FBEAE7; color: #8B2B1F; }
+  .twotest-mini-22 .m22-cell.fn { background: #FBEAE7; color: #8B2B1F; }
+  .twotest-mini-22 .m22-cell.tn { background: #E8F4EC; color: #1B5E3F; }
+  .twotest-mini-22 .m22-cell .m22-num {
+    font-size: 18px; display: block;
+  }
+  .twotest-mini-22 .m22-cell .m22-tag {
+    font-size: 10.5px; opacity: 0.75;
+    text-transform: uppercase; letter-spacing: 0.6px;
+  }
+  .twotest-stats {
+    font-size: 13px; color: #2c3e50; line-height: 1.5;
+    text-align: left; padding-top: 10px;
+    border-top: 1px dashed #d8dde2;
+  }
+  .twotest-stats .ts-row {
+    display: flex; justify-content: space-between; padding: 2px 0;
+  }
+  .twotest-stats .ts-row .ts-name { font-weight: 600; color: #616467; }
+  .twotest-stats .ts-row .ts-val { font-weight: 700; color: #172940; font-variant-numeric: tabular-nums; }
+  .twotest-stats .ts-row.highlight .ts-val { color: #C0504D; }
+
+  .twotest-reveal-row {
+    text-align: center; margin-top: 14px;
+  }
+  .twotest-reveal-msg {
+    background: #172940; color: white; border-radius: 6px;
+    padding: 14px 18px; margin-top: 14px;
+    font-size: 15.5px; line-height: 1.65;
+    display: none; animation: fadeIn 0.4s ease;
+  }
+  .twotest-reveal-msg.show { display: block; }
+  .twotest-reveal-msg strong { color: #FFC857; }
+
+  .calc-box {
+    background: #F8FAFB; border-radius: 10px;
+    border: 1px solid #d8dde2; padding: 20px 22px; margin: 14px 0;
+    text-align: center; font-family: "Cambria Math", Cambria, serif;
+    font-size: 19px; color: #172940;
+  }
+  .calc-box .calc-step { margin: 6px 0; transition: opacity 0.4s ease; }
+  .calc-box .calc-result {
+    color: #2E8FAF; font-weight: 700; font-size: 24px;
+    opacity: 0; transition: opacity 0.6s ease; display: inline-block;
+  }
+  .calc-box .calc-result.show { opacity: 1; }
+  .calc-box .calc-action { margin-top: 12px; }
+  .calc-cursor {
+    display: inline-block; width: 10px; color: #2E8FAF;
+    animation: blink 1s infinite;
+  }
+  @keyframes blink {
+    0%, 50% { opacity: 1; }
+    51%, 100% { opacity: 0; }
+  }
+
+  .so-what {
+    background: #FFF8E1; border: 1px solid #F4D77A; border-radius: 8px;
+    padding: 15px 19px; margin-top: 12px;
+  }
+  .so-what .sw-label {
+    color: #8B6914; font-weight: 700; font-size: 12.5px;
+    text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;
+  }
+  .so-what p { color: #5a4a10; font-size: 16px; line-height: 1.65; margin: 0; }
+  .so-what p strong { color: #172940; }
+
+  .mc-block {
+    background: white; border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08);
+    padding: 24px 26px; border-top: 5px solid #FFC857;
+    opacity: 0.45; pointer-events: none; transition: opacity 0.4s ease;
+  }
+  .mc-block.unlocked { opacity: 1; pointer-events: auto; }
+  .mc-question {
+    font-size: 17px; font-weight: 700; color: #172940;
+    margin-bottom: 14px; line-height: 1.5;
+  }
+  .mc-question .q-num { color: #2E8FAF; margin-right: 6px; }
+  .mc-options { display: flex; flex-direction: column; gap: 10px; }
+  .mc-option {
+    background: #F8FAFB; border: 2px solid #d8dde2; border-radius: 8px;
+    padding: 13px 17px; cursor: pointer; font-size: 16px;
+    color: #2c3e50; text-align: left; transition: all 0.18s ease;
+    font-family: inherit; width: 100%; line-height: 1.6;
+  }
+  .mc-option:hover:not(:disabled) { border-color: #2E8FAF; background: #EAF3F7; }
+  .mc-option:disabled { cursor: default; }
+  .mc-option.selected-correct {
+    background: #E8F4EC; border-color: #2D8B5A;
+    color: #1B5E3F; font-weight: 600;
+  }
+  .mc-option.selected-wrong {
+    background: #FBEAE7; border-color: #C0504D; color: #8B2B1F;
+  }
+  .mc-option.show-correct {
+    background: #E8F4EC; border-color: #2D8B5A;
+    color: #1B5E3F; font-weight: 600;
+  }
+  .mc-option .marker {
+    display: inline-block; font-weight: 700; margin-right: 8px; color: #2E8FAF;
+  }
+  .mc-feedback {
+    margin-top: 14px; padding: 15px 17px; border-radius: 8px;
+    font-size: 15.5px; line-height: 1.65; display: none;
+  }
+  .mc-feedback.correct {
+    background: #E8F4EC; border-left: 4px solid #2D8B5A;
+    color: #1B5E3F; display: block;
+  }
+  .mc-feedback.incorrect {
+    background: #FBEAE7; border-left: 4px solid #C0504D;
+    color: #8B2B1F; display: block;
+  }
+  .mc-feedback strong {
+    display: block; margin-bottom: 4px; font-size: 13.5px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+
+  .explore-prompt {
+    background: #FFF8E1; border: 1px solid #F4D77A; border-radius: 8px;
+    padding: 13px 17px; margin-bottom: 14px;
+    font-size: 15.5px; color: #5a4a10; line-height: 1.6;
+  }
+  .explore-prompt strong { color: #172940; }
+  .explore-prompt .e-label {
+    color: #8B6914; font-weight: 700; font-size: 12px;
+    text-transform: uppercase; letter-spacing: 1px;
+    margin-bottom: 4px; display: block;
+  }
+
+  .takeaways {
+    background: #172940; color: white; border-radius: 12px;
+    padding: 28px 30px; border-left: 5px solid #FFC857;
+  }
+  .takeaways h3 {
+    color: #FFC857; font-size: 13.5px; text-transform: uppercase;
+    letter-spacing: 1.5px; margin-bottom: 6px; font-weight: 700;
+  }
+  .takeaways h2 {
+    font-size: 23px; color: white; margin-bottom: 18px; font-weight: 700;
+  }
+  .takeaways ul { list-style: none; padding: 0; margin: 0; }
+  .takeaways li {
+    padding: 13px 0 13px 38px; border-bottom: 1px solid rgba(255,255,255,0.12);
+    position: relative; font-size: 16px; line-height: 1.7; color: #F0F3F5;
+  }
+  .takeaways li:last-child { border-bottom: none; }
+  .takeaways li::before {
+    content: "\2713"; position: absolute; left: 0; top: 13px;
+    width: 24px; height: 24px; border-radius: 50%;
+    background: #FFC857; color: #172940; font-weight: 700;
+    display: flex; align-items: center; justify-content: center; font-size: 13.5px;
+  }
+  .takeaways li strong { color: white; }
+
+  .nav-bar {
+    grid-column: 1 / -1; display: flex; justify-content: space-between;
+    align-items: center; padding: 18px 0 0; margin-top: 8px;
+  }
+  .nav-btn {
+    background: #2E8FAF; color: white; border: none;
+    padding: 14px 30px; border-radius: 8px; font-size: 15.5px;
+    font-weight: 600; cursor: pointer; font-family: inherit;
+    transition: all 0.2s ease; text-decoration: none; display: inline-block;
+  }
+  .nav-btn:hover { background: #246F89; transform: translateY(-1px); }
+  .nav-btn.secondary {
+    background: white; color: #2E8FAF; border: 2px solid #2E8FAF;
+  }
+  .nav-btn.secondary:hover { background: #EAF3F7; }
+  .completion-msg {
+    color: #2D8659; font-size: 14.5px; font-weight: 600;
+    text-align: center; flex-grow: 1; margin: 0 20px;
+  }
+
+  @media (max-width: 1100px) {
+    .container { grid-template-columns: 1fr; }
+    .left-panel { position: relative; top: auto; max-height: none; }
+  }
+  @media (max-width: 600px) {
+    .header { padding: 14px 18px; flex-direction: column; gap: 8px; align-items: flex-start; }
+    .container { padding: 16px; }
+    .twotest-grid { grid-template-columns: 1fr; }
+    .live-stats-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <h1>Unit 8: Diagnostic Accuracy Activity</h1>
+    <span class="part-label">Part 2 of 10 &middot; Overall Accuracy</span>
+  </div>
+  <div class="progress-pill">Step <strong id="step-counter">1</strong> of 6</div>
+</header>
+
+<main class="container">
+
+  <aside class="left-panel">
+    <h2>The article's data</h2>
+    <p class="subtitle">Rapid antigen test vs. RT-PCR &middot; n = 500</p>
+
+    <table class="contingency">
+      <thead>
+        <tr>
+          <th></th>
+          <th>PCR positive</th>
+          <th>PCR negative</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="row-label">Antigen positive</td>
+          <td class="cell-tp" id="cell-tp">70</td>
+          <td class="cell-fp" id="cell-fp">8</td>
+          <td class="group-total" id="row-pos-total">78</td>
+        </tr>
+        <tr>
+          <td class="row-label">Antigen negative</td>
+          <td class="cell-fn" id="cell-fn">30</td>
+          <td class="cell-tn" id="cell-tn">392</td>
+          <td class="group-total" id="row-neg-total">422</td>
+        </tr>
+        <tr>
+          <td class="row-label" style="background:#172940;">Total</td>
+          <td class="group-total">100</td>
+          <td class="group-total">400</td>
+          <td class="group-total" style="background:#FFC857;color:#172940;">500</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="table-caption">Antigen test result by RT-PCR truth &middot; Symptomatic adults</p>
+
+    <div class="sliders locked" id="sliders-box">
+      <div class="lock-overlay">&#128274; Unlocks at Step 6</div>
+      <div class="sliders-header">
+        <span class="s-title">Live exploration</span>
+        <button class="reset-btn" onclick="resetSliders()">Reset</button>
+      </div>
+      <div class="slider-row">
+        <span class="s-label fn">FN (missed cases)</span>
+        <input type="range" id="slider-fn" min="0" max="100" value="30" step="1" oninput="onSliderChange()">
+        <span class="s-value" id="slider-fn-val">30</span>
+      </div>
+      <div class="slider-row">
+        <span class="s-label fp">FP (false alarms)</span>
+        <input type="range" id="slider-fp" min="0" max="400" value="8" step="1" oninput="onSliderChange()">
+        <span class="s-value" id="slider-fp-val">8</span>
+      </div>
+
+      <div class="live-stats">
+        <div class="live-stats-title">Recomputed live</div>
+        <div class="live-stats-grid">
+          <div class="live-stat acc">
+            <div class="ls-label">Accuracy</div>
+            <div class="ls-value" id="live-acc">0.92</div>
+          </div>
+          <div class="live-stat sn">
+            <div class="ls-label">Sn</div>
+            <div class="ls-value" id="live-sn">0.70</div>
+          </div>
+          <div class="live-stat sp">
+            <div class="ls-label">Sp</div>
+            <div class="ls-value" id="live-sp">0.98</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section-label">Calculated statistic</div>
+    <div id="acc-card" class="stat-card locked" onclick="revealAcc()">
+      <div class="label">Overall Accuracy</div>
+      <div class="value" id="acc-value">? . ? ?</div>
+      <div class="ci" id="acc-ci">95% CI not yet revealed</div>
+      <div class="hint">&#9656; Click to reveal the value</div>
+      <div class="formula" id="acc-formula">Accuracy = (70 + 392) / 500 = 0.924</div>
+    </div>
+
+    <div class="acc-scale-wrap" id="acc-scale-wrap" style="display:none;">
+      <div class="acc-scale-title">Where this accuracy lands</div>
+      <div class="acc-scale-outer">
+        <div class="acc-scale">
+          <div class="acc-tick-70"></div>
+          <div class="acc-tick-70-pill">70% threshold</div>
+          <div class="acc-marker-group" id="acc-marker-panel" style="left: 92%;">
+            <div class="acc-marker-pill" id="acc-marker-pill-panel">0.92</div>
+            <div class="acc-marker-dot"></div>
+          </div>
+        </div>
+        <div class="acc-axis-labels">
+          <span>0%</span><span>50%</span><span>70%</span><span>100%</span>
+        </div>
+      </div>
+      <div class="acc-readout-bar high" id="acc-readout-bar-panel">
+        Above the 70% clinical-utility threshold &mdash; but read with caution.
+      </div>
+    </div>
+
+  </aside>
+
+  <section class="right-panel">
+
+    <div class="step" style="border-left-color:#FFC857; background: #172940;">
+      <div class="step-header">
+        <div class="step-number" style="background:#FFC857; color:#172940;">&#9733;</div>
+        <div class="step-title" style="color: white;">Orientation</div>
+      </div>
+      <div class="step-body" style="color: #F0F3F5;">
+        <p><strong style="color:#FFC857;">Overall accuracy</strong> is usually the first number authors report and the most commonly cited in clinical writing. It's intuitive: out of all the tests we did, what fraction came back correct?</p>
+        <div style="background: rgba(46,143,175,0.18); border-left: 3px solid #4A9BB7; padding: 14px 18px; border-radius: 6px; margin: 14px 0; font-size: 16px;">
+          But it's also the most likely number to mislead you &mdash; especially when prevalence is unusual or when the two error types matter differently. <strong style="color:#FFC857;">A high accuracy can hide a real problem.</strong>
+        </div>
+        <p>Let's walk through what overall accuracy actually counts, and then explore why two very different tests can produce the same headline number.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">1</div>
+        <div class="step-title">Find the key pieces in the article</div>
+      </div>
+      <div class="step-body">
+        <p>Here's the relevant sentence from the Results section. Click each button to spotlight a piece.</p>
+        <div class="article-excerpt">
+          <div class="article-meta">From the Results section</div>
+          The rapid antigen test correctly classified <span class="hi-target" id="hi-1">462 of 500 patients</span> (<span class="hi-target" id="hi-2">overall accuracy = 0.92</span>, <span class="hi-target" id="hi-3">95% CI [0.90, 0.94]</span>).
+        </div>
+        <div class="reveal-row">
+          <button class="reveal-btn" id="hi-btn-1" onclick="highlight(1)">&#9312; Spotlight the count</button>
+          <button class="reveal-btn" id="hi-btn-2" onclick="highlight(2)">&#9313; Spotlight the value</button>
+          <button class="reveal-btn" id="hi-btn-3" onclick="highlight(3)">&#9314; Spotlight the CI</button>
+        </div>
+        <div class="annot-line" id="annot-1"><span class="a-tag">The count</span>462 of 500 means the test agreed with PCR (the gold standard) in 462 patients &mdash; the 70 true positives plus the 392 true negatives. The other 38 patients were misclassified.</div>
+        <div class="annot-line" id="annot-2"><span class="a-tag">Accuracy = 0.92</span>That's the proportion: 462 / 500 = 0.924, rounded to 0.92 (or 92%). It's the simplest summary of how often the test got it right &mdash; and that simplicity is exactly the trap.</div>
+        <div class="annot-line" id="annot-3"><span class="a-tag">CI [0.90, 0.94]</span>The interval is narrow because n is large (500). It tells us the true accuracy in this population is plausibly between 90% and 94%. Note: a tight CI means the <em>estimate</em> is precise &mdash; it doesn't mean the test is good.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">2</div>
+        <div class="step-title">What accuracy actually counts &mdash; and what it ignores</div>
+      </div>
+      <div class="step-body">
+        <p>Accuracy is the fraction of patients the test classified correctly. It treats every error the same way: a missed case (FN) and a false alarm (FP) each count as one wrong answer, regardless of how different their clinical consequences are.</p>
+        <p>Because of that, <strong>two very different tests can produce the same overall accuracy</strong>. Here's the trap, side by side.</p>
+
+        <div class="twotest-wrap">
+          <div class="twotest-instruct">Same overall accuracy &mdash; very different tests. Click below to reveal the punchline.</div>
+
+          <div class="twotest-grid">
+            <div class="twotest-card test-a">
+              <div class="twotest-name">Test A &mdash; like our antigen test</div>
+              <div class="twotest-sub">High specificity, moderate sensitivity</div>
+              <div class="twotest-mini-22">
+                <div class="m22-cell tp">
+                  <span class="m22-num">70</span>
+                  <span class="m22-tag">TP</span>
+                </div>
+                <div class="m22-cell fp">
+                  <span class="m22-num">8</span>
+                  <span class="m22-tag">FP</span>
+                </div>
+                <div class="m22-cell fn">
+                  <span class="m22-num">30</span>
+                  <span class="m22-tag">FN</span>
+                </div>
+                <div class="m22-cell tn">
+                  <span class="m22-num">392</span>
+                  <span class="m22-tag">TN</span>
+                </div>
+              </div>
+              <div class="twotest-stats">
+                <div class="ts-row"><span class="ts-name">Accuracy</span><span class="ts-val">0.92</span></div>
+                <div class="ts-row highlight"><span class="ts-name">Sensitivity</span><span class="ts-val">0.70</span></div>
+                <div class="ts-row"><span class="ts-name">Specificity</span><span class="ts-val">0.98</span></div>
+              </div>
+            </div>
+
+            <div class="twotest-card test-b">
+              <div class="twotest-name">Test B &mdash; the imposter</div>
+              <div class="twotest-sub">Looks identical on accuracy alone</div>
+              <div class="twotest-mini-22">
+                <div class="m22-cell tp">
+                  <span class="m22-num">90</span>
+                  <span class="m22-tag">TP</span>
+                </div>
+                <div class="m22-cell fp">
+                  <span class="m22-num">28</span>
+                  <span class="m22-tag">FP</span>
+                </div>
+                <div class="m22-cell fn">
+                  <span class="m22-num">10</span>
+                  <span class="m22-tag">FN</span>
+                </div>
+                <div class="m22-cell tn">
+                  <span class="m22-num">372</span>
+                  <span class="m22-tag">TN</span>
+                </div>
+              </div>
+              <div class="twotest-stats">
+                <div class="ts-row"><span class="ts-name">Accuracy</span><span class="ts-val">0.92</span></div>
+                <div class="ts-row highlight"><span class="ts-name">Sensitivity</span><span class="ts-val">0.90</span></div>
+                <div class="ts-row"><span class="ts-name">Specificity</span><span class="ts-val">0.93</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="twotest-reveal-row">
+            <button class="reveal-btn" id="twotest-btn" onclick="revealTwoTest()">&#9656; What's actually different here?</button>
+          </div>
+          <div class="twotest-reveal-msg" id="twotest-msg">
+            <p style="margin-bottom: 10px;">Both tests classify <strong>462 of 500 patients correctly</strong>. But the kinds of mistakes they make are very different:</p>
+            <ul style="padding-left: 22px; margin: 0 0 12px; line-height: 1.6;">
+              <li style="margin-bottom: 8px;"><strong>Test A</strong> misses 30 truly infected patients (FN = 30) but only false-alarms on 8 healthy ones. Strong for ruling in disease, weaker for ruling it out.</li>
+              <li><strong>Test B</strong> misses only 10 truly infected patients (FN = 10) but false-alarms on 28. Stronger rule-out, but more healthy patients sent for unnecessary follow-up.</li>
+            </ul>
+            <p style="margin: 0;"><strong>Overall accuracy alone cannot distinguish these two tests.</strong> That's why every paper reports more than just accuracy &mdash; you'll meet sensitivity and specificity in Parts 4 and 5, the two numbers that crack accuracy open and tell you which kind of mistake the test makes.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">3</div>
+        <div class="step-title">Compute it from the table, then click the card</div>
+      </div>
+      <div class="step-body">
+        <p>The formula is simple: add the two correct cells (TP + TN) and divide by the total. Use the article's numbers: TP = 70, TN = 392, total = 500.</p>
+
+        <div class="calc-box">
+          <div class="calc-step">
+            Accuracy = (TP + TN) / Total
+          </div>
+          <div class="calc-step" style="margin-top:10px;">
+            Accuracy = (70 + 392) / 500 = <span class="calc-result" id="calc-result">0.924</span><span class="calc-cursor" id="calc-cursor">|</span>
+          </div>
+          <div class="calc-action">
+            <button class="reveal-btn" id="calc-btn" onclick="showCalcResult()">&#9656; Show me the answer</button>
+          </div>
+        </div>
+
+        <p>Now <strong>click the dashed Overall Accuracy card on the left side</strong> to confirm the value and see the 95% CI.</p>
+
+        <div style="margin-top: 14px; text-align: center;">
+          <button class="reveal-btn" id="sowhat-btn" onclick="revealSoWhat()">&#9733; Reveal: So what does Accuracy = 0.92 mean?</button>
+        </div>
+        <div class="so-what" id="sowhat-box" style="display:none;">
+          <div class="sw-label">&#9733; So what does Accuracy = 0.92 mean?</div>
+          <p>Out of every 100 symptomatic patients tested, the antigen test classifies about 92 correctly &mdash; either as truly infected or truly uninfected. That sounds great. But because accuracy treats all errors equally, you don't yet know <strong>which kind of mistake the test makes</strong>. Are the 8 errors mostly false alarms, or mostly missed cases? You can't tell from accuracy alone, and the difference matters enormously for clinical practice.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">4</div>
+        <div class="step-title">Four rules to remember when reading any accuracy</div>
+      </div>
+      <div class="step-body">
+        <p>Overall accuracy shows up in nearly every diagnostic accuracy paper. These four rules carry through whatever test you're reading about:</p>
+        <p style="padding-left: 14px;">
+          &bull; <strong>Accuracy = (TP + TN) / Total.</strong> Both correct cells, divided by everyone tested.<br>
+          &bull; <strong>Accuracy alone can hide a poorly-performing test.</strong> Always look for Sn and Sp alongside it.<br>
+          &bull; <strong>Accuracy depends on prevalence.</strong> A test's accuracy can change dramatically if you move it to a population with very different disease prevalence &mdash; even when Sn and Sp stay constant.<br>
+          &bull; <strong>The ~70% threshold isn't magic, but it's a useful floor.</strong> Below 70%, a test isn't generally useful clinically. Above 70%, you still need to ask: <em>useful for what?</em>
+        </p>
+        <div style="margin-top: 14px; text-align: center;">
+          <button class="reveal-btn" id="habit-btn" onclick="revealHabit()">&#9656; Reveal the most important habit</button>
+        </div>
+        <div class="annot-line" id="habit-msg" style="border-left-color:#2E8FAF;">
+          <span class="a-tag">The most important habit</span>Never quote overall accuracy without also quoting Sn and Sp. They're the three numbers that travel together.
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-6">
+      <div class="step-header">
+        <div class="step-number">5</div>
+        <div class="step-title">Now explore &mdash; change the cells and watch what shifts</div>
+      </div>
+      <div class="step-body">
+        <p>After you click the Overall Accuracy card in Step 3 and answer Q3 below, <strong>the two sliders on the left panel will unlock</strong>. As you drag them, the 2 &times; 2 table will recalculate, and the live readout will show how Accuracy, Sn, and Sp all shift.</p>
+        <p>Use the sliders to answer Q4&ndash;Q6 below. There's a <strong>Reset</strong> button on the slider panel to return to the article's original values whenever you want.</p>
+      </div>
+    </div>
+
+    <div id="mc1-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q1.</span> A patient asks what overall accuracy = 0.92 means for this test. Which response is the most accurate and clear?</div>
+      <div class="mc-options" id="mc1-options">
+        <button class="mc-option" onclick="answerMC(1, 'a', false)"><span class="marker">A.</span> "It means 92% of patients in this population have COVID."</button>
+        <button class="mc-option" onclick="answerMC(1, 'b', true)"><span class="marker">B.</span> "Of every 100 patients tested, the antigen result agreed with PCR in about 92."</button>
+        <button class="mc-option" onclick="answerMC(1, 'c', false)"><span class="marker">C.</span> "It means the test is 92% reliable, so any result you get can be trusted."</button>
+        <button class="mc-option" onclick="answerMC(1, 'd', false)"><span class="marker">D.</span> "It means 92% are correctly diagnosed and 8% need a different test entirely."</button>
+      </div>
+      <div class="mc-feedback" id="mc1-feedback"></div>
+    </div>
+
+    <div id="mc2-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q2.</span> The article reports the 95% CI for overall accuracy as [0.90, 0.94]. What can you conclude?</div>
+      <div class="mc-options" id="mc2-options">
+        <button class="mc-option" onclick="answerMC(2, 'a', true)"><span class="marker">A.</span> A 95% CI describes the range of plausible values for the population accuracy.</button>
+        <button class="mc-option" onclick="answerMC(2, 'b', false)"><span class="marker">B.</span> The result is not statistically significant because the CI doesn't include 1.</button>
+        <button class="mc-option" onclick="answerMC(2, 'c', false)"><span class="marker">C.</span> The CI tells you 95% of patients are correctly classified.</button>
+        <button class="mc-option" onclick="answerMC(2, 'd', false)"><span class="marker">D.</span> 95% of patients had accuracy values between 0.90 and 0.94.</button>
+      </div>
+      <div class="mc-feedback" id="mc2-feedback"></div>
+    </div>
+
+    <div id="mc3-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q3.</span> A colleague reads the article and says: "Accuracy = 0.92, that's well above the 70% threshold &mdash; this test is good." What's the most important thing missing from that take?</div>
+      <div class="mc-options" id="mc3-options">
+        <button class="mc-option" onclick="answerMC(3, 'a', false)"><span class="marker">A.</span> Nothing &mdash; 92% accuracy is enough to call a test good.</button>
+        <button class="mc-option" onclick="answerMC(3, 'b', false)"><span class="marker">B.</span> The CI isn't tight enough to draw conclusions.</button>
+        <button class="mc-option" onclick="answerMC(3, 'c', false)"><span class="marker">C.</span> The 70% threshold doesn't apply to overall accuracy &mdash; only to Sn and Sp.</button>
+        <button class="mc-option" onclick="answerMC(3, 'd', true)"><span class="marker">D.</span> Accuracy doesn't tell you which kind of error the test makes.</button>
+      </div>
+      <div class="mc-feedback" id="mc3-feedback"></div>
+    </div>
+
+    <div id="mc4-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q4.</span> Use the sliders on the left to explore what happens when you increase the false negatives.</div>
+      <div class="explore-prompt">
+        <span class="e-label">&#9656; Try this on the left panel</span>
+        Move the <strong>FN slider up to 50</strong> (currently 30). Leave FP at 8. Watch the live readout below the sliders. <strong>What happened to overall accuracy, and what happened to Sn?</strong>
+      </div>
+      <div class="mc-options" id="mc4-options">
+        <button class="mc-option" onclick="answerMC(4, 'a', false)"><span class="marker">A.</span> Both accuracy and Sn went up.</button>
+        <button class="mc-option" onclick="answerMC(4, 'b', false)"><span class="marker">B.</span> Accuracy stayed exactly the same; Sn dropped slightly.</button>
+        <button class="mc-option" onclick="answerMC(4, 'c', true)"><span class="marker">C.</span> Accuracy dropped a little, but Sn dropped much more.</button>
+        <button class="mc-option" onclick="answerMC(4, 'd', false)"><span class="marker">D.</span> Sn doesn't change because FN doesn't affect it.</button>
+      </div>
+      <div class="mc-feedback" id="mc4-feedback"></div>
+    </div>
+
+    <div id="mc5-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q5.</span> Now reset the sliders, then try increasing false positives instead.</div>
+      <div class="explore-prompt">
+        <span class="e-label">&#9656; Try this on the left panel</span>
+        Click <strong>Reset</strong> on the slider panel to restore the article's values. Then move the <strong>FP slider up to 40</strong> (currently 8). Leave FN at 30. <strong>What happened to accuracy, Sn, and Sp this time?</strong>
+      </div>
+      <div class="mc-options" id="mc5-options">
+        <button class="mc-option" onclick="answerMC(5, 'a', false)"><span class="marker">A.</span> Accuracy, Sn, and Sp all dropped about the same amount.</button>
+        <button class="mc-option" onclick="answerMC(5, 'b', true)"><span class="marker">B.</span> Accuracy and Sp dropped, but Sn stayed at 0.70.</button>
+        <button class="mc-option" onclick="answerMC(5, 'c', false)"><span class="marker">C.</span> Sn went up because the test is detecting more positives.</button>
+        <button class="mc-option" onclick="answerMC(5, 'd', false)"><span class="marker">D.</span> Nothing changed because we only adjusted FP.</button>
+      </div>
+      <div class="mc-feedback" id="mc5-feedback"></div>
+    </div>
+
+    <div id="mc6-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q6.</span> The conceptual punch line &mdash; can two tests have the same overall accuracy but different real-world quality?</div>
+      <div class="explore-prompt">
+        <span class="e-label">&#9656; Try this on the left panel</span>
+        Click <strong>Reset</strong>, then set <strong>FN = 50 and FP = 30</strong>. Note the new accuracy, Sn, and Sp. Now reset and set <strong>FN = 10 and FP = 70</strong>. Both scenarios produce <em>roughly the same accuracy</em>. <strong>What does this exploration tell you about overall accuracy as a summary statistic?</strong>
+      </div>
+      <div class="mc-options" id="mc6-options">
+        <button class="mc-option" onclick="answerMC(6, 'a', false)"><span class="marker">A.</span> Two tests with the same accuracy are clinically equivalent.</button>
+        <button class="mc-option" onclick="answerMC(6, 'b', false)"><span class="marker">B.</span> Accuracy doesn't change when you adjust the cells.</button>
+        <button class="mc-option" onclick="answerMC(6, 'c', false)"><span class="marker">C.</span> Sn and Sp always change together with accuracy.</button>
+        <button class="mc-option" onclick="answerMC(6, 'd', true)"><span class="marker">D.</span> Identical accuracy can hide very different Sn/Sp profiles.</button>
+      </div>
+      <div class="mc-feedback" id="mc6-feedback"></div>
+    </div>
+
+    <div class="takeaways" id="takeaways" style="display:none;">
+      <h3>Big takeaways</h3>
+      <h2>What overall accuracy will tell you in any paper</h2>
+      <ul>
+        <li><strong>Accuracy = (TP + TN) / Total.</strong> The fraction of patients the test classified correctly &mdash; same formula no matter what condition or test you're reading about.</li>
+        <li><strong>Accuracy weighs all errors equally.</strong> A missed case (FN) and a false alarm (FP) each count once. That's exactly why accuracy alone can be misleading &mdash; clinically, those two errors are very different.</li>
+        <li><strong>Two tests can share the same accuracy and behave very differently.</strong> Always read accuracy alongside sensitivity and specificity. They're the three numbers that travel together.</li>
+        <li><strong>Accuracy depends on who you tested.</strong> The same test in a population with different prevalence can produce a different accuracy &mdash; even though the test itself didn't change. You'll see why in Part 3.</li>
+        <li><strong>Above 70% is a starting point, not a verdict.</strong> The 70% threshold rules out genuinely poor tests. Above it, the question becomes: <em>good for ruling in, ruling out, or both?</em> Sn and Sp answer that.</li>
+      </ul>
+    </div>
+
+    <div class="nav-bar">
+      <a href="part1c.html" class="nav-btn secondary">&larr; Back to Part 1c</a>
+      <span class="completion-msg" id="completion-msg"></span>
+      <a href="part3.html" class="nav-btn" id="next-btn" style="pointer-events:none; opacity:0.5;">Continue to Part 3 &rarr;</a>
+    </div>
+
+  </section>
+</main>
+
+<script>
+  var ORIG = { tp: 70, fn: 30, fp: 8, tn: 392, totalPos: 100, totalNeg: 400, totalAll: 500 };
+
+  var state = {
+    accRevealed: false,
+    calcShown: false,
+    twoTestRevealed: false,
+    answered: { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false },
+    correct:  { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false },
+    highlighted: { 1: false, 2: false, 3: false }
+  };
+
+  function highlight(n) {
+    state.highlighted[n] = true;
+    var cls = n === 1 ? 'on' : (n === 2 ? 'on-2' : 'on-3');
+    document.getElementById('hi-' + n).classList.add(cls);
+    document.getElementById('annot-' + n).classList.add('show');
+    var btn = document.getElementById('hi-btn-' + n);
+    btn.classList.add('done');
+    btn.disabled = true;
+    updateStepCounter();
+  }
+
+  function revealSoWhat() {
+    var btn = document.getElementById('sowhat-btn');
+    if (btn.classList.contains('done')) return;
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '✓ Revealed';
+    var box = document.getElementById('sowhat-box');
+    box.style.display = 'block';
+    box.style.animation = 'fadeIn 0.4s ease-out';
+  }
+
+  function revealHabit() {
+    var btn = document.getElementById('habit-btn');
+    if (btn.classList.contains('done')) return;
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '✓ Revealed';
+    document.getElementById('habit-msg').classList.add('show');
+  }
+
+  function revealTwoTest() {
+    if (state.twoTestRevealed) return;
+    state.twoTestRevealed = true;
+    var btn = document.getElementById('twotest-btn');
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '\u2713 Revealed';
+    document.getElementById('twotest-msg').classList.add('show');
+    updateStepCounter();
+  }
+
+  function showCalcResult() {
+    if (state.calcShown) return;
+    state.calcShown = true;
+    document.getElementById('calc-result').classList.add('show');
+    document.getElementById('calc-cursor').style.display = 'none';
+    var btn = document.getElementById('calc-btn');
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '\u2713 Shown';
+    updateStepCounter();
+  }
+
+  function revealAcc() {
+    if (state.accRevealed) return;
+    state.accRevealed = true;
+    var card = document.getElementById('acc-card');
+    card.classList.remove('locked');
+    card.classList.add('revealed');
+    document.getElementById('acc-value').textContent = '0.92';
+    document.getElementById('acc-ci').textContent = '95% CI [0.90, 0.94]';
+
+    document.getElementById('acc-scale-wrap').style.display = 'block';
+    updatePanelScale(0.924);
+
+    updateStepCounter();
+    unlockMC(1);
+  }
+
+  function unlockSliders() {
+    document.getElementById('sliders-box').classList.remove('locked');
+  }
+
+  function onSliderChange() {
+    var fn = parseInt(document.getElementById('slider-fn').value, 10);
+    var fp = parseInt(document.getElementById('slider-fp').value, 10);
+
+    document.getElementById('slider-fn-val').textContent = fn;
+    document.getElementById('slider-fp-val').textContent = fp;
+
+    var tp = ORIG.totalPos - fn;
+    var tn = ORIG.totalNeg - fp;
+    if (tp < 0) tp = 0;
+    if (tn < 0) tn = 0;
+
+    document.getElementById('cell-tp').textContent = tp;
+    document.getElementById('cell-fn').textContent = fn;
+    document.getElementById('cell-fp').textContent = fp;
+    document.getElementById('cell-tn').textContent = tn;
+
+    document.getElementById('row-pos-total').textContent = tp + fp;
+    document.getElementById('row-neg-total').textContent = fn + tn;
+
+    var acc = (tp + tn) / ORIG.totalAll;
+    var sn = ORIG.totalPos > 0 ? tp / ORIG.totalPos : 0;
+    var sp = ORIG.totalNeg > 0 ? tn / ORIG.totalNeg : 0;
+
+    document.getElementById('live-acc').textContent = acc.toFixed(2);
+    document.getElementById('live-sn').textContent = sn.toFixed(2);
+    document.getElementById('live-sp').textContent = sp.toFixed(2);
+
+    document.getElementById('acc-value').textContent = acc.toFixed(2);
+    document.getElementById('acc-formula').textContent =
+      'Accuracy = (' + tp + ' + ' + tn + ') / 500 = ' + acc.toFixed(3);
+
+    if (fn === ORIG.fn && fp === ORIG.fp) {
+      document.getElementById('acc-ci').textContent = '95% CI [0.90, 0.94]';
+    } else {
+      document.getElementById('acc-ci').textContent = '(exploration mode \u2014 CI applies to original values)';
+    }
+
+    if (state.accRevealed) updatePanelScale(acc);
+  }
+
+  function accToPct(acc) {
+    var val = acc * 100;
+    if (val < 0) val = 0;
+    if (val > 100) val = 100;
+    return val;
+  }
+
+  function updatePanelScale(acc) {
+    var pct = accToPct(acc);
+    document.getElementById('acc-marker-panel').style.left = pct + '%';
+    document.getElementById('acc-marker-pill-panel').textContent = acc.toFixed(2);
+
+    var readout = document.getElementById('acc-readout-bar-panel');
+    readout.classList.remove('high', 'borderline', 'low');
+    if (acc >= 0.85) {
+      readout.classList.add('high');
+      readout.innerHTML = 'Above the 70% threshold &mdash; but read with caution.';
+    } else if (acc >= 0.70) {
+      readout.classList.add('borderline');
+      readout.innerHTML = 'Just above the 70% threshold &mdash; clinically borderline.';
+    } else {
+      readout.classList.add('low');
+      readout.innerHTML = 'Below the 70% threshold &mdash; not clinically useful as a stand-alone test.';
+    }
+  }
+
+  function resetSliders() {
+    document.getElementById('slider-fn').value = ORIG.fn;
+    document.getElementById('slider-fp').value = ORIG.fp;
+    onSliderChange();
+  }
+
+  var feedbackText = {
+    1: {
+      correct: "<strong>Correct.</strong> That's the cleanest read of overall accuracy: out of all the patients tested, what fraction did the test classify the same as the gold standard? It's a fraction of agreement, not a measure of disease prevalence or test reliability in any deeper sense.",
+      a: "<strong>Not quite.</strong> 92% is the test's accuracy, not how many patients in the population have COVID. The article tells us the disease prevalence was 0.20 (20%) &mdash; a different number entirely. Mixing accuracy and prevalence is one of the most common reading errors in diagnostic accuracy. <strong>The correct answer is B.</strong> That's the cleanest read of overall accuracy: out of all the patients tested, what fraction did the test classify the same as the gold standard? It's a fraction of agreement, not a measure of disease prevalence or test reliability in any deeper sense.",
+      c: "<strong>Not quite.</strong> &ldquo;92% reliable&rdquo; is vague and overpromises. Accuracy doesn't tell you whether you can trust a positive or a negative result &mdash; that depends on PPV and NPV (Part 6). Two tests can share the same accuracy and have very different reliability for different decisions. <strong>The correct answer is B.</strong> That's the cleanest read of overall accuracy: out of all the patients tested, what fraction did the test classify the same as the gold standard? It's a fraction of agreement, not a measure of disease prevalence or test reliability in any deeper sense.",
+      d: "<strong>Not quite.</strong> The 8% misclassified aren't a separate group who need a different test &mdash; they're patients within this same study who got a wrong answer (either FP or FN). They were tested with both the antigen test and PCR; we know they're misclassified because we have the gold standard. <strong>The correct answer is B.</strong> That's the cleanest read of overall accuracy: out of all the patients tested, what fraction did the test classify the same as the gold standard? It's a fraction of agreement, not a measure of disease prevalence or test reliability in any deeper sense."
+    },
+    2: {
+      correct: "<strong>Correct.</strong> A 95% CI describes the range of plausible values for the population accuracy &mdash; here, the true accuracy is plausibly between 0.90 and 0.94. The narrow width tells you the estimate is precise (n = 500 is large). But precision and clinical usefulness are different things &mdash; a test can have a precise but unimpressive accuracy.",
+      b: "<strong>Not quite.</strong> The null value of 1 applies to ratios like risk ratio or odds ratio (where 1 means no association). Accuracy is a proportion ranging from 0 to 1, so there's no equivalent null value to test against here. <strong>The correct answer is A.</strong> A 95% CI describes the range of plausible values for the population accuracy &mdash; here, the true accuracy is plausibly between 0.90 and 0.94. The narrow width tells you the estimate is precise (n = 500 is large). But precision and clinical usefulness are different things &mdash; a test can have a precise but unimpressive accuracy.",
+      c: "<strong>Not quite.</strong> The &ldquo;95%&rdquo; in &ldquo;95% CI&rdquo; refers to the confidence level of the interval &mdash; across many studies, this kind of interval would contain the true parameter 95% of the time. It's not a count of correctly classified patients in this particular sample. <strong>The correct answer is A.</strong> A 95% CI describes the range of plausible values for the population accuracy &mdash; here, the true accuracy is plausibly between 0.90 and 0.94. The narrow width tells you the estimate is precise (n = 500 is large). But precision and clinical usefulness are different things &mdash; a test can have a precise but unimpressive accuracy.",
+      d: "<strong>Not quite.</strong> A confidence interval doesn't describe a range across patients. Each patient is either classified correctly or not &mdash; individual patients don't have their own accuracy values. The CI describes uncertainty about the population estimate. <strong>The correct answer is A.</strong> A 95% CI describes the range of plausible values for the population accuracy &mdash; here, the true accuracy is plausibly between 0.90 and 0.94. The narrow width tells you the estimate is precise (n = 500 is large). But precision and clinical usefulness are different things &mdash; a test can have a precise but unimpressive accuracy."
+    },
+    3: {
+      correct: "<strong>Correct.</strong> This is the central trap of overall accuracy. A 92% accuracy with Sn = 0.70 and Sp = 0.98 (our scenario) is very different from a 92% accuracy with Sn = 0.98 and Sp = 0.70. The first is a strong rule-in test, weak for rule-out. The second is the opposite. Same headline number, completely different clinical use. Always read Sn and Sp alongside accuracy.",
+      a: "<strong>Not quite.</strong> 92% accuracy is necessary but not sufficient to call a test good. The clinical utility of a test depends on which kinds of mistakes it makes, and accuracy alone doesn't tell you that. You need Sn and Sp to know whether the test's strength is rule-in, rule-out, or both. <strong>The correct answer is D.</strong> Accuracy doesn't tell you which kind of error the test makes. A 92% accuracy with Sn = 0.70 and Sp = 0.98 is very different from a 92% accuracy with Sn = 0.98 and Sp = 0.70 — same headline number, completely different clinical use. Always read Sn and Sp alongside accuracy.",
+      b: "<strong>Not quite.</strong> The CI [0.90, 0.94] is actually quite tight, indicating a precise estimate. The issue isn't statistical precision &mdash; it's that overall accuracy is fundamentally a limited summary of test performance, no matter how precisely it's been measured. <strong>The correct answer is D.</strong> Accuracy doesn't tell you which kind of error the test makes. A 92% accuracy with Sn = 0.70 and Sp = 0.98 is very different from a 92% accuracy with Sn = 0.98 and Sp = 0.70 — same headline number, completely different clinical use. Always read Sn and Sp alongside accuracy.",
+      c: "<strong>Not quite.</strong> The 70% threshold is most often discussed in the context of Sn and Sp, but it's also a reasonable floor for overall accuracy. The 92% figure is well above it. The issue isn't whether the threshold applies &mdash; it's that &ldquo;above the threshold&rdquo; doesn't tell you whether the test fits the specific clinical question you're asking. <strong>The correct answer is D.</strong> Accuracy doesn't tell you which kind of error the test makes. A 92% accuracy with Sn = 0.70 and Sp = 0.98 is very different from a 92% accuracy with Sn = 0.98 and Sp = 0.70 — same headline number, completely different clinical use. Always read Sn and Sp alongside accuracy."
+    },
+    4: {
+      correct: "<strong>Correct.</strong> When you increased FN from 30 to 50, you converted 20 true positives into false negatives &mdash; the test missed 20 more cases of COVID. Accuracy = (50 + 392) / 500 = 0.884 (drop from 0.92 to about 0.88). But Sn = 50/100 = 0.50 (drop from 0.70 to 0.50). Notice how much harder the Sn drop hits clinically: the test now misses half the truly infected. Accuracy dropped 4 points; Sn dropped 20. <strong>Accuracy understates the impact of FN changes</strong> &mdash; that's the trap.",
+      a: "<strong>Not quite.</strong> Adding more false negatives can't increase the test's correct classifications. More misses pulls both accuracy and Sn down, not up. Look at the live readout: both numbers fell when you raised FN. <strong>The correct answer is C.</strong> Accuracy dropped from 0.92 to 0.88 (a 4-point drop), but Sn dropped from 0.70 to 0.50 (a 20-point drop). The test now misses half the truly infected patients. That's the trap with accuracy: a small accuracy change can mask a much larger Sn change.",
+      b: "<strong>Not quite.</strong> Accuracy did drop, just not as much as Sn did. That's exactly the lesson here: a small accuracy change can mask a much larger Sn change. Sn dropped 20 points while accuracy dropped about 4. <strong>The correct answer is C.</strong> Accuracy dropped from 0.92 to 0.88 (a 4-point drop), but Sn dropped from 0.70 to 0.50 (a 20-point drop). The test now misses half the truly infected patients. That's the trap with accuracy: a small accuracy change can mask a much larger Sn change.",
+      d: "<strong>Not quite.</strong> Sn = TP / (TP + FN) &mdash; FN is right there in the formula. When FN goes up and TP goes down (because the disease+ column total stays at 100), Sn drops directly. FN affects Sn the most of any cell. <strong>The correct answer is C.</strong> Accuracy dropped from 0.92 to 0.88 (a 4-point drop), but Sn dropped from 0.70 to 0.50 (a 20-point drop). The test now misses half the truly infected patients. That's the trap with accuracy: a small accuracy change can mask a much larger Sn change."
+    },
+    5: {
+      correct: "<strong>Correct.</strong> Sn = TP / (TP + FN) = 70 / 100 = 0.70 &mdash; unchanged because we didn't touch the disease+ column. Sp = TN / (TN + FP) = 360 / 400 = 0.90 (was 0.98). And accuracy = (70 + 360) / 500 = 0.86. <strong>Each error cell affects a different statistic:</strong> FN moves Sn, FP moves Sp. Accuracy averages over both, which is why it can change without telling you which kind of error grew.",
+      a: "<strong>Not quite.</strong> Sn didn't change at all because Sn doesn't depend on FP &mdash; the formula Sn = TP / (TP + FN) doesn't include FP. Look at the live readout: Sn stayed locked at 0.70 while accuracy and Sp both dropped. <strong>The correct answer is B.</strong> Sn = TP / (TP + FN) = 70 / 100 = 0.70 — unchanged because we didn't touch the disease+ column. Sp dropped to 0.90 (was 0.98) and accuracy dropped to 0.86. Each error cell affects a different statistic: FN moves Sn, FP moves Sp.",
+      c: "<strong>Not quite.</strong> Adding more false positives doesn't make the test better at detecting true positives. FP and TP are different cells with different patient populations behind them &mdash; increasing one doesn't increase the other, and Sn doesn't go up just because more positives were issued. <strong>The correct answer is B.</strong> Sn = TP / (TP + FN) = 70 / 100 = 0.70 — unchanged because we didn't touch the disease+ column. Sp dropped to 0.90 (was 0.98) and accuracy dropped to 0.86. Each error cell affects a different statistic: FN moves Sn, FP moves Sp.",
+      d: "<strong>Not quite.</strong> Accuracy and Sp definitely changed when you raised FP. The cell counts and derived statistics update on every drag of the slider &mdash; check the live readout. Adjusting FP affects everything that uses the disease− column. <strong>The correct answer is B.</strong> Sn = TP / (TP + FN) = 70 / 100 = 0.70 — unchanged because we didn't touch the disease+ column. Sp dropped to 0.90 (was 0.98) and accuracy dropped to 0.86. Each error cell affects a different statistic: FN moves Sn, FP moves Sp."
+    },
+    6: {
+      correct: "<strong>Correct &mdash; this is the conceptual punch line.</strong> FN=50/FP=30 gives accuracy ~0.84 with Sn = 0.50 and Sp = 0.93 (rule-in OK, rule-out poor). FN=10/FP=70 gives accuracy ~0.84 with Sn = 0.90 and Sp = 0.83 (rule-out strong, rule-in weaker). Same accuracy, completely different test profiles. Accuracy alone cannot tell you which of these tests fits your clinical need. <strong>That's the central lesson of Part 2:</strong> read accuracy as the start of the story, not the conclusion.",
+      a: "<strong>Not quite.</strong> Two tests with the same accuracy can be wildly different clinically. The exploration just showed you that explicitly &mdash; one missed many true cases, the other generated many false alarms. Identical headline accuracy, very different real-world consequences. <strong>The correct answer is D.</strong> Identical accuracy can hide very different Sn/Sp profiles. FN=50/FP=30 gives accuracy ~0.84 with Sn = 0.50 and Sp = 0.93 (rule-in OK, rule-out poor). FN=10/FP=70 gives the same ~0.84 accuracy but Sn = 0.90 and Sp = 0.83 (rule-out strong, rule-in weaker). Same accuracy, completely different test profiles.",
+      b: "<strong>Not quite.</strong> Accuracy did change when you adjusted the cells &mdash; just by less than Sn or Sp did in many cases. Look at the live readout next to the sliders: the value updates on every drag. <strong>The correct answer is D.</strong> Identical accuracy can hide very different Sn/Sp profiles. FN=50/FP=30 gives accuracy ~0.84 with Sn = 0.50 and Sp = 0.93 (rule-in OK, rule-out poor). FN=10/FP=70 gives the same ~0.84 accuracy but Sn = 0.90 and Sp = 0.83 (rule-out strong, rule-in weaker). Same accuracy, completely different test profiles.",
+      c: "<strong>Not quite.</strong> Sn and Sp can move independently of accuracy and of each other. They depend on different cells &mdash; Sn on TP/FN, Sp on TN/FP. That's exactly why accuracy can stay flat while Sn and Sp shift dramatically in opposite directions. <strong>The correct answer is D.</strong> Identical accuracy can hide very different Sn/Sp profiles. FN=50/FP=30 gives accuracy ~0.84 with Sn = 0.50 and Sp = 0.93 (rule-in OK, rule-out poor). FN=10/FP=70 gives the same ~0.84 accuracy but Sn = 0.90 and Sp = 0.83 (rule-out strong, rule-in weaker). Same accuracy, completely different test profiles."
+    }
+  };
+
+  function answerMC(qNum, choice, isCorrect) {
+    if (state.answered[qNum]) return;
+    state.answered[qNum] = true;
+    state.correct[qNum] = isCorrect;
+
+    var buttons = document.querySelectorAll('#mc' + qNum + '-options .mc-option');
+    buttons.forEach(function(btn) { btn.disabled = true; });
+
+    var chosenBtn = Array.prototype.find.call(buttons, function(btn) {
+      return btn.getAttribute('onclick').indexOf("'" + choice + "'") !== -1;
+    });
+    if (chosenBtn) {
+      chosenBtn.classList.add(isCorrect ? 'selected-correct' : 'selected-wrong');
+    }
+    if (!isCorrect) {
+      buttons.forEach(function(btn) {
+        var onClick = btn.getAttribute('onclick');
+        if (onClick.indexOf('true') !== -1) btn.classList.add('show-correct');
+      });
+    }
+
+    var fb = document.getElementById('mc' + qNum + '-feedback');
+    fb.classList.remove('correct', 'incorrect');
+    fb.classList.add(isCorrect ? 'correct' : 'incorrect');
+    fb.innerHTML = isCorrect ? feedbackText[qNum].correct : feedbackText[qNum][choice];
+
+    if (qNum < 6) {
+      unlockMC(qNum + 1);
+      if (qNum === 3) unlockSliders();
+    } else {
+      finalize();
+    }
+    updateStepCounter();
+  }
+
+  function unlockMC(qNum) {
+    var block = document.getElementById('mc' + qNum + '-block');
+    if (block) block.classList.add('unlocked');
+  }
+
+  function finalize() {
+    var allCorrect = state.correct[1] && state.correct[2] && state.correct[3] && state.correct[4] && state.correct[5] && state.correct[6];
+    var msg = document.getElementById('completion-msg');
+    msg.textContent = allCorrect ? '\u2713 All six correct \u2014 excellent work.' : '\u2713 Section complete. Review feedback as needed.';
+    document.getElementById('takeaways').style.display = 'block';
+    var nextBtn = document.getElementById('next-btn');
+    nextBtn.style.pointerEvents = 'auto';
+    nextBtn.style.opacity = '1';
+    try { localStorage.setItem('unit8_part2_done', '1'); } catch (e) {}
+  }
+
+  function updateStepCounter() {
+    var step = 1;
+    if (state.highlighted[1] || state.highlighted[2] || state.highlighted[3]) step = 2;
+    if (state.twoTestRevealed) step = 3;
+    if (state.calcShown) step = 4;
+    if (state.accRevealed) step = 5;
+    if (state.answered[3]) step = 6;
+    document.getElementById('step-counter').textContent = step;
+  }
+
+  resetSliders();
+</script>
+</body>
+</html>

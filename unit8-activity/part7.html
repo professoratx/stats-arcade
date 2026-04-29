@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit 8 Activity — Part 7: Apply It</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Calibri, "Segoe UI", Tahoma, sans-serif; background: #F0F3F5; color: #172940; line-height: 1.55; min-height: 100vh; font-size: 16.5px; }
+  .header { background: #172940; color: white; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid #2E8FAF; }
+  .header-left { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .header h1 { font-size: 23px; font-weight: 700; }
+  .header .part-label { font-size: 13.5px; color: #FFC857; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+  .progress-pill { background: rgba(255,255,255,0.12); padding: 6px 14px; border-radius: 20px; font-size: 13.5px; color: #F0F3F5; }
+  .progress-pill strong { color: #FFC857; }
+
+  .container { max-width: 1100px; margin: 0 auto; padding: 24px 32px 60px; display: flex; flex-direction: column; gap: 18px; }
+
+  .step { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 24px 26px; border-left: 5px solid #2E8FAF; }
+  .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .step-number { background: #2E8FAF; color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+  .step-title { font-size: 18.5px; font-weight: 700; color: #172940; }
+  .step-body { color: #2c3e50; font-size: 16px; line-height: 1.7; }
+  .step-body p { margin-bottom: 12px; }
+  .step-body p:last-child { margin-bottom: 0; }
+  .step-body strong { color: #172940; }
+
+  /* Orientation panel */
+  .orient-step { background: linear-gradient(135deg, #172940 0%, #2E8FAF 100%); color: white; border-left: 5px solid #FFC857; }
+  .orient-step .step-number { background: #FFC857; color: #172940; }
+  .orient-step .step-title { color: white; }
+  .orient-step .step-body { color: #F0F3F5; }
+  .orient-step .step-body strong { color: #FFC857; }
+
+  /* Compare callout */
+  .compare-callout { background: rgba(46,143,175,0.10); border-left: 4px solid #2E8FAF; border-radius: 8px; padding: 16px 20px; font-size: 16px; line-height: 1.65; color: #172940; }
+  .compare-callout strong { color: #172940; }
+  .compare-callout .cc-tag { display: block; font-size: 12.5px; font-weight: 700; color: #2E8FAF; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+
+  /* Article excerpt with embedded 2x2 */
+  .article-excerpt { background: #F8FAFB; border: 1px solid #d8dde2; border-left: 4px solid #172940; border-radius: 6px; padding: 20px 24px; margin: 14px 0; font-family: Georgia, "Times New Roman", serif; color: #2c3e50; font-size: 16.5px; line-height: 1.75; }
+  .article-excerpt .article-meta { font-size: 13px; font-family: Calibri, sans-serif; color: #616467; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+  .article-excerpt .article-title { font-family: Calibri, sans-serif; font-size: 17px; font-weight: 700; color: #172940; margin-bottom: 14px; line-height: 1.4; }
+  .article-excerpt .article-section { font-family: Calibri, sans-serif; font-size: 13px; color: #2E8FAF; font-weight: 700; margin: 16px 0 6px; text-transform: uppercase; letter-spacing: 0.8px; }
+  .article-excerpt .article-section:first-of-type { margin-top: 0; }
+  .article-excerpt p { margin-bottom: 10px; }
+  .article-excerpt p:last-child { margin-bottom: 0; }
+  .article-excerpt strong { color: #172940; }
+  .stat-hi { padding: 1px 5px; border-radius: 3px; font-weight: 700; color: #172940; font-family: Calibri, sans-serif; }
+  .stat-hi.acc { background: #DFEDF4; }
+  .stat-hi.prev { background: #FFF4D6; }
+  .stat-hi.sn { background: #C9E4D5; }
+  .stat-hi.sp { background: #D4E2E8; }
+  .stat-hi.ppv { background: #E5DCEB; }
+  .stat-hi.npv { background: #E1F5EE; }
+
+  /* Inline 2x2 inside article */
+  .article-22 { margin: 14px auto; max-width: 540px; }
+  .article-22-title { font-family: Calibri, sans-serif; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.8px; color: #616467; font-weight: 700; text-align: center; margin-bottom: 8px; }
+  .article-22-grid { display: grid; grid-template-columns: 150px 1fr 1fr 80px; gap: 2px; background: #d8dde2; border-radius: 6px; overflow: hidden; font-family: Calibri, sans-serif; border: 1px solid #d8dde2; }
+  .a22-cell { background: white; padding: 10px 8px; text-align: center; font-size: 14px; color: #172940; }
+  .a22-cell.h { background: #172940; color: white; font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .a22-cell.h.subhead { background: #2E8FAF; }
+  .a22-cell.lbl { background: #2E8FAF; color: white; font-weight: 600; text-align: left; padding-left: 14px; font-size: 13px; }
+  .a22-cell.tp { background: #E8F4EC; color: #1B5E3F; font-weight: 700; font-size: 16px; }
+  .a22-cell.fp { background: #FBEAE7; color: #8B2B1F; font-weight: 700; font-size: 16px; }
+  .a22-cell.fn { background: #FBEAE7; color: #8B2B1F; font-weight: 700; font-size: 16px; }
+  .a22-cell.tn { background: #E8F4EC; color: #1B5E3F; font-weight: 700; font-size: 16px; }
+  .a22-cell.total { background: #F0F3F5; color: #172940; font-weight: 700; font-size: 14px; }
+  .a22-cell.gtotal { background: #172940; color: #FFC857; font-weight: 700; font-size: 14px; }
+
+  /* Stats summary card under article */
+  .stats-summary { background: #F8FAFB; border: 1px solid #d8dde2; border-radius: 10px; padding: 16px 20px; margin: 14px 0 4px; }
+  .stats-summary-title { font-size: 13px; text-transform: uppercase; letter-spacing: 1.2px; color: #2E8FAF; font-weight: 700; margin-bottom: 10px; text-align: center; }
+  .stats-summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .ss-cell { background: white; border-radius: 8px; padding: 10px 8px; text-align: center; border-top: 3px solid #2E8FAF; }
+  .ss-cell.acc { border-top-color: #2E8FAF; }
+  .ss-cell.prev { border-top-color: #FFC857; }
+  .ss-cell.sn { border-top-color: #2D8659; }
+  .ss-cell.sp { border-top-color: #246F89; }
+  .ss-cell.ppv { border-top-color: #8B6FB0; }
+  .ss-cell.npv { border-top-color: #1B5E3F; }
+  .ss-name { font-family: "Cambria Math", Cambria, serif; font-weight: 700; font-size: 14.5px; color: #172940; margin-bottom: 2px; }
+  .ss-value { font-size: 20px; font-weight: 700; color: #2E8FAF; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .ss-cell.acc .ss-value { color: #2E8FAF; }
+  .ss-cell.prev .ss-value { color: #8B6914; }
+  .ss-cell.sn .ss-value { color: #2D8659; }
+  .ss-cell.sp .ss-value { color: #246F89; }
+  .ss-cell.ppv .ss-value { color: #6B4F92; }
+  .ss-cell.npv .ss-value { color: #1B5E3F; }
+  .ss-ci { font-size: 11px; color: #616467; margin-top: 3px; font-variant-numeric: tabular-nums; line-height: 1.4; }
+
+  /* Calc box */
+  .calc-box { background: #F8FAFB; border-radius: 10px; border: 1px solid #d8dde2; padding: 20px 22px; margin: 14px 0; text-align: center; font-family: "Cambria Math", Cambria, serif; font-size: 19px; color: #172940; }
+  .calc-box .calc-step { margin: 6px 0; transition: opacity 0.4s ease; }
+  .calc-box .calc-result { color: #2E8FAF; font-weight: 700; font-size: 24px; opacity: 0; transition: opacity 0.6s ease; display: inline-block; }
+  .calc-box .calc-result.show { opacity: 1; }
+  .calc-box .calc-action { margin-top: 12px; }
+  .calc-cursor { display: inline-block; width: 10px; color: #2E8FAF; animation: blink 1s infinite; }
+  @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+  .calc-prompt { font-family: Calibri, sans-serif; font-size: 14.5px; color: #616467; margin-bottom: 10px; font-style: italic; }
+
+  /* Reveal button */
+  .reveal-btn { background: white; color: #2E8FAF; border: 2px solid #2E8FAF; padding: 10px 18px; border-radius: 7px; font-size: 14.5px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.18s ease; }
+  .reveal-btn:hover { background: #EAF3F7; transform: translateY(-1px); }
+  .reveal-btn.done { background: #246F89; color: white; border-color: #246F89; cursor: default; }
+  .reveal-btn.done:hover { transform: none; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* MC blocks */
+  .mc-intro { background: #F8FAFB; border: 1px solid #d8dde2; border-left: 4px solid #2E8FAF; border-radius: 8px; padding: 14px 18px; font-size: 15.5px; line-height: 1.6; color: #2c3e50; margin-top: 4px; }
+  .mc-intro strong { color: #172940; }
+  .mc-intro .mi-tag { display: block; font-size: 12.5px; font-weight: 700; color: #2E8FAF; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+
+  .mc-block { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 24px 26px; border-top: 5px solid #2E8FAF; opacity: 0.45; pointer-events: none; transition: opacity 0.4s ease; }
+  .mc-block.unlocked { opacity: 1; pointer-events: auto; }
+  .mc-question { font-size: 17px; font-weight: 700; color: #172940; margin-bottom: 14px; line-height: 1.5; }
+  .mc-question .q-num { color: #2E8FAF; margin-right: 6px; }
+  .mc-options { display: flex; flex-direction: column; gap: 10px; }
+  .mc-option { background: #F8FAFB; border: 2px solid #d8dde2; border-radius: 8px; padding: 13px 17px; cursor: pointer; font-size: 16px; color: #2c3e50; text-align: left; transition: all 0.18s ease; font-family: inherit; width: 100%; line-height: 1.6; }
+  .mc-option:hover:not(:disabled) { border-color: #2E8FAF; background: #EAF3F7; }
+  .mc-option:disabled { cursor: default; }
+  .mc-option.selected-correct { background: #E8F4EC; border-color: #2D8B5A; color: #1B5E3F; font-weight: 600; }
+  .mc-option.selected-wrong { background: #FBEAE7; border-color: #C0504D; color: #8B2B1F; }
+  .mc-option.show-correct { background: #E8F4EC; border-color: #2D8B5A; color: #1B5E3F; font-weight: 600; }
+  .mc-option .marker { display: inline-block; font-weight: 700; margin-right: 8px; color: #2E8FAF; }
+  .mc-feedback { margin-top: 14px; padding: 15px 17px; border-radius: 8px; font-size: 15.5px; line-height: 1.65; display: none; }
+  .mc-feedback.correct { background: #E8F4EC; border-left: 4px solid #2D8B5A; color: #1B5E3F; display: block; }
+  .mc-feedback.incorrect { background: #FBEAE7; border-left: 4px solid #C0504D; color: #8B2B1F; display: block; }
+  .mc-feedback strong { display: block; margin-bottom: 4px; font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Takeaways */
+  .takeaways { background: #172940; color: white; border-radius: 12px; padding: 28px 30px; border-left: 5px solid #2E8FAF; }
+  .takeaways h3 { color: #2E8FAF; font-size: 13.5px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; font-weight: 700; }
+  .takeaways h2 { font-size: 23px; color: white; margin-bottom: 18px; font-weight: 700; }
+  .takeaways ul { list-style: none; padding: 0; margin: 0; }
+  .takeaways li { padding: 13px 0 13px 38px; border-bottom: 1px solid rgba(255,255,255,0.12); position: relative; font-size: 16px; line-height: 1.7; color: #F0F3F5; }
+  .takeaways li:last-child { border-bottom: none; }
+  .takeaways li::before { content: "\2713"; position: absolute; left: 0; top: 13px; width: 24px; height: 24px; border-radius: 50%; background: #FFC857; color: #172940; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 13.5px; }
+  .takeaways li strong { color: white; }
+
+  /* Translation table */
+  .translation-panel { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 26px 28px; border-left: 5px solid #FFC857; display: none; }
+  .translation-panel.show { display: block; }
+  .translation-panel h3 { color: #2E8FAF; font-size: 13.5px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 4px; font-weight: 700; }
+  .translation-panel h2 { font-size: 22px; color: #172940; margin-bottom: 8px; font-weight: 700; }
+  .translation-panel .tp-intro { color: #2c3e50; font-size: 15.5px; line-height: 1.65; margin-bottom: 16px; }
+  .translation-panel .tp-intro strong { color: #172940; }
+
+  .trans-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 14.5px; margin-bottom: 16px; }
+  .trans-table th, .trans-table td { padding: 11px 12px; text-align: left; border-bottom: 1px solid #e3e8ec; vertical-align: top; line-height: 1.5; }
+  .trans-table th { background: #172940; color: white; font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: 0.7px; padding: 12px; }
+  .trans-table th:first-child { border-top-left-radius: 8px; }
+  .trans-table th:last-child { border-top-right-radius: 8px; }
+  .trans-table td.stat-name { font-family: "Cambria Math", Cambria, serif; font-weight: 700; color: #172940; font-size: 16px; background: #F8FAFB; }
+  .trans-table td.val { font-weight: 700; color: #172940; font-variant-numeric: tabular-nums; font-size: 15.5px; text-align: center; }
+  .trans-table td.val.antigen { background: #DFEDF4; color: #2E8FAF; }
+  .trans-table td.val.cog { background: #EAF3F7; color: #246F89; }
+  .trans-table td.note { color: #2c3e50; font-size: 14.5px; }
+  .trans-table tr:last-child td { border-bottom: none; }
+
+  .trans-framing { background: linear-gradient(135deg, #172940 0%, #2E8FAF 100%); color: white; border-radius: 8px; padding: 18px 22px; font-size: 15.5px; line-height: 1.7; }
+  .trans-framing strong { color: #FFC857; }
+
+  /* Nav */
+  .nav-bar { display: flex; justify-content: space-between; align-items: center; padding: 18px 0 0; margin-top: 8px; gap: 12px; flex-wrap: wrap; }
+  .nav-btn { background: #2E8FAF; color: white; border: none; padding: 14px 30px; border-radius: 8px; font-size: 15.5px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s ease; text-decoration: none; display: inline-block; }
+  .nav-btn:hover { background: #246F89; transform: translateY(-1px); }
+  .nav-btn.secondary { background: white; color: #2E8FAF; border: 2px solid #2E8FAF; }
+  .nav-btn.secondary:hover { background: #EAF3F7; }
+  .completion-msg { color: #2E8FAF; font-size: 14.5px; font-weight: 600; text-align: center; flex-grow: 1; margin: 0 16px; }
+
+  @media (max-width: 720px) {
+    .header { padding: 14px 18px; flex-direction: column; gap: 8px; align-items: flex-start; }
+    .container { padding: 16px; }
+    .stats-summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .article-22-grid { grid-template-columns: 110px 1fr 1fr 70px; }
+    .a22-cell { font-size: 12.5px; padding: 8px 4px; }
+    .a22-cell.tp, .a22-cell.fp, .a22-cell.fn, .a22-cell.tn { font-size: 14px; }
+    .trans-table { font-size: 13px; }
+    .trans-table th, .trans-table td { padding: 9px 7px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <h1>Unit 8: Diagnostic Accuracy Activity</h1>
+    <span class="part-label">Part 7 of 10 &middot; Apply It</span>
+  </div>
+  <div class="progress-pill">Step <strong id="step-counter">1</strong> of 6</div>
+</header>
+
+<main class="container">
+
+  <!-- Step 0: Orientation -->
+  <div class="step orient-step">
+    <div class="step-header">
+      <div class="step-number">&#9733;</div>
+      <div class="step-title">Orientation</div>
+    </div>
+    <div class="step-body">
+      <p>You've spent six parts learning to read diagnostic accuracy in one specific study. Now apply that exact same logic to a completely different test, in a completely different setting, with a completely different patient population.</p>
+      <div style="background: rgba(255,200,87,0.15); border-left: 3px solid #FFC857; padding: 14px 18px; border-radius: 6px; margin: 14px 0; font-size: 16px;">
+        The math doesn't change. The interpretation framework doesn't change. <strong>Only the context does.</strong>
+      </div>
+      <p>The new scenario below is a brief cognitive screen for early dementia in older adults. As you read, watch yourself recognize each of the six statistics &mdash; you've already done the hard work.</p>
+    </div>
+  </div>
+
+  <!-- Step 1: New scenario + article -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">1</div>
+      <div class="step-title">A new scenario &mdash; same six statistics</div>
+    </div>
+    <div class="step-body">
+      <p>Cognitive screening is a routine part of primary care for older adults, and a flagged screen often triggers referral for an OT cognitive evaluation, ADL safety assessment, or driving review. Brief screens are quick, low-cost, and easy to administer &mdash; but they're not diagnostic on their own. The reference standard for early dementia is a comprehensive <strong>neuropsychological battery (NPB)</strong> performed by a licensed neuropsychologist.</p>
+
+      <p>Below is the kind of diagnostic accuracy article you'll see in occupational therapy, geriatrics, and audiology journals when a new screening tool is being evaluated. As you read, notice that all six statistics from Parts 2&ndash;6 are reported &mdash; and that the values themselves are quite different from the antigen test.</p>
+
+      <div class="article-excerpt">
+        <div class="article-meta">Mock journal article</div>
+        <div class="article-title">Diagnostic accuracy of a brief cognitive screen for early dementia in community-dwelling older adults at primary care</div>
+
+        <div class="article-section">Methods</div>
+        <p>Community-dwelling adults aged 65+ at three primary care clinics were screened with a 10-minute brief cognitive screen between January and June. All screened patients received a comprehensive neuropsychological battery (NPB) within 30 days, regardless of screen result. Examiners were blinded to screen results. The NPB result served as the gold standard.</p>
+
+        <div class="article-section">Results &mdash; Contingency table</div>
+
+        <div class="article-22">
+          <div class="article-22-title">Brief cognitive screen result &times; NPB result (n = 400)</div>
+          <div class="article-22-grid">
+            <div class="a22-cell h"></div>
+            <div class="a22-cell h subhead">NPB positive (dementia)</div>
+            <div class="a22-cell h subhead">NPB negative (no dementia)</div>
+            <div class="a22-cell h">Total</div>
+
+            <div class="a22-cell lbl">Screen positive</div>
+            <div class="a22-cell tp">60</div>
+            <div class="a22-cell fp">32</div>
+            <div class="a22-cell total">92</div>
+
+            <div class="a22-cell lbl">Screen negative</div>
+            <div class="a22-cell fn">20</div>
+            <div class="a22-cell tn">288</div>
+            <div class="a22-cell total">308</div>
+
+            <div class="a22-cell lbl">Total</div>
+            <div class="a22-cell total">80</div>
+            <div class="a22-cell total">320</div>
+            <div class="a22-cell gtotal">400</div>
+          </div>
+        </div>
+
+        <div class="article-section">Results &mdash; Statistics</div>
+        <p>Of 400 patients screened, 80 (20%) met diagnostic criteria for early dementia on NPB (<span class="stat-hi prev">prevalence = 0.20</span>). The screen correctly identified 60 of 80 dementia cases (<span class="stat-hi sn">sensitivity = 0.75, 95% CI [0.65, 0.84]</span>) and correctly cleared 288 of 320 patients without dementia (<span class="stat-hi sp">specificity = 0.90, 95% CI [0.86, 0.93]</span>). Among screen-positive patients, 60 of 92 had dementia confirmed (<span class="stat-hi ppv">PPV = 0.65, 95% CI [0.55, 0.74]</span>). Among screen-negative patients, 288 of 308 were correctly cleared (<span class="stat-hi npv">NPV = 0.94, 95% CI [0.90, 0.96]</span>). Overall accuracy was <span class="stat-hi acc">0.87, 95% CI [0.83, 0.90]</span>.</p>
+
+        <div class="article-section">Discussion</div>
+        <p>The brief cognitive screen demonstrates moderate sensitivity and good specificity in primary care. However, with only about two-thirds of positive screens confirmed by NPB, a positive screen is best understood as a flag for confirmatory neuropsychological testing rather than a diagnosis. A negative screen offers reasonable reassurance for asymptomatic patients but should not preclude further evaluation when clinical concern persists.</p>
+
+        <div class="stats-summary">
+          <div class="stats-summary-title">The six primary statistics &mdash; at a glance</div>
+          <div class="stats-summary-grid">
+            <div class="ss-cell acc">
+              <div class="ss-name">Accuracy</div>
+              <div class="ss-value">0.87</div>
+              <div class="ss-ci">95% CI [0.83, 0.90]</div>
+            </div>
+            <div class="ss-cell prev">
+              <div class="ss-name">Prevalence</div>
+              <div class="ss-value">0.20</div>
+              <div class="ss-ci">80 / 400</div>
+            </div>
+            <div class="ss-cell sn">
+              <div class="ss-name">Sn</div>
+              <div class="ss-value">0.75</div>
+              <div class="ss-ci">95% CI [0.65, 0.84]</div>
+            </div>
+            <div class="ss-cell sp">
+              <div class="ss-name">Sp</div>
+              <div class="ss-value">0.90</div>
+              <div class="ss-ci">95% CI [0.86, 0.93]</div>
+            </div>
+            <div class="ss-cell ppv">
+              <div class="ss-name">PPV</div>
+              <div class="ss-value">0.65</div>
+              <div class="ss-ci">95% CI [0.55, 0.74]</div>
+            </div>
+            <div class="ss-cell npv">
+              <div class="ss-name">NPV</div>
+              <div class="ss-value">0.94</div>
+              <div class="ss-ci">95% CI [0.90, 0.96]</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Compare callout -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">2</div>
+      <div class="step-title">Compare to what you've already learned</div>
+    </div>
+    <div class="step-body">
+      <div class="compare-callout">
+        <span class="cc-tag">&#9656; The point of this part</span>
+        <strong>Same six statistics. Different test. Different disease. Different population context.</strong> Watch how the same logic applies. The interpretation framework you built in Parts 2&ndash;6 transfers directly &mdash; you just plug in new numbers and ask the same questions.
+      </div>
+      <p style="margin-top:14px;">Notice the profile is different: this screen is <strong>moderately sensitive (0.75) and moderately specific (0.90)</strong>, where the antigen test was specificity-heavy. And critically, PPV here is only 0.65 &mdash; about 1 in 3 positive screens turn out NOT to be dementia. Same population prevalence (0.20), but a very different clinical role for the test.</p>
+    </div>
+  </div>
+
+  <!-- Step 3: Compute on your own -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">3</div>
+      <div class="step-title">Compute one of the statistics on your own</div>
+    </div>
+    <div class="step-body">
+      <p>Before answering the questions below, work through the accuracy calculation directly from the 2 &times; 2 table. Try it in your head first, then click to check.</p>
+
+      <div class="calc-box">
+        <div class="calc-prompt">Calculate overall accuracy from the 2 &times; 2 above</div>
+        <div class="calc-step">
+          Accuracy = (TP + TN) / Total
+        </div>
+        <div class="calc-step" style="margin-top:10px;">
+          Accuracy = (60 + 288) / 400 = 348 / 400 = <span class="calc-result" id="calc-result">0.87</span><span class="calc-cursor" id="calc-cursor">|</span>
+        </div>
+        <div class="calc-action">
+          <button class="reveal-btn" id="calc-btn" onclick="showCalcResult()">&#9656; Show me the answer</button>
+        </div>
+      </div>
+      <p style="margin-top:14px; font-size:15.5px; color:#616467;">If you got 0.87, you're reading the table correctly. The math is identical to Part 2 &mdash; just with new cell counts. That's the whole point of this part.</p>
+    </div>
+  </div>
+
+  <!-- Step 4: Reading rules adapted for synthesis -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">4</div>
+      <div class="step-title">Four reading rules for any diagnostic accuracy paper</div>
+    </div>
+    <div class="step-body">
+      <p>These four rules pull together everything from Parts 2&ndash;6 into a checklist you can use any time you read a diagnostic accuracy study:</p>
+      <p style="padding-left: 14px;">
+        &bull; <strong>Sn and Sp tell you about the test. PPV and NPV tell you about the result.</strong> Sn/Sp describe how the test behaves on diseased vs. disease-free patients; PPV/NPV translate a specific positive or negative result into &ldquo;what does this mean for this patient?&rdquo;<br>
+        &bull; <strong>Always check whether your population's prevalence matches the study's.</strong> PPV and NPV shift with prevalence, so a study's reported PPV doesn't transfer cleanly to a setting with different prevalence.<br>
+        &bull; <strong>A weak PPV doesn't mean the test is bad &mdash; it tells you positives need confirmation.</strong> A screen with PPV = 0.65 isn't broken. It's a screen, doing its job: flagging patients who need confirmatory work-up.<br>
+        &bull; <strong>The 70% threshold is a useful floor for Sn and Sp.</strong> Below 70%, a negative (or positive) result isn't trustworthy enough on its own. Above 70%, useful; above 90%, very useful.
+      </p>
+    </div>
+  </div>
+
+  <!-- Step 5: MC intro -->
+  <div class="step">
+    <div class="step-header">
+      <div class="step-number">5</div>
+      <div class="step-title">Apply the framework &mdash; eight questions</div>
+    </div>
+    <div class="step-body">
+      <div class="mc-intro">
+        <span class="mi-tag">&#9656; What's coming</span>
+        <strong>Eight questions, applying everything from Parts 2&ndash;6 to this new screen.</strong> The first two ask you to interpret Sn and Sp directly from the article. Q3 asks you to compute. Q4 and Q5 are clinical-translation questions for PPV and NPV. Q6&ndash;Q7 test setting transfer (what changes when you move the screen to a memory clinic?). Q8 asks for the clinical synthesis &mdash; what's this screen actually for?
+      </div>
+    </div>
+  </div>
+
+  <!-- Q1 -->
+  <div id="mc1-block" class="mc-block unlocked">
+    <div class="mc-question"><span class="q-num">Q1.</span> What does Sn = 0.75 mean for using this screen to rule out early dementia in this study?</div>
+    <div class="mc-options" id="mc1-options">
+      <button class="mc-option" onclick="answerMC(1, 'a', false)"><span class="marker">A.</span> The screen is highly accurate &mdash; 75% of all patients are correctly classified, regardless of dementia status.</button>
+      <button class="mc-option" onclick="answerMC(1, 'b', true)"><span class="marker">B.</span> Of every 100 patients with dementia, the screen catches 75 and misses 25 &mdash; above the 70% threshold, but with substantial leak.</button>
+      <button class="mc-option" onclick="answerMC(1, 'c', false)"><span class="marker">C.</span> Of every 100 patients without dementia, the screen correctly clears 75. A negative result is therefore very reassuring in this study population.</button>
+      <button class="mc-option" onclick="answerMC(1, 'd', false)"><span class="marker">D.</span> 75% of patients with a negative screen actually do not have dementia, so a negative essentially rules dementia out.</button>
+    </div>
+    <div class="mc-feedback" id="mc1-feedback"></div>
+  </div>
+
+  <!-- Q2 -->
+  <div id="mc2-block" class="mc-block">
+    <div class="mc-question"><span class="q-num">Q2.</span> What does Sp = 0.90 mean for using this screen to rule in dementia?</div>
+    <div class="mc-options" id="mc2-options">
+      <button class="mc-option" onclick="answerMC(2, 'a', false)"><span class="marker">A.</span> 90% of patients tested in this study had dementia confirmed, so the screen is highly trustworthy overall.</button>
+      <button class="mc-option" onclick="answerMC(2, 'b', false)"><span class="marker">B.</span> Of every 100 patients with dementia, the screen correctly identifies 90 and misses 10 &mdash; an excellent rule-in test.</button>
+      <button class="mc-option" onclick="answerMC(2, 'c', true)"><span class="marker">C.</span> Of every 100 patients without dementia, the screen correctly clears 90 and falsely flags 10 &mdash; above 70%, but not definitive on its own.</button>
+      <button class="mc-option" onclick="answerMC(2, 'd', false)"><span class="marker">D.</span> 90% of patients with a positive screen actually have dementia, making the screen a strong rule-in test on its own.</button>
+    </div>
+    <div class="mc-feedback" id="mc2-feedback"></div>
+  </div>
+
+  <!-- Q3 -->
+  <div id="mc3-block" class="mc-block">
+    <div class="mc-question"><span class="q-num">Q3.</span> Compute overall accuracy directly from the 2 &times; 2 table. Which value is correct?</div>
+    <div class="mc-options" id="mc3-options">
+      <button class="mc-option" onclick="answerMC(3, 'a', false)"><span class="marker">A.</span> Accuracy = 60 / 92 = 0.65, because the numerator is the count of true positives among screen positives.</button>
+      <button class="mc-option" onclick="answerMC(3, 'b', false)"><span class="marker">B.</span> Accuracy = 288 / 320 = 0.90, because accuracy is the rate at which the screen correctly clears disease-free patients.</button>
+      <button class="mc-option" onclick="answerMC(3, 'c', false)"><span class="marker">C.</span> Accuracy = 60 / 80 = 0.75, because accuracy is the rate at which the screen catches truly diseased patients.</button>
+      <button class="mc-option" onclick="answerMC(3, 'd', true)"><span class="marker">D.</span> Accuracy = (60 + 288) / 400 = 348 / 400 = 0.87. The numerator is all correct classifications (TP + TN); the denominator is the full sample.</button>
+    </div>
+    <div class="mc-feedback" id="mc3-feedback"></div>
+  </div>
+
+  <!-- Q4 -->
+  <div id="mc4-block" class="mc-block">
+    <div class="mc-question"><span class="q-num">Q4.</span> A patient just screened positive and asks, "What does this mean? Do I have dementia?" Given PPV = 0.65, what's the cleanest answer?</div>
+    <div class="mc-options" id="mc4-options">
+      <button class="mc-option" onclick="answerMC(4, 'a', true)"><span class="marker">A.</span> About two-thirds of positive screens are confirmed dementia and about one in three are not &mdash; the screen is a flag, not a diagnosis.</button>
+      <button class="mc-option" onclick="answerMC(4, 'b', false)"><span class="marker">B.</span> A positive screen is essentially a diagnosis &mdash; the screen is highly specific (Sp = 0.90), so positive results are very trustworthy on their own.</button>
+      <button class="mc-option" onclick="answerMC(4, 'c', false)"><span class="marker">C.</span> The positive result means there's a 35% chance you have dementia &mdash; less likely than not, so we'll monitor and rescreen later.</button>
+      <button class="mc-option" onclick="answerMC(4, 'd', false)"><span class="marker">D.</span> The screen is 87% accurate overall, so we can be 87% confident the positive result is correct.</button>
+    </div>
+    <div class="mc-feedback" id="mc4-feedback"></div>
+  </div>
+
+  <!-- Q5 -->
+  <div id="mc5-block" class="mc-block">
+    <div class="mc-question"><span class="q-num">Q5.</span> A patient just screened negative. Given NPV = 0.94, how confident can you be that they don't have early dementia?</div>
+    <div class="mc-options" id="mc5-options">
+      <button class="mc-option" onclick="answerMC(5, 'a', false)"><span class="marker">A.</span> 94% of patients screened in this study did not have dementia &mdash; so a negative screen reflects the typical study patient.</button>
+      <button class="mc-option" onclick="answerMC(5, 'b', true)"><span class="marker">B.</span> Of every 100 patients with a negative screen, 94 truly don't have dementia and 6 are missed cases &mdash; reasonable reassurance, but not certainty.</button>
+      <button class="mc-option" onclick="answerMC(5, 'c', false)"><span class="marker">C.</span> A negative screen rules dementia out essentially completely &mdash; NPV = 0.94 means there's almost no chance of being wrong.</button>
+      <button class="mc-option" onclick="answerMC(5, 'd', false)"><span class="marker">D.</span> NPV refers to the test, not the patient, so it doesn't directly say what to expect for any individual negative result.</button>
+    </div>
+    <div class="mc-feedback" id="mc5-feedback"></div>
+  </div>
+
+  <!-- Q6 -->
+  <div id="mc6-block" class="mc-block">
+    <div class="mc-question"><span class="q-num">Q6.</span> Which statistics would change if this screen were used in a memory clinic (where prevalence is much higher than primary care) instead of community-dwelling primary care?</div>
+    <div class="mc-options" id="mc6-options">
+      <button class="mc-option" onclick="answerMC(6, 'a', false)"><span class="marker">A.</span> Sn and Sp would shift, because more dementia patients in the sample changes the test's catch rate; PPV and NPV would not change.</button>
+      <button class="mc-option" onclick="answerMC(6, 'b', false)"><span class="marker">B.</span> All six statistics would change, because the entire 2 &times; 2 table is rebuilt in a new population.</button>
+      <button class="mc-option" onclick="answerMC(6, 'c', false)"><span class="marker">C.</span> None would change, because the test itself is the same instrument and produces the same numbers wherever it's used.</button>
+      <button class="mc-option" onclick="answerMC(6, 'd', true)"><span class="marker">D.</span> PPV and NPV would change, because they depend on prevalence; Sn and Sp would not, because they're properties of the screen itself.</button>
+    </div>
+    <div class="mc-feedback" id="mc6-feedback"></div>
+  </div>
+
+  <!-- Q7 -->
+  <div id="mc7-block" class="mc-block">
+    <div class="mc-question"><span class="q-num">Q7.</span> The screen is being considered for use in a high-risk memory clinic where prevalence is roughly 50%. What happens to PPV?</div>
+    <div class="mc-options" id="mc7-options">
+      <button class="mc-option" onclick="answerMC(7, 'a', true)"><span class="marker">A.</span> PPV would rise substantially &mdash; to roughly 0.88 at 50% prevalence &mdash; making the screen more useful for ruling in dementia.</button>
+      <button class="mc-option" onclick="answerMC(7, 'b', false)"><span class="marker">B.</span> PPV would stay at 0.65 &mdash; PPV is a property of the test mechanism and doesn't move with the population.</button>
+      <button class="mc-option" onclick="answerMC(7, 'c', false)"><span class="marker">C.</span> PPV would fall, because more dementia in the sample produces more false positives among the larger group of positives.</button>
+      <button class="mc-option" onclick="answerMC(7, 'd', false)"><span class="marker">D.</span> PPV would track the new prevalence directly, settling at roughly 0.50 to match the population rate.</button>
+    </div>
+    <div class="mc-feedback" id="mc7-feedback"></div>
+  </div>
+
+  <!-- Q8 -->
+  <div id="mc8-block" class="mc-block">
+    <div class="mc-question"><span class="q-num">Q8.</span> Given the values reported in this article, what's the clinical role of this brief cognitive screen?</div>
+    <div class="mc-options" id="mc8-options">
+      <button class="mc-option" onclick="answerMC(8, 'a', false)"><span class="marker">A.</span> A diagnostic test &mdash; PPV and NPV are both above 0.60, so a positive or negative result on its own justifies a dementia diagnosis or ruling it out without further evaluation.</button>
+      <button class="mc-option" onclick="answerMC(8, 'b', false)"><span class="marker">B.</span> A confirmatory test for cases already flagged by NPB &mdash; the screen's job is to verify the more expensive battery's findings before treatment begins.</button>
+      <button class="mc-option" onclick="answerMC(8, 'c', true)"><span class="marker">C.</span> A screening tool, not a diagnostic test &mdash; a positive screen flags a patient for confirmatory NPB, and a negative screen offers reasonable but not absolute reassurance.</button>
+      <button class="mc-option" onclick="answerMC(8, 'd', false)"><span class="marker">D.</span> A monitoring tool used only to track changes over time &mdash; given the moderate Sn and Sp, it shouldn't be used to make any decisions about an individual patient.</button>
+    </div>
+    <div class="mc-feedback" id="mc8-feedback"></div>
+  </div>
+
+  <!-- Takeaways -->
+  <div class="takeaways" id="takeaways" style="display:none;">
+    <h3>Big takeaways</h3>
+    <h2>What carries forward to every diagnostic accuracy paper</h2>
+    <ul>
+      <li><strong>The same six statistics describe any diagnostic test.</strong> The math doesn't change with the disease &mdash; it's the same framework whether you're reading about an antigen test, a cognitive screen, a hearing screening, or a falls-risk tool.</li>
+      <li><strong>Sn and Sp tell you about the test; PPV and NPV tell you about the result.</strong> Sn/Sp answer &ldquo;how does this test behave on diseased vs. disease-free patients?&rdquo; PPV/NPV answer &ldquo;given my patient's actual result, what's the probability it's right?&rdquo;</li>
+      <li><strong>Prevalence shapes PPV and NPV.</strong> Always ask whether your patient population resembles the study's. A study's PPV is only as portable as its prevalence.</li>
+      <li><strong>A weak PPV doesn't mean the test is bad.</strong> It tells you positives need confirmation. That's what screening tools are designed to do &mdash; flag, not diagnose.</li>
+      <li><strong>Reading any diagnostic accuracy paper means asking the same questions.</strong> How sensitive? How specific? In whom? What does prevalence look like in my setting? What are the consequences of positive vs. negative results for this particular patient?</li>
+    </ul>
+  </div>
+
+  <!-- Translation table -->
+  <div class="translation-panel" id="translation-panel">
+    <h3>Side-by-side translation</h3>
+    <h2>Same framework, different test</h2>
+    <p class="tp-intro">Compare the antigen test you studied in Parts 2&ndash;6 to the cognitive screen you just analyzed. <strong>The numbers are different. The framework for reading them is identical.</strong></p>
+
+    <table class="trans-table">
+      <thead>
+        <tr>
+          <th>Statistic</th>
+          <th>Antigen test (COVID)</th>
+          <th>Cognitive screen (dementia)</th>
+          <th>What both tell us</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="stat-name">Sn</td>
+          <td class="val antigen">0.70</td>
+          <td class="val cog">0.75</td>
+          <td class="note">Both moderately catch true cases &mdash; right around the 70% rule-out threshold.</td>
+        </tr>
+        <tr>
+          <td class="stat-name">Sp</td>
+          <td class="val antigen">0.98</td>
+          <td class="val cog">0.90</td>
+          <td class="note">Antigen is better at ruling in. The cognitive screen is still useful, but a positive isn't definitive.</td>
+        </tr>
+        <tr>
+          <td class="stat-name">PPV</td>
+          <td class="val antigen">0.90</td>
+          <td class="val cog">0.65</td>
+          <td class="note">An antigen positive is highly trustworthy. A cognitive-screen positive needs confirmation.</td>
+        </tr>
+        <tr>
+          <td class="stat-name">NPV</td>
+          <td class="val antigen">0.93</td>
+          <td class="val cog">0.94</td>
+          <td class="note">Both negatives are reasonably trustworthy &mdash; about 6&ndash;7% miss rate either way.</td>
+        </tr>
+        <tr>
+          <td class="stat-name">Prevalence</td>
+          <td class="val antigen">0.20</td>
+          <td class="val cog">0.20</td>
+          <td class="note">Same here &mdash; but populations are very different (symptomatic urgent-care vs. community-dwelling older adults).</td>
+        </tr>
+        <tr>
+          <td class="stat-name">Accuracy</td>
+          <td class="val antigen">0.92</td>
+          <td class="val cog">0.87</td>
+          <td class="note">Both above 70% &mdash; both screen-grade utility, neither a stand-alone diagnosis.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="trans-framing">
+      Different tests, different diseases, different settings &mdash; <strong>same statistical framework</strong>. That's the goal of this unit: when you read any future paper reporting diagnostic accuracy, you should recognize all six numbers, know which apply to ruling in vs. ruling out, and ask whether the population resembles your patients.
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <div class="nav-bar">
+    <a href="part6.html" class="nav-btn secondary">&larr; Back to Part 6</a>
+    <span class="completion-msg" id="completion-msg">Answer all eight questions to unlock the translation table and continue.</span>
+    <a href="part8.html" class="nav-btn" id="next-btn" style="pointer-events:none; opacity:0.5;">Continue to Part 8 &rarr;</a>
+  </div>
+
+</main>
+
+<script>
+  var state = {
+    calcShown: false,
+    answered: { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false, 8: false },
+    correct:  { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false, 7: false, 8: false }
+  };
+
+  function showCalcResult() {
+    if (state.calcShown) return;
+    state.calcShown = true;
+    document.getElementById('calc-result').classList.add('show');
+    document.getElementById('calc-cursor').style.display = 'none';
+    var btn = document.getElementById('calc-btn');
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '✓ Shown';
+    updateStepCounter();
+  }
+
+  var feedbackText = {
+    1: {
+      correct: "<strong>Correct.</strong> Sn lives in the disease+ column: it's the proportion of patients with dementia that the screen catches. At 0.75, that's 75 of every 100 dementia cases caught and 25 missed (false negatives). Above 70% so a negative is meaningfully informative, but with a 25% miss rate, clinical judgment still matters &mdash; especially when symptoms or family-reported decline make you suspicious.",
+      a: "<strong>Not quite.</strong> That description sounds like overall accuracy, not sensitivity. Accuracy uses the entire sample as its denominator; sensitivity uses only the disease+ column (in this study, the 80 patients with NPB-confirmed dementia). The two statistics are answering different questions. <strong>The correct answer is B.</strong> Of every 100 patients with dementia, the screen catches 75 and misses 25. Above the 70% threshold but borderline &mdash; a negative is reasonably trustworthy, but symptomatic patients warrant follow-up.",
+      c: "<strong>Not quite.</strong> That's the description of specificity, not sensitivity. Specificity (Sp) uses the disease&minus; column &mdash; patients without dementia &mdash; and asks how many the test correctly clears. Sn uses the opposite column. <strong>The correct answer is B.</strong> Of every 100 patients with dementia, the screen catches 75 and misses 25. Above the 70% threshold but borderline &mdash; a negative is reasonably trustworthy, but symptomatic patients warrant follow-up.",
+      d: "<strong>Not quite.</strong> That's NPV, not Sn. NPV asks: of patients with a negative test, what fraction truly don't have the disease? Sn asks the reverse: of patients who truly have the disease, what fraction does the test catch? Different denominators, different questions. <strong>The correct answer is B.</strong> Of every 100 patients with dementia, the screen catches 75 and misses 25. Above the 70% threshold but borderline &mdash; a negative is reasonably trustworthy, but symptomatic patients warrant follow-up."
+    },
+    2: {
+      correct: "<strong>Correct.</strong> Sp lives in the disease&minus; column. At 0.90, the screen correctly clears 90 of every 100 patients without dementia and falsely flags 10. That's solidly above the 70% threshold but notably less specific than the antigen test from Parts 2&ndash;6 (Sp = 0.98). A positive screen here moves the patient toward NPB, but it's not on its own enough to label a patient with dementia.",
+      a: "<strong>Not quite.</strong> Sp = 0.90 doesn't mean 90% of all patients had dementia confirmed &mdash; it's not a statement about the whole sample. Sp is restricted to the disease&minus; column: patients without dementia (320 of 400 in this study). It tells you how often the screen correctly clears them. <strong>The correct answer is C.</strong> Of every 100 patients without dementia, the screen correctly clears 90 and falsely flags 10. Above 70%, but not as strong as the antigen test's 0.98 &mdash; a positive screen is worth investigating, not definitive.",
+      b: "<strong>Not quite.</strong> That description applies to sensitivity (Sn), not specificity. Sn looks at the disease+ column and asks how many cases the test catches. Sp looks at the disease&minus; column and asks how many disease-free patients the test correctly clears. The denominators are different. <strong>The correct answer is C.</strong> Of every 100 patients without dementia, the screen correctly clears 90 and falsely flags 10. Above 70%, but not as strong as the antigen test's 0.98 &mdash; a positive screen is worth investigating, not definitive.",
+      d: "<strong>Not quite.</strong> That's PPV (which equals 0.65 in this study, not 0.90), not Sp. PPV looks at patients who tested positive and asks how many actually had the disease. Sp asks the opposite question from a different starting point. <strong>The correct answer is C.</strong> Of every 100 patients without dementia, the screen correctly clears 90 and falsely flags 10. Above 70%, but not as strong as the antigen test's 0.98 &mdash; a positive screen is worth investigating, not definitive."
+    },
+    3: {
+      correct: "<strong>Correct.</strong> Accuracy = (TP + TN) / Total = (60 + 288) / 400 = 348 / 400 = 0.87. The numerator is everyone the screen classified correctly &mdash; both the true positives and the true negatives. The denominator is the entire sample of 400 patients. This is the same formula you used in Part 2 with the antigen test &mdash; just different numbers.",
+      a: "<strong>Not quite.</strong> 60 / 92 = 0.65 is PPV, not accuracy. PPV restricts the denominator to patients who tested positive on the screen (92 of them), and asks how many truly had dementia. Accuracy uses the full sample as its denominator. <strong>The correct answer is D.</strong> Accuracy = (60 + 288) / 400 = 348 / 400 = 0.87. The numerator is all correct classifications (TP + TN); the denominator is the full sample.",
+      b: "<strong>Not quite.</strong> 288 / 320 = 0.90 is specificity, not accuracy. Sp restricts the denominator to patients without dementia (the 320 NPB-negative patients) and asks how many were correctly cleared. Accuracy uses the full sample of 400. <strong>The correct answer is D.</strong> Accuracy = (60 + 288) / 400 = 348 / 400 = 0.87. The numerator is all correct classifications (TP + TN); the denominator is the full sample.",
+      c: "<strong>Not quite.</strong> 60 / 80 = 0.75 is sensitivity, not accuracy. Sn restricts the denominator to patients with dementia (the 80 NPB-positive patients) and asks how many were caught. Accuracy includes everyone in the sample. <strong>The correct answer is D.</strong> Accuracy = (60 + 288) / 400 = 348 / 400 = 0.87. The numerator is all correct classifications (TP + TN); the denominator is the full sample."
+    },
+    4: {
+      correct: "<strong>Correct.</strong> PPV = 0.65 means about two-thirds of positive screens are confirmed cases &mdash; and the other third aren't. That's exactly the clinical lesson here: a positive screen is a flag, not a diagnosis. The patient needs confirmatory NPB before any care plan changes, medications, driving discussions, or capacity conversations. Acting on a positive screen alone would mean labeling roughly 1 in 3 patients with a serious diagnosis they don't actually have.",
+      b: "<strong>Not quite.</strong> Sp = 0.90 isn't the same as PPV. Sp tells you how the screen performs on patients who don't have dementia (clears 90, false-flags 10). PPV is the question the patient is actually asking: given my positive screen, what's the chance I have dementia? PPV = 0.65 here &mdash; not nearly as reassuring as Sp = 0.90 might make it sound. <strong>The correct answer is A.</strong> About two-thirds of positive screens turn out to be dementia, but about one in three are not. The screen is a flag, not a diagnosis &mdash; the patient needs a comprehensive neuropsych battery to confirm before any care plan changes.",
+      c: "<strong>Not quite.</strong> The probability isn't 35% &mdash; that's actually the false-positive proportion among screen-positives (about 1 in 3). The probability that a positive screen reflects true dementia is PPV = 0.65, which is more likely than not. So &ldquo;less likely than not&rdquo; flips the meaning. The right move is confirmatory NPB, not just monitoring. <strong>The correct answer is A.</strong> About two-thirds of positive screens turn out to be dementia, but about one in three are not. The screen is a flag, not a diagnosis &mdash; the patient needs a comprehensive neuropsych battery to confirm before any care plan changes.",
+      d: "<strong>Not quite.</strong> Overall accuracy describes the whole sample's correct-classification rate. It doesn't tell the patient what their specific positive result means &mdash; for that, you need PPV (the probability that a positive is correct). PPV here is 0.65, not 0.87, so accuracy overstates how trustworthy this particular result is. <strong>The correct answer is A.</strong> About two-thirds of positive screens turn out to be dementia, but about one in three are not. The screen is a flag, not a diagnosis &mdash; the patient needs a comprehensive neuropsych battery to confirm before any care plan changes."
+    },
+    5: {
+      correct: "<strong>Correct.</strong> NPV = 0.94 means that of every 100 patients with a negative screen, 94 truly don't have dementia and 6 do (false negatives). That's strong reassurance for asymptomatic patients in a primary-care population. But the 6% miss rate matters: when a patient or family member is reporting decline, you should still pursue NPB even with a negative screen. NPV is reasonable confidence, not certainty.",
+      a: "<strong>Not quite.</strong> NPV isn't a description of who got tested &mdash; it's a probability that applies to a specific result. NPV = 0.94 means that, given a negative screen, 94% of patients truly don't have dementia. It's a result-conditional probability, not a sample-composition statement. <strong>The correct answer is B.</strong> Of every 100 patients with a negative screen, 94 truly don't have dementia and 6 are missed cases. Reasonable reassurance for asymptomatic patients, but the ~6% miss rate means symptomatic patients should still get NPB.",
+      c: "<strong>Not quite.</strong> A 94% NPV is reassuring, but not certainty. Six of every 100 negative screens still represent missed dementia cases &mdash; that's roughly the same miss rate as the antigen test from Parts 2&ndash;6. In any test where missing the disease has real consequences, that residual miss rate matters. <strong>The correct answer is B.</strong> Of every 100 patients with a negative screen, 94 truly don't have dementia and 6 are missed cases. Reasonable reassurance for asymptomatic patients, but the ~6% miss rate means symptomatic patients should still get NPB.",
+      d: "<strong>Not quite.</strong> NPV is exactly the statistic that translates a test result into a patient-level probability. Of all the six core statistics, NPV and PPV are the ones that answer &ldquo;what does my specific result mean for me?&rdquo; That's why they're so clinically useful. <strong>The correct answer is B.</strong> Of every 100 patients with a negative screen, 94 truly don't have dementia and 6 are missed cases. Reasonable reassurance for asymptomatic patients, but the ~6% miss rate means symptomatic patients should still get NPB."
+    },
+    6: {
+      correct: "<strong>Correct.</strong> This is one of the most important conceptual takeaways of the unit. Sn and Sp are properties of the test mechanism &mdash; they describe how the test behaves on diseased vs. disease-free patients and don't shift with prevalence. PPV and NPV translate test performance into patient-level probabilities, and those probabilities depend on how common the disease is. Move the same test to a memory clinic, and PPV will rise (more true positives among the larger pool of positives) while NPV will fall (more missed cases among the smaller pool of negatives).",
+      a: "<strong>Not quite.</strong> Sn and Sp are properties of how the test behaves &mdash; they don't change with prevalence. The math for Sn uses only the disease+ column, and the math for Sp uses only the disease&minus; column, so the proportion of diseased people in the overall sample doesn't move either one. PPV and NPV are the prevalence-dependent stats. <strong>The correct answer is D.</strong> PPV and NPV would change because they depend on prevalence; Sn and Sp would not because they're properties of the screen itself.",
+      b: "<strong>Not quite.</strong> Not all six change with prevalence. Sn and Sp are properties of the test mechanism and stay stable across populations &mdash; that's why they're useful when you're trying to compare tests. PPV and NPV are the prevalence-dependent ones, and accuracy can shift with prevalence too. <strong>The correct answer is D.</strong> PPV and NPV would change because they depend on prevalence; Sn and Sp would not because they're properties of the screen itself.",
+      c: "<strong>Not quite.</strong> The test is the same instrument, but the values that describe its real-world performance shift with the population. PPV and NPV in particular depend on how common the disease is &mdash; a test with PPV = 0.65 in primary care will perform very differently in a memory clinic where prevalence is much higher. That's the whole reason population-matching matters when interpreting reported PPVs. <strong>The correct answer is D.</strong> PPV and NPV would change because they depend on prevalence; Sn and Sp would not because they're properties of the screen itself."
+    },
+    7: {
+      correct: "<strong>Correct.</strong> When prevalence rises, more positive screens are true positives, so PPV climbs. With Sn = 0.75 and Sp = 0.90 held constant, a 50% prevalence population gives roughly PPV = 0.88. Same screen, same Sn, same Sp &mdash; very different clinical interpretation. This is why the same test can be a good rule-in tool in a memory clinic but only a flag in primary care. The test itself didn't change; the population did.",
+      b: "<strong>Not quite.</strong> PPV is not a property of the test mechanism &mdash; it's a probability that depends on both how the test performs (Sn, Sp) AND on how common the disease is. Move the same test to a higher-prevalence setting and PPV rises, even though the test itself is unchanged. That's the whole reason setting-matching matters. <strong>The correct answer is A.</strong> PPV would rise substantially &mdash; in this scenario, to roughly 0.88. At higher prevalence, more positive screens are true positives, so the screen becomes more useful for ruling in dementia.",
+      c: "<strong>Not quite.</strong> The relationship runs the other way. As prevalence rises, more of the people who test positive are true positives (because there are simply more diseased people in the pool), so PPV goes up, not down. NPV is the one that falls when prevalence rises. <strong>The correct answer is A.</strong> PPV would rise substantially &mdash; in this scenario, to roughly 0.88. At higher prevalence, more positive screens are true positives, so the screen becomes more useful for ruling in dementia.",
+      d: "<strong>Not quite.</strong> PPV doesn't simply equal the prevalence. PPV combines the test's Sn, Sp, and the population prevalence into a probability that a positive result is correct. With Sn = 0.75 and Sp = 0.90 held constant and prevalence at 50%, PPV works out to about 0.88 &mdash; well above the prevalence value alone. <strong>The correct answer is A.</strong> PPV would rise substantially &mdash; in this scenario, to roughly 0.88. At higher prevalence, more positive screens are true positives, so the screen becomes more useful for ruling in dementia."
+    },
+    8: {
+      correct: "<strong>Correct.</strong> This is exactly how brief cognitive screens are intended to function in primary care. The PPV of 0.65 tells you a positive screen flags a patient who needs comprehensive NPB &mdash; not a patient who has dementia. The NPV of 0.94 tells you a negative screen offers reasonable reassurance for asymptomatic patients but shouldn't override clinical concern. The screen does what screens do: it filters patients into &ldquo;likely needs further work-up&rdquo; vs. &ldquo;probably fine.&rdquo; The diagnosis itself comes from NPB.",
+      a: "<strong>Not quite.</strong> PPV = 0.65 is exactly the kind of value that tells you a test isn't diagnostic on its own. About 1 in 3 positive screens are false alarms &mdash; far too high a rate to label patients with dementia and start care plan changes. The screen flags; the NPB confirms. <strong>The correct answer is C.</strong> A screening tool, not a diagnostic test. A positive screen flags the patient for confirmatory NPB (PPV = 0.65 means 1 in 3 positives is a false alarm); a negative screen offers reasonable reassurance for asymptomatic patients (NPV = 0.94) but should be supplemented with NPB if clinical concern persists.",
+      b: "<strong>Not quite.</strong> The relationship between a brief screen and a comprehensive battery runs the other way: the brief screen is the front-line filter, and NPB is the more rigorous gold-standard test. NPB confirms or rules out dementia; the screen helps decide who gets sent for NPB in the first place. <strong>The correct answer is C.</strong> A screening tool, not a diagnostic test. A positive screen flags the patient for confirmatory NPB (PPV = 0.65 means 1 in 3 positives is a false alarm); a negative screen offers reasonable reassurance for asymptomatic patients (NPV = 0.94) but should be supplemented with NPB if clinical concern persists.",
+      d: "<strong>Not quite.</strong> The screen has clear individual-patient value: a negative result with NPV = 0.94 is meaningfully reassuring, and a positive result with PPV = 0.65 is a clinically useful flag for further work-up. Treating it as a pure population-monitoring tool understates its actual function. The point is to interpret each result correctly, not to dismiss it. <strong>The correct answer is C.</strong> A screening tool, not a diagnostic test. A positive screen flags the patient for confirmatory NPB (PPV = 0.65 means 1 in 3 positives is a false alarm); a negative screen offers reasonable reassurance for asymptomatic patients (NPV = 0.94) but should be supplemented with NPB if clinical concern persists."
+    }
+  };
+
+  function answerMC(qNum, choice, isCorrect) {
+    if (state.answered[qNum]) return;
+    state.answered[qNum] = true;
+    state.correct[qNum] = isCorrect;
+
+    var buttons = document.querySelectorAll('#mc' + qNum + '-options .mc-option');
+    buttons.forEach(function(btn) { btn.disabled = true; });
+
+    var chosenBtn = Array.prototype.find.call(buttons, function(btn) {
+      return btn.getAttribute('onclick').indexOf("'" + choice + "'") !== -1;
+    });
+    if (chosenBtn) chosenBtn.classList.add(isCorrect ? 'selected-correct' : 'selected-wrong');
+    if (!isCorrect) {
+      buttons.forEach(function(btn) {
+        var onClick = btn.getAttribute('onclick');
+        if (onClick.indexOf('true') !== -1) btn.classList.add('show-correct');
+      });
+    }
+
+    var fb = document.getElementById('mc' + qNum + '-feedback');
+    fb.classList.remove('correct', 'incorrect');
+    fb.classList.add(isCorrect ? 'correct' : 'incorrect');
+    fb.innerHTML = isCorrect ? feedbackText[qNum].correct : feedbackText[qNum][choice];
+
+    if (qNum < 8) {
+      unlockMC(qNum + 1);
+    } else {
+      finalize();
+    }
+    updateStepCounter();
+  }
+
+  function unlockMC(qNum) {
+    var block = document.getElementById('mc' + qNum + '-block');
+    if (block) block.classList.add('unlocked');
+  }
+
+  function finalize() {
+    var allCorrect = state.correct[1] && state.correct[2] && state.correct[3] && state.correct[4] && state.correct[5] && state.correct[6] && state.correct[7] && state.correct[8];
+    var msg = document.getElementById('completion-msg');
+    msg.textContent = allCorrect ? '✓ All eight correct — you’ve internalized the framework.' : '✓ Section complete. Review feedback as needed.';
+    document.getElementById('takeaways').style.display = 'block';
+    document.getElementById('translation-panel').classList.add('show');
+    var nextBtn = document.getElementById('next-btn');
+    nextBtn.style.pointerEvents = 'auto';
+    nextBtn.style.opacity = '1';
+    try { localStorage.setItem('unit8_part7_done', '1'); } catch (e) {}
+  }
+
+  function updateStepCounter() {
+    var step = 1;
+    if (state.calcShown) step = 2;
+    var answeredCount = 0;
+    for (var i = 1; i <= 8; i++) if (state.answered[i]) answeredCount++;
+    if (answeredCount >= 1) step = 3;
+    if (answeredCount >= 3) step = 4;
+    if (answeredCount >= 5) step = 5;
+    if (answeredCount >= 8) step = 6;
+    document.getElementById('step-counter').textContent = step;
+  }
+</script>
+</body>
+</html>

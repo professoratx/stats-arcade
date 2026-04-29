@@ -1,0 +1,836 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit 8 Activity — Part 5: Specificity</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Calibri, "Segoe UI", Tahoma, sans-serif; background: #F0F3F5; color: #172940; line-height: 1.55; min-height: 100vh; font-size: 16.5px; }
+  .header { background: #172940; color: white; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid #246F89; }
+  .header-left { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .header h1 { font-size: 23px; font-weight: 700; }
+  .header .part-label { font-size: 13.5px; color: #7BB7C9; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+  .progress-pill { background: rgba(255,255,255,0.12); padding: 6px 14px; border-radius: 20px; font-size: 13.5px; color: #F0F3F5; }
+  .progress-pill strong { color: #7BB7C9; }
+
+  .container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 24px 32px 60px; max-width: 1500px; margin: 0 auto; }
+
+  .left-panel { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 26px 26px 22px; position: sticky; top: 24px; height: fit-content; max-height: calc(100vh - 48px); overflow-y: auto; }
+  .left-panel h2 { font-size: 19px; color: #172940; margin-bottom: 4px; font-weight: 700; }
+  .left-panel .subtitle { color: #616467; font-size: 14px; margin-bottom: 18px; }
+  .panel-section-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: #246F89; font-weight: 700; margin-bottom: 8px; margin-top: 18px; }
+
+  .grid-wrap { background: #F8FAFB; border: 1px solid #d8dde2; border-radius: 10px; padding: 16px 18px; }
+  .grid-title { font-size: 13px; font-weight: 700; color: #172940; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 4px; text-align: center; }
+  .grid-subtitle { font-size: 12px; color: #616467; text-align: center; margin-bottom: 14px; font-style: italic; }
+  .patient-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; max-width: 320px; margin: 0 auto; }
+  .patient-cell { aspect-ratio: 1; background: #2D8659; border-radius: 4px; transition: background 0.3s ease, transform 0.2s ease; }
+  .patient-cell.alarm { background: #C0504D; }
+  .grid-counts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .grid-count-card { background: white; border-radius: 6px; padding: 10px 8px; text-align: center; border: 1px solid #d8dde2; }
+  .grid-count-card.cleared { border-top: 3px solid #2D8659; }
+  .grid-count-card.alarm { border-top: 3px solid #C0504D; }
+  .grid-count-num { font-size: 22px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+  .grid-count-card.cleared .grid-count-num { color: #1B5E3F; }
+  .grid-count-card.alarm .grid-count-num { color: #8B2B1F; }
+  .grid-count-label { font-size: 11px; color: #616467; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; margin-top: 4px; }
+
+  .contingency { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; margin-bottom: 6px; margin-top: 4px; }
+  .contingency th, .contingency td { padding: 9px 6px; text-align: center; border: 1px solid #d8dde2; }
+  .contingency th { background: #172940; color: white; font-weight: 600; font-size: 12px; }
+  .contingency th:first-child { background: transparent; border: none; }
+  .contingency .row-label { background: #2E8FAF; color: white; font-weight: 600; text-align: left; padding: 9px 8px; font-size: 12.5px; }
+  .contingency .group-total { background: #F0F3F5; font-weight: 700; color: #172940; }
+  .contingency .cell-tp { background: #E8F4EC; font-weight: 700; font-size: 16px; color: #1B5E3F; transition: background 0.3s ease; }
+  .contingency .cell-fp { background: #FBEAE7; font-weight: 700; font-size: 16px; color: #8B2B1F; transition: background 0.3s ease; }
+  .contingency .cell-fn { background: #FBEAE7; font-weight: 700; font-size: 16px; color: #8B2B1F; transition: background 0.3s ease; }
+  .contingency .cell-tn { background: #E8F4EC; font-weight: 700; font-size: 16px; color: #1B5E3F; transition: background 0.3s ease; }
+  .contingency .cell-fp.highlight, .contingency .cell-tn.highlight { box-shadow: inset 0 0 0 3px #246F89; }
+  .table-caption { text-align: center; color: #616467; font-size: 12px; margin-top: 4px; font-style: italic; }
+
+  .sliders { background: #F8FAFB; border: 1px solid #d8dde2; border-radius: 10px; padding: 14px 16px; margin-top: 14px; position: relative; transition: opacity 0.3s ease; }
+  .sliders.locked { opacity: 0.55; pointer-events: none; }
+  .sliders-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .sliders-header .s-title { font-size: 13px; font-weight: 700; color: #172940; text-transform: uppercase; letter-spacing: 0.8px; }
+  .reset-btn { background: white; border: 1.5px solid #246F89; color: #246F89; padding: 4px 10px; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.18s ease; }
+  .reset-btn:hover { background: #E5EFF3; }
+  .lock-overlay { position: absolute; top: 6px; right: 12px; font-size: 12px; color: #8B9098; font-style: italic; }
+  .sliders.locked .lock-overlay { display: block; }
+  .sliders:not(.locked) .lock-overlay { display: none; }
+
+  .slider-row { display: grid; grid-template-columns: 110px 1fr 60px; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .slider-row:last-of-type { margin-bottom: 0; }
+  .slider-row .s-label { font-size: 13px; font-weight: 600; color: #172940; }
+  .slider-row .s-label.fp { color: #8B2B1F; }
+  .slider-row input[type="range"] { width: 100%; accent-color: #246F89; }
+  .slider-row .s-value { text-align: right; font-size: 13.5px; font-weight: 700; color: #172940; font-variant-numeric: tabular-nums; }
+
+  .live-stats { margin-top: 14px; padding: 12px 14px; background: white; border: 1px solid #d8dde2; border-radius: 8px; }
+  .live-stats-title { font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px; color: #616467; font-weight: 700; margin-bottom: 10px; text-align: center; }
+  .live-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .live-stat { background: #F8FAFB; border-radius: 6px; padding: 10px 6px; text-align: center; }
+  .live-stat .ls-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: #616467; font-weight: 700; margin-bottom: 3px; }
+  .live-stat .ls-value { font-size: 18px; font-weight: 700; color: #172940; font-variant-numeric: tabular-nums; }
+  .live-stat.sp .ls-value { color: #246F89; }
+  .live-stat.acc .ls-value { color: #2E8FAF; }
+  .live-stats-fixed { margin-top: 8px; padding: 8px 10px; background: #F0F3F5; border-radius: 6px; font-size: 12px; color: #616467; text-align: center; line-height: 1.45; }
+  .live-stats-fixed strong { color: #172940; }
+
+  .stat-card { border: 2px solid #246F89; border-radius: 10px; padding: 18px 20px; text-align: center; cursor: pointer; transition: all 0.25s ease; background: white; user-select: none; margin-top: 16px; }
+  .stat-card.locked { background: #F0F3F5; border-style: dashed; border-color: #b8c2c8; }
+  .stat-card.locked:hover { background: #E5EFF3; border-color: #246F89; transform: translateY(-1px); }
+  .stat-card.revealed { background: linear-gradient(135deg, #246F89 0%, #1A5A70 100%); color: white; border-color: #1A5A70; cursor: default; }
+  .stat-card .label { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #616467; margin-bottom: 6px; font-weight: 600; }
+  .stat-card.revealed .label { color: #FFC857; }
+  .stat-card .value { font-size: 42px; font-weight: 700; line-height: 1; margin-bottom: 6px; color: #172940; font-variant-numeric: tabular-nums; }
+  .stat-card.revealed .value { color: white; }
+  .stat-card .ci { font-size: 13px; color: #616467; }
+  .stat-card.revealed .ci { color: #B8D4DD; }
+  .stat-card .hint { font-size: 13px; color: #246F89; font-weight: 600; margin-top: 6px; }
+  .stat-card.revealed .hint { display: none; }
+  .stat-card .formula { font-size: 13.5px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-family: "Cambria Math", Cambria, serif; color: #B8D4DD; display: none; font-variant-numeric: tabular-nums; }
+  .stat-card.revealed .formula { display: block; }
+
+  .sp-scale-wrap { margin-top: 16px; background: white; border: 1px solid #d8dde2; border-radius: 10px; padding: 16px 18px; }
+  .sp-scale-title { font-size: 13px; font-weight: 700; color: #172940; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 22px; text-align: center; }
+  .sp-scale-outer { position: relative; padding-top: 38px; }
+  .sp-scale { position: relative; height: 30px; background: linear-gradient(90deg, #C0504D 0%, #D89A92 35%, #FFC857 65%, #3D7FA9 78%, #246F89 100%); border-radius: 15px; }
+  .sp-tick-70 { position: absolute; top: -6px; bottom: -6px; left: 70%; width: 2px; background: #172940; z-index: 2; }
+  .sp-tick-70-pill { position: absolute; top: -34px; left: 70%; transform: translateX(-50%); background: #FFC857; color: #172940; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; white-space: nowrap; z-index: 4; }
+  .sp-marker-group { position: absolute; top: -34px; transform: translateX(-50%); transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 5; }
+  .sp-marker-pill { background: #172940; color: white; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 700; text-align: center; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.15); font-variant-numeric: tabular-nums; }
+  .sp-marker-dot { width: 22px; height: 22px; background: white; border: 3px solid #172940; border-radius: 50%; margin: 4px auto 0; position: relative; top: 24px; }
+  .sp-axis-labels { display: flex; justify-content: space-between; margin-top: 12px; font-size: 12px; color: #172940; font-weight: 600; padding: 0 2px; }
+  .sp-readout-bar { margin-top: 14px; padding: 10px 14px; border-radius: 6px; font-size: 13.5px; font-weight: 600; text-align: center; line-height: 1.5; transition: background 0.4s ease, color 0.4s ease; }
+  .sp-readout-bar.high { background: #E5EFF3; color: #1A5A70; border-left: 3px solid #246F89; }
+  .sp-readout-bar.borderline { background: #FFF8E1; color: #8B6914; border-left: 3px solid #FFC857; }
+  .sp-readout-bar.low { background: #FBEAE7; color: #8B2B1F; border-left: 3px solid #C0504D; }
+
+  .right-panel { display: flex; flex-direction: column; gap: 18px; }
+  .step { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 24px 26px; border-left: 5px solid #246F89; }
+  .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .step-number { background: #246F89; color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+  .step-title { font-size: 18.5px; font-weight: 700; color: #172940; }
+  .step-body { color: #2c3e50; font-size: 16px; line-height: 1.7; }
+  .step-body p { margin-bottom: 12px; }
+  .step-body p:last-child { margin-bottom: 0; }
+  .step-body strong { color: #172940; }
+
+  .article-excerpt { background: #F8FAFB; border: 1px solid #d8dde2; border-left: 4px solid #172940; border-radius: 6px; padding: 18px 22px; margin: 14px 0; font-family: Georgia, "Times New Roman", serif; color: #2c3e50; font-size: 16.5px; line-height: 1.75; }
+  .article-excerpt .article-meta { font-size: 13px; font-family: Calibri, sans-serif; color: #616467; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .hi-target { background: transparent; transition: background 0.5s ease; padding: 1px 3px; border-radius: 2px; }
+  .hi-target.on { background: #DFEDF4; }
+  .hi-target.on-2 { background: #FFE9A6; }
+  .hi-target.on-3 { background: #C9E4D5; }
+
+  .reveal-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .reveal-btn { background: white; color: #246F89; border: 2px solid #246F89; padding: 10px 18px; border-radius: 7px; font-size: 14.5px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.18s ease; }
+  .reveal-btn:hover { background: #E5EFF3; transform: translateY(-1px); }
+  .reveal-btn.done { background: #1A5A70; color: white; border-color: #1A5A70; cursor: default; }
+  .reveal-btn.done:hover { transform: none; }
+
+  .annot-line { margin-top: 10px; padding: 12px 18px; background: #fff; border-radius: 6px; border-left: 3px solid #FFC857; font-family: Calibri, sans-serif; font-size: 15.5px; color: #172940; display: none; animation: fadeIn 0.4s ease-out; line-height: 1.6; }
+  .annot-line.show { display: block; }
+  .annot-line .a-tag { display: inline-block; font-weight: 700; color: #246F89; margin-right: 6px; text-transform: uppercase; font-size: 12.5px; letter-spacing: 1px; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .sppin-wrap { background: linear-gradient(135deg, #172940 0%, #1A5A70 100%); color: white; border-radius: 10px; padding: 22px 24px; margin: 14px 0; }
+  .sppin-wrap .sp-letters { font-size: 32px; font-weight: 700; color: #FFC857; margin-bottom: 10px; letter-spacing: 1px; text-align: center; }
+  .sppin-wrap .sp-letters .underline { text-decoration: underline; text-underline-offset: 4px; }
+  .sppin-wrap .sp-explain { font-size: 15.5px; line-height: 1.7; color: #F0F3F5; margin-bottom: 12px; }
+  .sppin-wrap .sp-explain strong { color: #FFC857; }
+  .sppin-wrap .sp-explain:last-child { margin-bottom: 0; }
+  .sppin-reveal-row { text-align: center; margin-top: 14px; }
+  .sppin-reveal-msg { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,200,87,0.3); border-radius: 6px; padding: 14px 18px; margin-top: 14px; font-size: 15.5px; line-height: 1.65; display: none; animation: fadeIn 0.4s ease; color: #F0F3F5; }
+  .sppin-reveal-msg.show { display: block; }
+  .sppin-reveal-msg strong { color: #FFC857; }
+  .sppin-reveal-row .reveal-btn { background: rgba(255,255,255,0.12); color: #FFC857; border-color: #FFC857; }
+  .sppin-reveal-row .reveal-btn:hover { background: rgba(255,255,255,0.2); }
+  .sppin-reveal-row .reveal-btn.done { background: #FFC857; color: #172940; border-color: #FFC857; }
+
+  .calc-box { background: #F8FAFB; border-radius: 10px; border: 1px solid #d8dde2; padding: 20px 22px; margin: 14px 0; text-align: center; font-family: "Cambria Math", Cambria, serif; font-size: 19px; color: #172940; }
+  .calc-box .calc-step { margin: 6px 0; transition: opacity 0.4s ease; }
+  .calc-box .calc-result { color: #246F89; font-weight: 700; font-size: 24px; opacity: 0; transition: opacity 0.6s ease; display: inline-block; }
+  .calc-box .calc-result.show { opacity: 1; }
+  .calc-box .calc-action { margin-top: 12px; }
+  .calc-cursor { display: inline-block; width: 10px; color: #246F89; animation: blink 1s infinite; }
+  @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+
+  .so-what { background: #FFF8E1; border: 1px solid #F4D77A; border-radius: 8px; padding: 15px 19px; margin-top: 12px; }
+  .so-what .sw-label { color: #8B6914; font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .so-what p { color: #5a4a10; font-size: 16px; line-height: 1.65; margin: 0; }
+  .so-what p strong { color: #172940; }
+
+  .mc-block { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 24px 26px; border-top: 5px solid #246F89; opacity: 0.45; pointer-events: none; transition: opacity 0.4s ease; }
+  .mc-block.unlocked { opacity: 1; pointer-events: auto; }
+  .mc-question { font-size: 17px; font-weight: 700; color: #172940; margin-bottom: 14px; line-height: 1.5; }
+  .mc-question .q-num { color: #246F89; margin-right: 6px; }
+  .mc-options { display: flex; flex-direction: column; gap: 10px; }
+  .mc-option { background: #F8FAFB; border: 2px solid #d8dde2; border-radius: 8px; padding: 13px 17px; cursor: pointer; font-size: 16px; color: #2c3e50; text-align: left; transition: all 0.18s ease; font-family: inherit; width: 100%; line-height: 1.6; }
+  .mc-option:hover:not(:disabled) { border-color: #246F89; background: #E5EFF3; }
+  .mc-option:disabled { cursor: default; }
+  .mc-option.selected-correct { background: #E8F4EC; border-color: #2D8B5A; color: #1B5E3F; font-weight: 600; }
+  .mc-option.selected-wrong { background: #FBEAE7; border-color: #C0504D; color: #8B2B1F; }
+  .mc-option.show-correct { background: #E8F4EC; border-color: #2D8B5A; color: #1B5E3F; font-weight: 600; }
+  .mc-option .marker { display: inline-block; font-weight: 700; margin-right: 8px; color: #246F89; }
+  .mc-feedback { margin-top: 14px; padding: 15px 17px; border-radius: 8px; font-size: 15.5px; line-height: 1.65; display: none; }
+  .mc-feedback.correct { background: #E8F4EC; border-left: 4px solid #2D8B5A; color: #1B5E3F; display: block; }
+  .mc-feedback.incorrect { background: #FBEAE7; border-left: 4px solid #C0504D; color: #8B2B1F; display: block; }
+  .mc-feedback strong { display: block; margin-bottom: 4px; font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .explore-prompt { background: #FFF8E1; border: 1px solid #F4D77A; border-radius: 8px; padding: 13px 17px; margin-bottom: 14px; font-size: 15.5px; color: #5a4a10; line-height: 1.6; }
+  .explore-prompt strong { color: #172940; }
+  .explore-prompt .e-label { color: #8B6914; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block; }
+
+  .takeaways { background: #172940; color: white; border-radius: 12px; padding: 28px 30px; border-left: 5px solid #246F89; }
+  .takeaways h3 { color: #7BB7C9; font-size: 13.5px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; font-weight: 700; }
+  .takeaways h2 { font-size: 23px; color: white; margin-bottom: 18px; font-weight: 700; }
+  .takeaways ul { list-style: none; padding: 0; margin: 0; }
+  .takeaways li { padding: 13px 0 13px 38px; border-bottom: 1px solid rgba(255,255,255,0.12); position: relative; font-size: 16px; line-height: 1.7; color: #F0F3F5; }
+  .takeaways li:last-child { border-bottom: none; }
+  .takeaways li::before { content: "\2713"; position: absolute; left: 0; top: 13px; width: 24px; height: 24px; border-radius: 50%; background: #7BB7C9; color: #172940; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 13.5px; }
+  .takeaways li strong { color: white; }
+
+  .nav-bar { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 18px 0 0; margin-top: 8px; }
+  .nav-btn { background: #246F89; color: white; border: none; padding: 14px 30px; border-radius: 8px; font-size: 15.5px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s ease; text-decoration: none; display: inline-block; }
+  .nav-btn:hover { background: #1A5A70; transform: translateY(-1px); }
+  .nav-btn.secondary { background: white; color: #246F89; border: 2px solid #246F89; }
+  .nav-btn.secondary:hover { background: #E5EFF3; }
+  .completion-msg { color: #246F89; font-size: 14.5px; font-weight: 600; text-align: center; flex-grow: 1; margin: 0 20px; }
+
+  @media (max-width: 1100px) { .container { grid-template-columns: 1fr; } .left-panel { position: relative; top: auto; max-height: none; } }
+  @media (max-width: 600px) { .header { padding: 14px 18px; flex-direction: column; gap: 8px; align-items: flex-start; } .container { padding: 16px; } .live-stats-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <h1>Unit 8: Diagnostic Accuracy Activity</h1>
+    <span class="part-label">Part 5 of 10 &middot; Specificity</span>
+  </div>
+  <div class="progress-pill">Step <strong id="step-counter">1</strong> of 6</div>
+</header>
+
+<main class="container">
+
+  <aside class="left-panel">
+    <h2>100 truly disease-free patients</h2>
+    <p class="subtitle">Imagine 100 patients who all do NOT have COVID. What does the test do?</p>
+
+    <div class="grid-wrap">
+      <div class="grid-title">The disease&minus; column, visualized</div>
+      <div class="grid-subtitle">Green = test correctly cleared (TN) &middot; Red = false alarm (FP)</div>
+      <div class="patient-grid" id="patient-grid"></div>
+      <div class="grid-counts">
+        <div class="grid-count-card cleared">
+          <div class="grid-count-num" id="grid-cleared">98</div>
+          <div class="grid-count-label">Cleared (TN)</div>
+        </div>
+        <div class="grid-count-card alarm">
+          <div class="grid-count-num" id="grid-alarm">2</div>
+          <div class="grid-count-label">False alarm (FP)</div>
+        </div>
+      </div>
+    </div>
+
+    <table class="contingency">
+      <thead>
+        <tr>
+          <th></th>
+          <th>PCR positive</th>
+          <th>PCR negative</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="row-label">Antigen positive</td>
+          <td class="cell-tp" id="cell-tp">70</td>
+          <td class="cell-fp highlight" id="cell-fp">8</td>
+          <td class="group-total" id="row-pos-total">78</td>
+        </tr>
+        <tr>
+          <td class="row-label">Antigen negative</td>
+          <td class="cell-fn" id="cell-fn">30</td>
+          <td class="cell-tn highlight" id="cell-tn">392</td>
+          <td class="group-total" id="row-neg-total">422</td>
+        </tr>
+        <tr>
+          <td class="row-label" style="background:#172940;">Total</td>
+          <td class="group-total">100</td>
+          <td class="group-total">400</td>
+          <td class="group-total" style="background:#FFC857;color:#172940;">500</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="table-caption">Sp uses only the disease&minus; column (highlighted)</p>
+
+    <div class="sliders locked" id="sliders-box">
+      <div class="lock-overlay">&#128274; Unlocks at Step 6</div>
+      <div class="sliders-header">
+        <span class="s-title">Live exploration</span>
+        <button class="reset-btn" onclick="resetSliders()">Reset to FP = 8</button>
+      </div>
+      <div class="slider-row">
+        <span class="s-label fp">FP (false alarms)</span>
+        <input type="range" id="slider-fp" min="0" max="400" value="8" step="1" oninput="onSliderChange()">
+        <span class="s-value" id="slider-fp-val">8</span>
+      </div>
+
+      <div class="live-stats">
+        <div class="live-stats-title">Recomputed live</div>
+        <div class="live-stats-grid">
+          <div class="live-stat sp">
+            <div class="ls-label">Specificity</div>
+            <div class="ls-value" id="live-sp">0.98</div>
+          </div>
+          <div class="live-stat acc">
+            <div class="ls-label">Accuracy</div>
+            <div class="ls-value" id="live-acc">0.92</div>
+          </div>
+        </div>
+        <div class="live-stats-fixed">
+          <strong>Fixed:</strong> Sn = 0.70 &mdash; TP and FN don't move when you slide FP
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section-label">Calculated statistic</div>
+    <div id="sp-card" class="stat-card locked" onclick="revealSp()">
+      <div class="label">Specificity (Sp)</div>
+      <div class="value" id="sp-value">? . ? ?</div>
+      <div class="ci" id="sp-ci">95% CI not yet revealed</div>
+      <div class="hint">&#9656; Click to reveal the value</div>
+      <div class="formula" id="sp-formula">Sp = 392 / (392 + 8) = 0.98</div>
+    </div>
+
+    <div class="sp-scale-wrap" id="sp-scale-wrap" style="display:none;">
+      <div class="sp-scale-title">Where this Sp lands</div>
+      <div class="sp-scale-outer">
+        <div class="sp-scale">
+          <div class="sp-tick-70"></div>
+          <div class="sp-tick-70-pill">70% threshold</div>
+          <div class="sp-marker-group" id="sp-marker-panel" style="left: 98%;">
+            <div class="sp-marker-pill" id="sp-marker-pill-panel">0.98</div>
+            <div class="sp-marker-dot"></div>
+          </div>
+        </div>
+        <div class="sp-axis-labels">
+          <span>0%</span><span>50%</span><span>70%</span><span>100%</span>
+        </div>
+      </div>
+      <div class="sp-readout-bar high" id="sp-readout-bar-panel">
+        Far above the 70% threshold &mdash; strong rule-in test.
+      </div>
+    </div>
+
+  </aside>
+
+  <section class="right-panel">
+
+    <div class="step" style="border-left-color:#FFC857; background: #172940;">
+      <div class="step-header">
+        <div class="step-number" style="background:#FFC857; color:#172940;">&#9733;</div>
+        <div class="step-title" style="color: white;">Orientation</div>
+      </div>
+      <div class="step-body" style="color: #F0F3F5;">
+        <p><strong style="color:#7BB7C9;">Specificity</strong> answers the mirror-image question to sensitivity: <em>of all the patients who truly do NOT have the disease, what fraction does the test correctly clear?</em></p>
+        <div style="background: rgba(123,183,201,0.12); border-left: 3px solid #7BB7C9; padding: 14px 18px; border-radius: 6px; margin: 14px 0; font-size: 16px;">
+          A high-specificity test rarely cries wolf &mdash; it almost never produces a false positive on a healthy patient. So when a high-Sp test comes back positive, you can trust that positive. <strong style="color:#FFC857;">That's why specificity is the rule-in engine.</strong>
+        </div>
+        <p>The article reports Sp = 0.98 &mdash; well above the 70% threshold and into excellent territory. Let's see what that means for the patients who get a positive antigen result.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">1</div>
+        <div class="step-title">Find the key pieces in the article</div>
+      </div>
+      <div class="step-body">
+        <p>The article reports specificity in the standard way. Click each button to spotlight a piece.</p>
+        <div class="article-excerpt">
+          <div class="article-meta">From the Results section</div>
+          The rapid antigen test correctly cleared <span class="hi-target" id="hi-1">392 of 400 PCR-negative patients</span>, yielding a <span class="hi-target" id="hi-2">specificity of 0.98</span> <span class="hi-target" id="hi-3">(95% CI [0.96, 0.99])</span>.
+        </div>
+        <div class="reveal-row">
+          <button class="reveal-btn" id="hi-btn-1" onclick="highlight(1)">&#9312; Spotlight the count</button>
+          <button class="reveal-btn" id="hi-btn-2" onclick="highlight(2)">&#9313; Spotlight the value</button>
+          <button class="reveal-btn" id="hi-btn-3" onclick="highlight(3)">&#9314; Spotlight the CI</button>
+        </div>
+        <div class="annot-line" id="annot-1"><span class="a-tag">The count</span>The denominator (400) is everyone who truly did NOT have COVID by PCR. The numerator (392) is how many of those the antigen test correctly cleared. Only 8 disease-free patients got a false positive.</div>
+        <div class="annot-line" id="annot-2"><span class="a-tag">Sp = 0.98</span>98% of disease-free patients were correctly cleared. Only 2% got a false alarm. Far above the 70% threshold &mdash; this is excellent specificity.</div>
+        <div class="annot-line" id="annot-3"><span class="a-tag">CI [0.96, 0.99]</span>This CI is tight because n = 400 in the disease&minus; column (compared to Sn's denominator of 100 in disease+). Larger denominator, more precise estimate &mdash; the true Sp is plausibly anywhere from 0.96 to 0.99.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">2</div>
+        <div class="step-title">What 8 false alarms actually look like</div>
+      </div>
+      <div class="step-body">
+        <p>On the left panel, you can see a 10 &times; 10 grid &mdash; this represents 100 patients who do not have COVID as confirmed by a negative result on the PCR gold standard.</p>
+        <ul style="padding-left: 22px; margin: 10px 0 14px; line-height: 1.7;">
+          <li><strong>Green squares</strong> are patients who received a negative result on the antigen test, matching the PCR test result and representing a true negative (TN).</li>
+          <li><strong>Red squares</strong> are patients who received a positive result on the antigen test, resulting in a false positive (FP).</li>
+        </ul>
+        <p>Right now the grid shows the article's value: Sp = 0.98, so 98 cleared and 2 false alarms (per 100 disease-free).</p>
+
+        <div class="sppin-wrap">
+          <div class="sp-letters"><span class="underline">Sp</span>P&#x2009;In</div>
+          <p class="sp-explain">A useful memory aid for what specificity is for: when <strong>Sp</strong> is high and the test comes back <strong>P</strong>ositive, you can rule the disease <strong>In</strong>. In other words, a high-specificity test rarely produces false positives &mdash; so a positive result really does mean disease.</p>
+          <div class="sppin-reveal-row">
+            <button class="reveal-btn" id="sppin-btn" onclick="revealSppin()">&#9656; What does that mean clinically?</button>
+          </div>
+          <div class="sppin-reveal-msg" id="sppin-msg">
+            This means that, if you suspect a specific condition exists in your patient, you would use a highly specific test to rule in the condition. <strong>For example, the article's Sp = 0.98 is excellent.</strong> Only 2 of every 100 disease-free patients get a false positive &mdash; so when the antigen test says positive, it's almost certainly right.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">3</div>
+        <div class="step-title">Compute it from the table, then click the card</div>
+      </div>
+      <div class="step-body">
+        <p>The formula uses just the two cells from the disease&minus; column: TN and FP. That's it.</p>
+
+        <div class="calc-box">
+          <div class="calc-step">
+            Sp = TN / (TN + FP)
+          </div>
+          <div class="calc-step" style="margin-top:10px;">
+            Sp = 392 / (392 + 8) = 392 / 400 = <span class="calc-result" id="calc-result">0.98</span><span class="calc-cursor" id="calc-cursor">|</span>
+          </div>
+          <div class="calc-action">
+            <button class="reveal-btn" id="calc-btn" onclick="showCalcResult()">&#9656; Show me the answer</button>
+          </div>
+        </div>
+
+        <p>Now <strong>click the dashed Specificity card on the left side</strong> to confirm the value and see the 95% CI.</p>
+
+        <div style="margin-top: 14px; text-align: center;">
+          <button class="reveal-btn" id="sowhat-btn" onclick="revealSoWhat()">&#9733; Reveal: So what does Sp = 0.98 mean?</button>
+        </div>
+        <div class="so-what" id="sowhat-box" style="display:none;">
+          <div class="sw-label">&#9733; So what does Sp = 0.98 mean?</div>
+          <p>Of every 100 patients who truly do NOT have COVID, this test correctly clears 98 and falsely flags 2. <strong>If you're using a positive result to rule COVID in, you'll be wrong only about 2 times in every 100 disease-free patients.</strong> That's the upside of a 98% specific test &mdash; a positive result is highly trustworthy. The 2 false alarms still cost something (extra confirmation, brief worry), but the ratio is excellent for most clinical scenarios.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">4</div>
+        <div class="step-title">Four rules for reading specificity in any paper</div>
+      </div>
+      <div class="step-body">
+        <p>Specificity is reported on essentially every diagnostic accuracy paper. These four rules carry through whatever test you're reading about:</p>
+        <p style="padding-left: 14px;">
+          &bull; <strong>Sp = TN / (TN + FP).</strong> Just the disease&minus; column. The denominator is everyone who actually does NOT have the disease.<br>
+          &bull; <strong>SpPIn.</strong> High <strong>Sp</strong> + <strong>P</strong>ositive result = disease ruled <strong>In</strong>. The mnemonic clinicians use to remember what Sp is for.<br>
+          &bull; <strong>The 70% threshold.</strong> Below 70%, a positive result isn't trustworthy enough to rule in disease. Above 70%, it starts being useful. Above 90%, very trustworthy. Like sensitivity, specificity is a sliding scale &mdash; here it tells you how much you can trust a positive.<br>
+          &bull; <strong>Specificity doesn't tell you what to do with a negative.</strong> A high-Sp test rules in when positive. To know whether to trust a negative result, use sensitivity (Part 4) and NPV (Part 6).
+        </p>
+        <div style="margin-top: 14px; text-align: center;">
+          <button class="reveal-btn" id="habit-btn" onclick="revealHabit()">&#9656; Reveal the most important habit</button>
+        </div>
+        <div class="annot-line" id="habit-msg" style="border-left-color:#246F89;">
+          <span class="a-tag">The most important habit</span>When you read "Sp = X.XX," translate it immediately to "out of every 100 people without the disease, this test correctly clears X and falsely alarms on the rest." That's the patient-level meaning.
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-6">
+      <div class="step-header">
+        <div class="step-number">5</div>
+        <div class="step-title">Now explore &mdash; drag the FP slider</div>
+      </div>
+      <div class="step-body">
+        <p>After you click the Specificity card in Step 3 and answer Q3 below, <strong>the FP slider on the left panel will unlock</strong>. As you drag it, the patient grid will recolor (cleared vs. false alarm), the 2 &times; 2 cells will recalculate, and the live readout will show how Sp shifts. Sn won't move &mdash; we're not changing TP or FN.</p>
+        <p>Use the slider to answer Q4&ndash;Q6 below. The <strong>Reset</strong> button returns to the article's FP = 8 whenever you want.</p>
+      </div>
+    </div>
+
+    <div id="mc1-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q1.</span> A patient just tested positive on the antigen test and asks: "Does that mean I have COVID?" Given Sp = 0.98, what's the cleanest answer?</div>
+      <div class="mc-options" id="mc1-options">
+        <button class="mc-option" onclick="answerMC(1, 'a', false)"><span class="marker">A.</span> "This is a 98% accurate test, so yes, you have COVID."</button>
+        <button class="mc-option" onclick="answerMC(1, 'b', true)"><span class="marker">B.</span> "This test is excellent at identifying people who are healthy. Because it has a 98% specificity, it rarely gives a positive result to someone who is actually healthy (a false positive)."</button>
+        <button class="mc-option" onclick="answerMC(1, 'c', false)"><span class="marker">C.</span> "Specificity describes negative tests, so this number doesn't apply to your positive result."</button>
+        <button class="mc-option" onclick="answerMC(1, 'd', false)"><span class="marker">D.</span> "About 98% of positive tests are right and 2% are wrong, so a positive likely means COVID."</button>
+      </div>
+      <div class="mc-feedback" id="mc1-feedback"></div>
+    </div>
+
+    <div id="mc2-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q2.</span> The article reports Sp = 0.98 with 95% CI [0.96, 0.99]. Which interpretation is correct?</div>
+      <div class="mc-options" id="mc2-options">
+        <button class="mc-option" onclick="answerMC(2, 'a', true)"><span class="marker">A.</span> A 95% CI describes the range of plausible values for the population specificity.</button>
+        <button class="mc-option" onclick="answerMC(2, 'b', false)"><span class="marker">B.</span> 95% of disease-free patients had a specificity between 0.96 and 0.99.</button>
+        <button class="mc-option" onclick="answerMC(2, 'c', false)"><span class="marker">C.</span> Between 96% and 99% of all patients were correctly classified by the test.</button>
+        <button class="mc-option" onclick="answerMC(2, 'd', false)"><span class="marker">D.</span> The test will produce false positives between 96% and 99% of the time.</button>
+      </div>
+      <div class="mc-feedback" id="mc2-feedback"></div>
+    </div>
+
+    <div id="mc3-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q3.</span> Which statement about specificity is true?</div>
+      <div class="mc-options" id="mc3-options">
+        <button class="mc-option" onclick="answerMC(3, 'a', false)"><span class="marker">A.</span> Specificity tells you the chance a negative result is correct.</button>
+        <button class="mc-option" onclick="answerMC(3, 'b', false)"><span class="marker">B.</span> Specificity changes with prevalence, just like PPV.</button>
+        <button class="mc-option" onclick="answerMC(3, 'c', false)"><span class="marker">C.</span> When sensitivity goes up, specificity always goes down by the same amount.</button>
+        <button class="mc-option" onclick="answerMC(3, 'd', true)"><span class="marker">D.</span> A highly specific test rarely produces false positives, so a positive result helps rule in disease &mdash; the SpPIn rule.</button>
+      </div>
+      <div class="mc-feedback" id="mc3-feedback"></div>
+    </div>
+
+    <div id="mc4-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q4.</span> Use the slider to explore what happens when more disease-free patients get false alarms.</div>
+      <div class="explore-prompt">
+        <span class="e-label">&#9656; Try this on the left panel</span>
+        Drag the <strong>FP slider up to 100</strong>. Watch the patient grid grow more red squares and the live Sp readout fall. <strong>What happened to Sp, and what does it mean for ruling in disease?</strong>
+      </div>
+      <div class="mc-options" id="mc4-options">
+        <button class="mc-option" onclick="answerMC(4, 'a', false)"><span class="marker">A.</span> Sp stayed at 0.98 because the disease+ column didn't change.</button>
+        <button class="mc-option" onclick="answerMC(4, 'b', false)"><span class="marker">B.</span> Sp went up because more positive tests were issued.</button>
+        <button class="mc-option" onclick="answerMC(4, 'c', true)"><span class="marker">C.</span> Sp dropped to 0.75 &mdash; now a quarter of disease-free patients (25 of every 100) get a false positive.</button>
+        <button class="mc-option" onclick="answerMC(4, 'd', false)"><span class="marker">D.</span> Sp dropped but Sn rose to compensate, keeping accuracy steady.</button>
+      </div>
+      <div class="mc-feedback" id="mc4-feedback"></div>
+    </div>
+
+    <div id="mc5-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q5.</span> Now slide FP the other way &mdash; toward zero.</div>
+      <div class="explore-prompt">
+        <span class="e-label">&#9656; Try this on the left panel</span>
+        Click <strong>Reset</strong>, then drag the <strong>FP slider down to 0</strong>. <strong>What happened to Sp, and what does it mean for clinical use?</strong>
+      </div>
+      <div class="mc-options" id="mc5-options">
+        <button class="mc-option" onclick="answerMC(5, 'a', false)"><span class="marker">A.</span> Sp dropped because there are fewer positive tests overall.</button>
+        <button class="mc-option" onclick="answerMC(5, 'b', true)"><span class="marker">B.</span> Sp climbed to 1.00 &mdash; with zero false positives, the test never alarms on a disease-free patient.</button>
+        <button class="mc-option" onclick="answerMC(5, 'c', false)"><span class="marker">C.</span> Sp stayed at 0.98 because the test architecture didn't change.</button>
+        <button class="mc-option" onclick="answerMC(5, 'd', false)"><span class="marker">D.</span> Sp became greater than 1.00 because there are no false positives.</button>
+      </div>
+      <div class="mc-feedback" id="mc5-feedback"></div>
+    </div>
+
+    <div id="mc6-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q6.</span> The conceptual punchline &mdash; what's specificity actually for?</div>
+      <div class="explore-prompt">
+        <span class="e-label">&#9656; Try this on the left panel</span>
+        Slide FP between 0, 8, and 100, watching how the grid recolors and how Sp moves. Notice that <strong>Sn stays at 0.70 the whole time</strong>. <strong>What's the clearest takeaway?</strong>
+      </div>
+      <div class="mc-options" id="mc6-options">
+        <button class="mc-option" onclick="answerMC(6, 'a', false)"><span class="marker">A.</span> Specificity and sensitivity are essentially the same statistic with different names.</button>
+        <button class="mc-option" onclick="answerMC(6, 'b', false)"><span class="marker">B.</span> A test should always have Sp = 1.00 to be considered useful.</button>
+        <button class="mc-option" onclick="answerMC(6, 'c', false)"><span class="marker">C.</span> Specificity matters only for confirmatory tests, never for screening tools.</button>
+        <button class="mc-option" onclick="answerMC(6, 'd', true)"><span class="marker">D.</span> Sn and Sp live in different columns of the 2&times;2 and don't impact one another. That is, Sp lives entirely in the disease&minus; column, which is why moving FP moves Sp but doesn't touch Sn.</button>
+      </div>
+      <div class="mc-feedback" id="mc6-feedback"></div>
+    </div>
+
+    <div class="takeaways" id="takeaways" style="display:none;">
+      <h3>Big takeaways</h3>
+      <h2>What specificity will tell you in any paper</h2>
+      <ul>
+        <li><strong>Sp = TN / (TN + FP).</strong> The fraction of truly disease-free patients the test correctly clears. Disease&minus; column only.</li>
+        <li><strong>SpPIn.</strong> High <strong>Sp</strong> + <strong>P</strong>ositive result rules disease <strong>In</strong>. That's what specificity is for.</li>
+        <li><strong>Translate Sp directly to people.</strong> Sp = 0.98 means &ldquo;98 of every 100 disease-free patients get a correctly negative result; 2 get a false alarm.&rdquo; That's the patient-level read.</li>
+        <li><strong>Sp is independent of prevalence and Sn.</strong> Same disease&minus; column gives the same specificity at any prevalence, and changing TP or FN won't move Sp one bit.</li>
+        <li><strong>Above 70% trustworthy, above 90% very trustworthy.</strong> The article's 0.98 is excellent &mdash; a positive antigen result is very likely a true positive.</li>
+      </ul>
+    </div>
+
+    <div class="nav-bar">
+      <a href="part4.html" class="nav-btn secondary">&larr; Back to Part 4</a>
+      <span class="completion-msg" id="completion-msg"></span>
+      <a href="part6.html" class="nav-btn" id="next-btn" style="pointer-events:none; opacity:0.5;">Continue to Part 6 &rarr;</a>
+    </div>
+
+  </section>
+</main>
+
+<script>
+  var ORIG = { tp: 70, fn: 30, fp: 8, tn: 392, totalPos: 100, totalNeg: 400, totalAll: 500 };
+
+  var state = {
+    spRevealed: false,
+    calcShown: false,
+    sppinRevealed: false,
+    answered: { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false },
+    correct:  { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false },
+    highlighted: { 1: false, 2: false, 3: false }
+  };
+
+  function buildGrid() {
+    var grid = document.getElementById('patient-grid');
+    grid.innerHTML = '';
+    for (var i = 0; i < 100; i++) {
+      var cell = document.createElement('div');
+      cell.className = 'patient-cell';
+      cell.id = 'pcell-' + i;
+      grid.appendChild(cell);
+    }
+  }
+
+  function paintGrid(fp) {
+    // Grid represents 100 disease-free patients (a percentage view of the 400).
+    // Number of red cells = round(fp / 4), since 400 disease-free total.
+    var alarms = Math.round(fp / 4);
+    if (alarms < 0) alarms = 0;
+    if (alarms > 100) alarms = 100;
+    for (var i = 0; i < 100; i++) {
+      var cell = document.getElementById('pcell-' + i);
+      if (i < alarms) {
+        cell.classList.add('alarm');
+      } else {
+        cell.classList.remove('alarm');
+      }
+    }
+    document.getElementById('grid-cleared').textContent = (100 - alarms);
+    document.getElementById('grid-alarm').textContent = alarms;
+  }
+
+  function highlight(n) {
+    state.highlighted[n] = true;
+    var cls = n === 1 ? 'on' : (n === 2 ? 'on-2' : 'on-3');
+    document.getElementById('hi-' + n).classList.add(cls);
+    document.getElementById('annot-' + n).classList.add('show');
+    var btn = document.getElementById('hi-btn-' + n);
+    btn.classList.add('done');
+    btn.disabled = true;
+    updateStepCounter();
+  }
+
+  function revealSppin() {
+    if (state.sppinRevealed) return;
+    state.sppinRevealed = true;
+    var btn = document.getElementById('sppin-btn');
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '✓ Revealed';
+    document.getElementById('sppin-msg').classList.add('show');
+    updateStepCounter();
+  }
+
+  function revealSoWhat() {
+    var btn = document.getElementById('sowhat-btn');
+    if (btn.classList.contains('done')) return;
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '✓ Revealed';
+    var box = document.getElementById('sowhat-box');
+    box.style.display = 'block';
+    box.style.animation = 'fadeIn 0.4s ease-out';
+  }
+
+  function revealHabit() {
+    var btn = document.getElementById('habit-btn');
+    if (btn.classList.contains('done')) return;
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '✓ Revealed';
+    document.getElementById('habit-msg').classList.add('show');
+  }
+
+  function showCalcResult() {
+    if (state.calcShown) return;
+    state.calcShown = true;
+    document.getElementById('calc-result').classList.add('show');
+    document.getElementById('calc-cursor').style.display = 'none';
+    var btn = document.getElementById('calc-btn');
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '✓ Shown';
+    updateStepCounter();
+  }
+
+  function revealSp() {
+    if (state.spRevealed) return;
+    state.spRevealed = true;
+    var card = document.getElementById('sp-card');
+    card.classList.remove('locked');
+    card.classList.add('revealed');
+    document.getElementById('sp-value').textContent = '0.98';
+    document.getElementById('sp-ci').textContent = '95% CI [0.96, 0.99]';
+    document.getElementById('sp-scale-wrap').style.display = 'block';
+    updateSpScale(0.98);
+    updateStepCounter();
+    unlockMC(1);
+  }
+
+  function unlockSliders() {
+    document.getElementById('sliders-box').classList.remove('locked');
+  }
+
+  function onSliderChange() {
+    var fp = parseInt(document.getElementById('slider-fp').value, 10);
+    document.getElementById('slider-fp-val').textContent = fp;
+
+    var tp = ORIG.tp;
+    var fn = ORIG.fn;
+    var tn = ORIG.totalNeg - fp;
+    if (tn < 0) tn = 0;
+
+    document.getElementById('cell-tp').textContent = tp;
+    document.getElementById('cell-fn').textContent = fn;
+    document.getElementById('cell-fp').textContent = fp;
+    document.getElementById('cell-tn').textContent = tn;
+    document.getElementById('row-pos-total').textContent = tp + fp;
+    document.getElementById('row-neg-total').textContent = fn + tn;
+
+    paintGrid(fp);
+
+    var sp = ORIG.totalNeg > 0 ? tn / ORIG.totalNeg : 0;
+    var acc = (tp + tn) / ORIG.totalAll;
+
+    document.getElementById('live-sp').textContent = sp.toFixed(2);
+    document.getElementById('live-acc').textContent = acc.toFixed(2);
+
+    document.getElementById('sp-value').textContent = sp.toFixed(2);
+    document.getElementById('sp-formula').textContent = 'Sp = ' + tn + ' / (' + tn + ' + ' + fp + ') = ' + sp.toFixed(2);
+
+    if (fp === ORIG.fp) {
+      document.getElementById('sp-ci').textContent = '95% CI [0.96, 0.99]';
+    } else {
+      document.getElementById('sp-ci').textContent = '(exploration mode — CI applies to article values)';
+    }
+
+    if (state.spRevealed) updateSpScale(sp);
+  }
+
+  function updateSpScale(sp) {
+    var pct = sp * 100;
+    if (pct < 0) pct = 0;
+    if (pct > 100) pct = 100;
+    document.getElementById('sp-marker-panel').style.left = pct + '%';
+    document.getElementById('sp-marker-pill-panel').textContent = sp.toFixed(2);
+
+    var readout = document.getElementById('sp-readout-bar-panel');
+    readout.classList.remove('high', 'borderline', 'low');
+    if (sp >= 0.90) {
+      readout.classList.add('high');
+      readout.innerHTML = 'Strong rule-in test &mdash; a positive result is highly trustworthy.';
+    } else if (sp >= 0.70) {
+      readout.classList.add('borderline');
+      readout.innerHTML = 'At or above the 70% threshold &mdash; useful for rule-in, but with notable false-alarm rate.';
+    } else {
+      readout.classList.add('low');
+      readout.innerHTML = 'Below the 70% threshold &mdash; a positive result cannot reliably rule in disease.';
+    }
+  }
+
+  function resetSliders() {
+    document.getElementById('slider-fp').value = ORIG.fp;
+    onSliderChange();
+  }
+
+  var feedbackText = {
+    1: {
+      correct: "<strong>Correct.</strong> That's the cleanest patient-friendly translation of Sp = 0.98. A high-specificity test rarely produces false positives, so when it returns a positive, that positive carries weight. Combined with symptoms, the antigen positive is highly meaningful. PCR can still confirm before treatment decisions, but the patient already has strong evidence.",
+      a: "<strong>Not quite.</strong> Specificity isn't the same thing as overall accuracy. Sp = 0.98 only describes how the test performs on healthy people &mdash; it tells us the test rarely flags someone who is actually well. It doesn't directly mean a positive test is 98% certain to be COVID. Telling a patient they definitely have COVID based on this single number alone overstates what specificity actually says. <strong>The correct answer is B.</strong> That's the cleanest patient-friendly translation of Sp = 0.98. A high-specificity test rarely produces false positives, so when it returns a positive, that positive carries weight. Combined with symptoms, the antigen positive is highly meaningful. PCR can still confirm before treatment decisions, but the patient already has strong evidence.",
+      c: "<strong>Not quite.</strong> Specificity is actually exactly what we use to interpret a positive result. A high specificity means the test almost never falsely flags a healthy person, so a positive result is highly trustworthy. Telling the patient that specificity doesn't apply would leave them without the information they most need to understand what their result means. <strong>The correct answer is B.</strong> That's the cleanest patient-friendly translation of Sp = 0.98. A high-specificity test rarely produces false positives, so when it returns a positive, that positive carries weight. Combined with symptoms, the antigen positive is highly meaningful. PCR can still confirm before treatment decisions, but the patient already has strong evidence.",
+      d: "<strong>Not quite.</strong> This sounds close, but it's actually describing PPV (positive predictive value), not specificity. Specificity tells us how the test performs on healthy people (it correctly clears 98 of every 100); it doesn't tell us what fraction of positive tests turn out to be right. Those two numbers can differ &mdash; sometimes substantially &mdash; depending on how common the disease is. <strong>The correct answer is B.</strong> That's the cleanest patient-friendly translation of Sp = 0.98. A high-specificity test rarely produces false positives, so when it returns a positive, that positive carries weight. Combined with symptoms, the antigen positive is highly meaningful. PCR can still confirm before treatment decisions, but the patient already has strong evidence."
+    },
+    2: {
+      correct: "<strong>Correct.</strong> A 95% CI describes the range of plausible values for the population specificity &mdash; here, the true Sp is plausibly between 0.96 and 0.99. Note that this CI is tighter than Sn's CI [0.61, 0.78] because Sp uses the disease&minus; column (n = 400), four times the denominator Sn had to work with. Larger denominator, more precise estimate.",
+      b: "<strong>Not quite.</strong> A confidence interval doesn't describe a range across patients. Each patient is either correctly cleared by the test or not &mdash; individual patients don't have their own personal specificity values. The CI tells us how confident we are in the test's true specificity for the population as a whole. <strong>The correct answer is A.</strong> A 95% CI describes the range of plausible values for the population specificity &mdash; here, the true Sp is plausibly between 0.96 and 0.99. Note that this CI is tighter than Sn's CI [0.61, 0.78] because Sp uses the disease&minus; column (n = 400), four times the denominator Sn had to work with. Larger denominator, more precise estimate.",
+      c: "<strong>Not quite.</strong> This is closer to a description of overall accuracy, not specificity. Specificity is restricted just to the patients who don't have the disease &mdash; in this study, the 400 PCR-negative patients. The CI describes uncertainty about that specific number, not the test's overall classification rate across everyone. <strong>The correct answer is A.</strong> A 95% CI describes the range of plausible values for the population specificity &mdash; here, the true Sp is plausibly between 0.96 and 0.99. Note that this CI is tighter than Sn's CI [0.61, 0.78] because Sp uses the disease&minus; column (n = 400), four times the denominator Sn had to work with. Larger denominator, more precise estimate.",
+      d: "<strong>Not quite.</strong> The meaning is flipped here. The CI is for specificity (how often the test correctly clears healthy people), so the false-positive rate would actually fall between 1 and 4 percent &mdash; not 96 and 99. A test that produced false positives 96% of the time would be useless. <strong>The correct answer is A.</strong> A 95% CI describes the range of plausible values for the population specificity &mdash; here, the true Sp is plausibly between 0.96 and 0.99. Note that this CI is tighter than Sn's CI [0.61, 0.78] because Sp uses the disease&minus; column (n = 400), four times the denominator Sn had to work with. Larger denominator, more precise estimate."
+    },
+    3: {
+      correct: "<strong>Correct.</strong> SpPIn is the working clinician's mnemonic for what high specificity is for. Specificity is calculated only from the disease&minus; column (TN and FP) &mdash; the formula Sp = TN / (TN + FP) doesn't use TP or FN at all. That's why it's independent of prevalence and moves independently of Sn: changing TP or FN won't move Sp one bit. And like Sn, Sp is a property of the test mechanism, independent of how common the disease is.",
+      a: "<strong>Not quite.</strong> That's actually NPV (negative predictive value), which we cover in Part 6. Specificity is about positive results &mdash; specifically, how rare false alarms are among healthy people. The chance that a negative test result is correct is a separate question that also depends on how common the disease is in the population. <strong>The correct answer is D.</strong> SpPIn is the working clinician's mnemonic for what high specificity is for. Specificity is calculated only from the disease&minus; column (TN and FP) &mdash; the formula Sp = TN / (TN + FP) doesn't use TP or FN at all. That's why it's independent of prevalence and moves independently of Sn: changing TP or FN won't move Sp one bit.",
+      b: "<strong>Not quite.</strong> Sp is independent of prevalence. The math for specificity uses only the disease-free column, so changing how common the disease is in the population doesn't shift Sp at all. PPV and NPV do depend on prevalence, but Sn and Sp do not &mdash; that's one of their most useful properties. <strong>The correct answer is D.</strong> SpPIn is the working clinician's mnemonic for what high specificity is for. Specificity is calculated only from the disease&minus; column (TN and FP) &mdash; the formula Sp = TN / (TN + FP) doesn't use TP or FN at all. That's why it's independent of prevalence and moves independently of Sn: changing TP or FN won't move Sp one bit.",
+      c: "<strong>Not quite.</strong> Sn and Sp don't trade off one-for-one. Plenty of useful tests have very different Sn and Sp values without one rising as the other falls. Our antigen test is a clear example: Sn = 0.70 (moderate) and Sp = 0.98 (excellent). They live in different columns of the 2&times;2 and move independently. <strong>The correct answer is D.</strong> SpPIn is the working clinician's mnemonic for what high specificity is for. Specificity is calculated only from the disease&minus; column (TN and FP) &mdash; the formula Sp = TN / (TN + FP) doesn't use TP or FN at all. That's why it's independent of prevalence and moves independently of Sn: changing TP or FN won't move Sp one bit."
+    },
+    4: {
+      correct: "<strong>Correct.</strong> When you increased FP to 100, you converted 92 true negatives into false positives: TN = 400 &minus; 100 = 300. Sp = 300 / 400 = 0.75. The grid now shows roughly 25 red squares per 100. <strong>SpPIn weakens substantially:</strong> a positive result is no longer very trustworthy because false alarms are common &mdash; a quarter of all disease-free patients now look positive on the test.",
+      a: "<strong>Not quite.</strong> It's true the disease+ column didn't change &mdash; but specificity doesn't use that column. Sp is calculated from the disease-free column, and you just changed it dramatically by raising FP to 100. So Sp definitely moved, and it dropped. <strong>The correct answer is C.</strong> When you increased FP to 100, you converted 92 true negatives into false positives: TN = 400 &minus; 100 = 300. Sp = 300 / 400 = 0.75. The grid now shows roughly 25 red squares per 100. SpPIn weakens substantially: a positive result is no longer very trustworthy because false alarms are common.",
+      b: "<strong>Not quite.</strong> More false positives mean MORE healthy people getting wrongly flagged, which means LOWER specificity. Specificity counts how often the test correctly clears healthy people, so growing the false-alarm count pulls that number down, not up. <strong>The correct answer is C.</strong> When you increased FP to 100, you converted 92 true negatives into false positives: TN = 400 &minus; 100 = 300. Sp = 300 / 400 = 0.75. The grid now shows roughly 25 red squares per 100. SpPIn weakens substantially: a positive result is no longer very trustworthy because false alarms are common.",
+      d: "<strong>Not quite.</strong> Sn is calculated entirely from the disease+ column (TP and FN), and you didn't change either. Sn stayed locked at 0.70 the whole time. That's the key property of Sn vs. Sp: they live in different columns and move independently &mdash; so accuracy didn't stay steady when only Sp changed. <strong>The correct answer is C.</strong> When you increased FP to 100, you converted 92 true negatives into false positives: TN = 400 &minus; 100 = 300. Sp = 300 / 400 = 0.75. The grid now shows roughly 25 red squares per 100. SpPIn weakens substantially: a positive result is no longer very trustworthy because false alarms are common."
+    },
+    5: {
+      correct: "<strong>Correct.</strong> When FP dropped to 0, TN rose to 400. Sp = 400 / 400 = 1.00. The grid is entirely green. <strong>Every positive result is now definitive:</strong> if the test says positive, the patient truly has COVID. SpPIn works perfectly here. This is the ceiling for a rule-in test &mdash; in practice, Sp = 1.00 is rare, but Sp &ge; 0.95 already gives extremely trustworthy positives.",
+      a: "<strong>Not quite.</strong> Fewer false positives means MORE healthy people are correctly cleared, which raises specificity. When you reduced FP to zero, Sp climbed from 0.98 to 1.00 &mdash; it didn't drop. <strong>The correct answer is B.</strong> When FP dropped to 0, TN rose to 400. Sp = 400 / 400 = 1.00. The grid is entirely green. Every positive result is now definitive: if the test says positive, the patient truly has COVID. SpPIn works perfectly here. This is the ceiling for a rule-in test &mdash; in practice, Sp = 1.00 is rare, but Sp &ge; 0.95 already gives extremely trustworthy positives.",
+      c: "<strong>Not quite.</strong> The slider IS the test architecture in this view. By changing how many false positives the test produces, you're directly changing how it behaves on healthy people. Sliding FP to 0 means the test never falsely alarms &mdash; that's a real change captured by Sp = 1.00. <strong>The correct answer is B.</strong> When FP dropped to 0, TN rose to 400. Sp = 400 / 400 = 1.00. The grid is entirely green. Every positive result is now definitive: if the test says positive, the patient truly has COVID. SpPIn works perfectly here. This is the ceiling for a rule-in test &mdash; in practice, Sp = 1.00 is rare, but Sp &ge; 0.95 already gives extremely trustworthy positives.",
+      d: "<strong>Not quite.</strong> Sp is bounded between 0 and 1 (or 0% and 100%). It can't go higher than 1.00, because that would mean clearing more healthy people than actually exist in the study. The maximum is 1.00, which means the test correctly clears every disease-free patient. <strong>The correct answer is B.</strong> When FP dropped to 0, TN rose to 400. Sp = 400 / 400 = 1.00. The grid is entirely green. Every positive result is now definitive: if the test says positive, the patient truly has COVID. SpPIn works perfectly here. This is the ceiling for a rule-in test &mdash; in practice, Sp = 1.00 is rare, but Sp &ge; 0.95 already gives extremely trustworthy positives."
+    },
+    6: {
+      correct: "<strong>Correct.</strong> This is the central lesson of Part 5. Specificity is the rule-in engine &mdash; high Sp means few false positives, which means a positive result can be trusted (SpPIn). Sp is calculated only from the disease&minus; column &mdash; what fraction of truly disease-free patients the test correctly clears &mdash; while Sn lives in the disease+ column. That's why moving FP moves Sp directly while Sn stays locked. The article's Sp = 0.98 is excellent, so a positive antigen result here is very likely a true positive.",
+      a: "<strong>Not quite.</strong> They actually ask mirror-image questions about different patient groups. Sn looks at people who have the disease and asks &ldquo;how many did the test catch?&rdquo; Sp looks at people who don't have the disease and asks &ldquo;how many did the test correctly clear?&rdquo; Different denominators, different columns, different clinical jobs &mdash; not the same statistic with different names. <strong>The correct answer is D.</strong> Specificity is the rule-in engine &mdash; high Sp means few false positives, which means a positive result can be trusted (SpPIn). Sp is calculated only from the disease&minus; column, while Sn lives in the disease+ column. That's why moving FP moves Sp directly while Sn stays locked.",
+      b: "<strong>Not quite.</strong> Sp = 1.00 is a ceiling, but it's not a requirement for a useful test. A test with Sp = 0.95 or 0.98 is genuinely excellent for ruling in disease. The 70% threshold is the floor where rule-in starts being trustworthy; above 90% is very trustworthy. Demanding 1.00 would rule out almost every useful test in clinical practice. <strong>The correct answer is D.</strong> Specificity is the rule-in engine &mdash; high Sp means few false positives, which means a positive result can be trusted (SpPIn). Sp is calculated only from the disease&minus; column, while Sn lives in the disease+ column. That's why moving FP moves Sp directly while Sn stays locked.",
+      c: "<strong>Not quite.</strong> Sp matters whenever a positive result triggers an action &mdash; that includes screening (where a positive moves the patient to confirmatory testing), diagnostic confirmation, and surveillance. Anywhere a positive result has consequences, you want to know how trustworthy that positive is, and that's exactly what Sp tells you. <strong>The correct answer is D.</strong> Specificity is the rule-in engine &mdash; high Sp means few false positives, which means a positive result can be trusted (SpPIn). Sp is calculated only from the disease&minus; column, while Sn lives in the disease+ column. That's why moving FP moves Sp directly while Sn stays locked."
+    }
+  };
+
+  function answerMC(qNum, choice, isCorrect) {
+    if (state.answered[qNum]) return;
+    state.answered[qNum] = true;
+    state.correct[qNum] = isCorrect;
+
+    var buttons = document.querySelectorAll('#mc' + qNum + '-options .mc-option');
+    buttons.forEach(function(btn) { btn.disabled = true; });
+
+    var chosenBtn = Array.prototype.find.call(buttons, function(btn) {
+      return btn.getAttribute('onclick').indexOf("'" + choice + "'") !== -1;
+    });
+    if (chosenBtn) chosenBtn.classList.add(isCorrect ? 'selected-correct' : 'selected-wrong');
+    if (!isCorrect) {
+      buttons.forEach(function(btn) {
+        var onClick = btn.getAttribute('onclick');
+        if (onClick.indexOf('true') !== -1) btn.classList.add('show-correct');
+      });
+    }
+
+    var fb = document.getElementById('mc' + qNum + '-feedback');
+    fb.classList.remove('correct', 'incorrect');
+    fb.classList.add(isCorrect ? 'correct' : 'incorrect');
+    fb.innerHTML = isCorrect ? feedbackText[qNum].correct : feedbackText[qNum][choice];
+
+    if (qNum < 6) {
+      unlockMC(qNum + 1);
+      if (qNum === 3) unlockSliders();
+    } else {
+      finalize();
+    }
+    updateStepCounter();
+  }
+
+  function unlockMC(qNum) {
+    var block = document.getElementById('mc' + qNum + '-block');
+    if (block) block.classList.add('unlocked');
+  }
+
+  function finalize() {
+    var allCorrect = state.correct[1] && state.correct[2] && state.correct[3] && state.correct[4] && state.correct[5] && state.correct[6];
+    var msg = document.getElementById('completion-msg');
+    msg.textContent = allCorrect ? '✓ All six correct — excellent work.' : '✓ Section complete. Review feedback as needed.';
+    document.getElementById('takeaways').style.display = 'block';
+    var nextBtn = document.getElementById('next-btn');
+    nextBtn.style.pointerEvents = 'auto';
+    nextBtn.style.opacity = '1';
+    try { localStorage.setItem('unit8_part5_done', '1'); } catch (e) {}
+  }
+
+  function updateStepCounter() {
+    var step = 1;
+    if (state.highlighted[1] || state.highlighted[2] || state.highlighted[3]) step = 2;
+    if (state.sppinRevealed) step = 3;
+    if (state.calcShown) step = 4;
+    if (state.spRevealed) step = 5;
+    if (state.answered[3]) step = 6;
+    document.getElementById('step-counter').textContent = step;
+  }
+
+  buildGrid();
+  resetSliders();
+</script>
+</body>
+</html>

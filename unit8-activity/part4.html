@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Unit 8 Activity — Part 4: Sensitivity</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Calibri, "Segoe UI", Tahoma, sans-serif; background: #F0F3F5; color: #172940; line-height: 1.55; min-height: 100vh; font-size: 16.5px; }
+  .header { background: #172940; color: white; padding: 18px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 4px solid #2D8659; }
+  .header-left { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; }
+  .header h1 { font-size: 23px; font-weight: 700; }
+  .header .part-label { font-size: 13.5px; color: #6FCF97; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600; }
+  .progress-pill { background: rgba(255,255,255,0.12); padding: 6px 14px; border-radius: 20px; font-size: 13.5px; color: #F0F3F5; }
+  .progress-pill strong { color: #6FCF97; }
+
+  .container { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; padding: 24px 32px 60px; max-width: 1500px; margin: 0 auto; }
+
+  .left-panel { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 26px 26px 22px; position: sticky; top: 24px; height: fit-content; max-height: calc(100vh - 48px); overflow-y: auto; }
+  .left-panel h2 { font-size: 19px; color: #172940; margin-bottom: 4px; font-weight: 700; }
+  .left-panel .subtitle { color: #616467; font-size: 14px; margin-bottom: 18px; }
+  .panel-section-label { font-size: 12px; text-transform: uppercase; letter-spacing: 1.2px; color: #2D8659; font-weight: 700; margin-bottom: 8px; margin-top: 18px; }
+
+  .grid-wrap { background: #F8FAFB; border: 1px solid #d8dde2; border-radius: 10px; padding: 16px 18px; }
+  .grid-title { font-size: 13px; font-weight: 700; color: #172940; text-transform: uppercase; letter-spacing: 0.7px; margin-bottom: 4px; text-align: center; }
+  .grid-subtitle { font-size: 12px; color: #616467; text-align: center; margin-bottom: 14px; font-style: italic; }
+  .patient-grid { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; max-width: 320px; margin: 0 auto; }
+  .patient-cell { aspect-ratio: 1; background: #2D8659; border-radius: 4px; transition: background 0.3s ease, transform 0.2s ease; }
+  .patient-cell.missed { background: #C0504D; }
+  .grid-counts { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+  .grid-count-card { background: white; border-radius: 6px; padding: 10px 8px; text-align: center; border: 1px solid #d8dde2; }
+  .grid-count-card.caught { border-top: 3px solid #2D8659; }
+  .grid-count-card.missed { border-top: 3px solid #C0504D; }
+  .grid-count-num { font-size: 22px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+  .grid-count-card.caught .grid-count-num { color: #1B5E3F; }
+  .grid-count-card.missed .grid-count-num { color: #8B2B1F; }
+  .grid-count-label { font-size: 11px; color: #616467; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; margin-top: 4px; }
+
+  .contingency { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13.5px; margin-bottom: 6px; margin-top: 4px; }
+  .contingency th, .contingency td { padding: 9px 6px; text-align: center; border: 1px solid #d8dde2; }
+  .contingency th { background: #172940; color: white; font-weight: 600; font-size: 12px; }
+  .contingency th:first-child { background: transparent; border: none; }
+  .contingency .row-label { background: #2E8FAF; color: white; font-weight: 600; text-align: left; padding: 9px 8px; font-size: 12.5px; }
+  .contingency .group-total { background: #F0F3F5; font-weight: 700; color: #172940; }
+  .contingency .cell-tp { background: #E8F4EC; font-weight: 700; font-size: 16px; color: #1B5E3F; transition: background 0.3s ease; }
+  .contingency .cell-fp { background: #FBEAE7; font-weight: 700; font-size: 16px; color: #8B2B1F; transition: background 0.3s ease; }
+  .contingency .cell-fn { background: #FBEAE7; font-weight: 700; font-size: 16px; color: #8B2B1F; transition: background 0.3s ease; }
+  .contingency .cell-tn { background: #E8F4EC; font-weight: 700; font-size: 16px; color: #1B5E3F; transition: background 0.3s ease; }
+  .contingency .cell-tp.highlight, .contingency .cell-fn.highlight { box-shadow: inset 0 0 0 3px #2D8659; }
+  .table-caption { text-align: center; color: #616467; font-size: 12px; margin-top: 4px; font-style: italic; }
+
+  .sliders { background: #F8FAFB; border: 1px solid #d8dde2; border-radius: 10px; padding: 14px 16px; margin-top: 14px; position: relative; transition: opacity 0.3s ease; }
+  .sliders.locked { opacity: 0.55; pointer-events: none; }
+  .sliders-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+  .sliders-header .s-title { font-size: 13px; font-weight: 700; color: #172940; text-transform: uppercase; letter-spacing: 0.8px; }
+  .reset-btn { background: white; border: 1.5px solid #2D8659; color: #2D8659; padding: 4px 10px; border-radius: 5px; font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.18s ease; }
+  .reset-btn:hover { background: #E8F4EC; }
+  .lock-overlay { position: absolute; top: 6px; right: 12px; font-size: 12px; color: #8B9098; font-style: italic; }
+  .sliders.locked .lock-overlay { display: block; }
+  .sliders:not(.locked) .lock-overlay { display: none; }
+
+  .slider-row { display: grid; grid-template-columns: 110px 1fr 60px; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .slider-row:last-of-type { margin-bottom: 0; }
+  .slider-row .s-label { font-size: 13px; font-weight: 600; color: #172940; }
+  .slider-row .s-label.fn { color: #8B2B1F; }
+  .slider-row input[type="range"] { width: 100%; accent-color: #2D8659; }
+  .slider-row .s-value { text-align: right; font-size: 13.5px; font-weight: 700; color: #172940; font-variant-numeric: tabular-nums; }
+
+  .live-stats { margin-top: 14px; padding: 12px 14px; background: white; border: 1px solid #d8dde2; border-radius: 8px; }
+  .live-stats-title { font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px; color: #616467; font-weight: 700; margin-bottom: 10px; text-align: center; }
+  .live-stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .live-stat { background: #F8FAFB; border-radius: 6px; padding: 10px 6px; text-align: center; }
+  .live-stat .ls-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; color: #616467; font-weight: 700; margin-bottom: 3px; }
+  .live-stat .ls-value { font-size: 18px; font-weight: 700; color: #172940; font-variant-numeric: tabular-nums; }
+  .live-stat.sn .ls-value { color: #2D8659; }
+  .live-stat.acc .ls-value { color: #2E8FAF; }
+  .live-stats-fixed { margin-top: 8px; padding: 8px 10px; background: #F0F3F5; border-radius: 6px; font-size: 12px; color: #616467; text-align: center; line-height: 1.45; }
+  .live-stats-fixed strong { color: #172940; }
+
+  .stat-card { border: 2px solid #2D8659; border-radius: 10px; padding: 18px 20px; text-align: center; cursor: pointer; transition: all 0.25s ease; background: white; user-select: none; margin-top: 16px; }
+  .stat-card.locked { background: #F0F3F5; border-style: dashed; border-color: #b8c2c8; }
+  .stat-card.locked:hover { background: #E8F4EC; border-color: #2D8659; transform: translateY(-1px); }
+  .stat-card.revealed { background: linear-gradient(135deg, #2D8659 0%, #1B5E3F 100%); color: white; border-color: #1B5E3F; cursor: default; }
+  .stat-card .label { font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #616467; margin-bottom: 6px; font-weight: 600; }
+  .stat-card.revealed .label { color: #FFC857; }
+  .stat-card .value { font-size: 42px; font-weight: 700; line-height: 1; margin-bottom: 6px; color: #172940; font-variant-numeric: tabular-nums; }
+  .stat-card.revealed .value { color: white; }
+  .stat-card .ci { font-size: 13px; color: #616467; }
+  .stat-card.revealed .ci { color: #C9E4D5; }
+  .stat-card .hint { font-size: 13px; color: #2D8659; font-weight: 600; margin-top: 6px; }
+  .stat-card.revealed .hint { display: none; }
+  .stat-card .formula { font-size: 13.5px; margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.25); font-family: "Cambria Math", Cambria, serif; color: #C9E4D5; display: none; font-variant-numeric: tabular-nums; }
+  .stat-card.revealed .formula { display: block; }
+
+  .sn-scale-wrap { margin-top: 16px; background: white; border: 1px solid #d8dde2; border-radius: 10px; padding: 16px 18px; }
+  .sn-scale-title { font-size: 13px; font-weight: 700; color: #172940; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 22px; text-align: center; }
+  .sn-scale-outer { position: relative; padding-top: 38px; }
+  .sn-scale { position: relative; height: 30px; background: linear-gradient(90deg, #C0504D 0%, #D89A92 35%, #FFC857 65%, #6FCF97 78%, #2D8659 100%); border-radius: 15px; }
+  .sn-tick-70 { position: absolute; top: -6px; bottom: -6px; left: 70%; width: 2px; background: #172940; z-index: 2; }
+  .sn-tick-70-pill { position: absolute; top: -34px; left: 70%; transform: translateX(-50%); background: #FFC857; color: #172940; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 700; white-space: nowrap; z-index: 4; }
+  .sn-marker-group { position: absolute; top: -34px; transform: translateX(-50%); transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 5; }
+  .sn-marker-pill { background: #172940; color: white; padding: 4px 10px; border-radius: 6px; font-size: 13px; font-weight: 700; text-align: center; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.15); font-variant-numeric: tabular-nums; }
+  .sn-marker-dot { width: 22px; height: 22px; background: white; border: 3px solid #172940; border-radius: 50%; margin: 4px auto 0; position: relative; top: 24px; }
+  .sn-axis-labels { display: flex; justify-content: space-between; margin-top: 12px; font-size: 12px; color: #172940; font-weight: 600; padding: 0 2px; }
+  .sn-readout-bar { margin-top: 14px; padding: 10px 14px; border-radius: 6px; font-size: 13.5px; font-weight: 600; text-align: center; line-height: 1.5; transition: background 0.4s ease, color 0.4s ease; }
+  .sn-readout-bar.high { background: #E8F4EC; color: #1B5E3F; border-left: 3px solid #2D8659; }
+  .sn-readout-bar.borderline { background: #FFF8E1; color: #8B6914; border-left: 3px solid #FFC857; }
+  .sn-readout-bar.low { background: #FBEAE7; color: #8B2B1F; border-left: 3px solid #C0504D; }
+
+  .right-panel { display: flex; flex-direction: column; gap: 18px; }
+  .step { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 24px 26px; border-left: 5px solid #2D8659; }
+  .step-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .step-number { background: #2D8659; color: white; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 16px; flex-shrink: 0; }
+  .step-title { font-size: 18.5px; font-weight: 700; color: #172940; }
+  .step-body { color: #2c3e50; font-size: 16px; line-height: 1.7; }
+  .step-body p { margin-bottom: 12px; }
+  .step-body p:last-child { margin-bottom: 0; }
+  .step-body strong { color: #172940; }
+
+  .article-excerpt { background: #F8FAFB; border: 1px solid #d8dde2; border-left: 4px solid #172940; border-radius: 6px; padding: 18px 22px; margin: 14px 0; font-family: Georgia, "Times New Roman", serif; color: #2c3e50; font-size: 16.5px; line-height: 1.75; }
+  .article-excerpt .article-meta { font-size: 13px; font-family: Calibri, sans-serif; color: #616467; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+  .hi-target { background: transparent; transition: background 0.5s ease; padding: 1px 3px; border-radius: 2px; }
+  .hi-target.on { background: #DFEDF4; }
+  .hi-target.on-2 { background: #FFE9A6; }
+  .hi-target.on-3 { background: #C9E4D5; }
+
+  .reveal-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+  .reveal-btn { background: white; color: #2D8659; border: 2px solid #2D8659; padding: 10px 18px; border-radius: 7px; font-size: 14.5px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.18s ease; }
+  .reveal-btn:hover { background: #E8F4EC; transform: translateY(-1px); }
+  .reveal-btn.done { background: #1B5E3F; color: white; border-color: #1B5E3F; cursor: default; }
+  .reveal-btn.done:hover { transform: none; }
+
+  .annot-line { margin-top: 10px; padding: 12px 18px; background: #fff; border-radius: 6px; border-left: 3px solid #FFC857; font-family: Calibri, sans-serif; font-size: 15.5px; color: #172940; display: none; animation: fadeIn 0.4s ease-out; line-height: 1.6; }
+  .annot-line.show { display: block; }
+  .annot-line .a-tag { display: inline-block; font-weight: 700; color: #2D8659; margin-right: 6px; text-transform: uppercase; font-size: 12.5px; letter-spacing: 1px; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .snnout-wrap { background: linear-gradient(135deg, #172940 0%, #1B5E3F 100%); color: white; border-radius: 10px; padding: 22px 24px; margin: 14px 0; }
+  .snnout-wrap .sn-letters { font-size: 32px; font-weight: 700; color: #FFC857; margin-bottom: 10px; letter-spacing: 1px; text-align: center; }
+  .snnout-wrap .sn-letters .underline { text-decoration: underline; text-underline-offset: 4px; }
+  .snnout-wrap .sn-explain { font-size: 15.5px; line-height: 1.7; color: #F0F3F5; margin-bottom: 12px; }
+  .snnout-wrap .sn-explain strong { color: #FFC857; }
+  .snnout-wrap .sn-explain:last-child { margin-bottom: 0; }
+  .snnout-reveal-row { text-align: center; margin-top: 14px; }
+  .snnout-reveal-msg { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,200,87,0.3); border-radius: 6px; padding: 14px 18px; margin-top: 14px; font-size: 15.5px; line-height: 1.65; display: none; animation: fadeIn 0.4s ease; color: #F0F3F5; }
+  .snnout-reveal-msg.show { display: block; }
+  .snnout-reveal-msg strong { color: #FFC857; }
+  .snnout-reveal-row .reveal-btn { background: rgba(255,255,255,0.12); color: #FFC857; border-color: #FFC857; }
+  .snnout-reveal-row .reveal-btn:hover { background: rgba(255,255,255,0.2); }
+  .snnout-reveal-row .reveal-btn.done { background: #FFC857; color: #172940; border-color: #FFC857; }
+
+  .calc-box { background: #F8FAFB; border-radius: 10px; border: 1px solid #d8dde2; padding: 20px 22px; margin: 14px 0; text-align: center; font-family: "Cambria Math", Cambria, serif; font-size: 19px; color: #172940; }
+  .calc-box .calc-step { margin: 6px 0; transition: opacity 0.4s ease; }
+  .calc-box .calc-result { color: #2D8659; font-weight: 700; font-size: 24px; opacity: 0; transition: opacity 0.6s ease; display: inline-block; }
+  .calc-box .calc-result.show { opacity: 1; }
+  .calc-box .calc-action { margin-top: 12px; }
+  .calc-cursor { display: inline-block; width: 10px; color: #2D8659; animation: blink 1s infinite; }
+  @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+
+  .so-what { background: #FFF8E1; border: 1px solid #F4D77A; border-radius: 8px; padding: 15px 19px; margin-top: 12px; }
+  .so-what .sw-label { color: #8B6914; font-weight: 700; font-size: 12.5px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .so-what p { color: #5a4a10; font-size: 16px; line-height: 1.65; margin: 0; }
+  .so-what p strong { color: #172940; }
+
+  .mc-block { background: white; border-radius: 12px; box-shadow: 0 4px 16px rgba(23, 41, 64, 0.08); padding: 24px 26px; border-top: 5px solid #2D8659; opacity: 0.45; pointer-events: none; transition: opacity 0.4s ease; }
+  .mc-block.unlocked { opacity: 1; pointer-events: auto; }
+  .mc-question { font-size: 17px; font-weight: 700; color: #172940; margin-bottom: 14px; line-height: 1.5; }
+  .mc-question .q-num { color: #2D8659; margin-right: 6px; }
+  .mc-options { display: flex; flex-direction: column; gap: 10px; }
+  .mc-option { background: #F8FAFB; border: 2px solid #d8dde2; border-radius: 8px; padding: 13px 17px; cursor: pointer; font-size: 16px; color: #2c3e50; text-align: left; transition: all 0.18s ease; font-family: inherit; width: 100%; line-height: 1.6; }
+  .mc-option:hover:not(:disabled) { border-color: #2D8659; background: #E8F4EC; }
+  .mc-option:disabled { cursor: default; }
+  .mc-option.selected-correct { background: #E8F4EC; border-color: #2D8B5A; color: #1B5E3F; font-weight: 600; }
+  .mc-option.selected-wrong { background: #FBEAE7; border-color: #C0504D; color: #8B2B1F; }
+  .mc-option.show-correct { background: #E8F4EC; border-color: #2D8B5A; color: #1B5E3F; font-weight: 600; }
+  .mc-option .marker { display: inline-block; font-weight: 700; margin-right: 8px; color: #2D8659; }
+  .mc-feedback { margin-top: 14px; padding: 15px 17px; border-radius: 8px; font-size: 15.5px; line-height: 1.65; display: none; }
+  .mc-feedback.correct { background: #E8F4EC; border-left: 4px solid #2D8B5A; color: #1B5E3F; display: block; }
+  .mc-feedback.incorrect { background: #FBEAE7; border-left: 4px solid #C0504D; color: #8B2B1F; display: block; }
+  .mc-feedback strong { display: block; margin-bottom: 4px; font-size: 13.5px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  .explore-prompt { background: #FFF8E1; border: 1px solid #F4D77A; border-radius: 8px; padding: 13px 17px; margin-bottom: 14px; font-size: 15.5px; color: #5a4a10; line-height: 1.6; }
+  .explore-prompt strong { color: #172940; }
+  .explore-prompt .e-label { color: #8B6914; font-weight: 700; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; display: block; }
+
+  .takeaways { background: #172940; color: white; border-radius: 12px; padding: 28px 30px; border-left: 5px solid #2D8659; }
+  .takeaways h3 { color: #6FCF97; font-size: 13.5px; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 6px; font-weight: 700; }
+  .takeaways h2 { font-size: 23px; color: white; margin-bottom: 18px; font-weight: 700; }
+  .takeaways ul { list-style: none; padding: 0; margin: 0; }
+  .takeaways li { padding: 13px 0 13px 38px; border-bottom: 1px solid rgba(255,255,255,0.12); position: relative; font-size: 16px; line-height: 1.7; color: #F0F3F5; }
+  .takeaways li:last-child { border-bottom: none; }
+  .takeaways li::before { content: "\2713"; position: absolute; left: 0; top: 13px; width: 24px; height: 24px; border-radius: 50%; background: #6FCF97; color: #172940; font-weight: 700; display: flex; align-items: center; justify-content: center; font-size: 13.5px; }
+  .takeaways li strong { color: white; }
+
+  .nav-bar { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; padding: 18px 0 0; margin-top: 8px; }
+  .nav-btn { background: #2D8659; color: white; border: none; padding: 14px 30px; border-radius: 8px; font-size: 15.5px; font-weight: 600; cursor: pointer; font-family: inherit; transition: all 0.2s ease; text-decoration: none; display: inline-block; }
+  .nav-btn:hover { background: #1B5E3F; transform: translateY(-1px); }
+  .nav-btn.secondary { background: white; color: #2D8659; border: 2px solid #2D8659; }
+  .nav-btn.secondary:hover { background: #E8F4EC; }
+  .completion-msg { color: #2D8659; font-size: 14.5px; font-weight: 600; text-align: center; flex-grow: 1; margin: 0 20px; }
+
+  @media (max-width: 1100px) { .container { grid-template-columns: 1fr; } .left-panel { position: relative; top: auto; max-height: none; } }
+  @media (max-width: 600px) { .header { padding: 14px 18px; flex-direction: column; gap: 8px; align-items: flex-start; } .container { padding: 16px; } .live-stats-grid { grid-template-columns: 1fr 1fr; } }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-left">
+    <h1>Unit 8: Diagnostic Accuracy Activity</h1>
+    <span class="part-label">Part 4 of 10 &middot; Sensitivity</span>
+  </div>
+  <div class="progress-pill">Step <strong id="step-counter">1</strong> of 6</div>
+</header>
+
+<main class="container">
+
+  <aside class="left-panel">
+    <h2>100 truly infected patients</h2>
+    <p class="subtitle">Imagine a sample of 100 patients who all have COVID. What does the test do?</p>
+
+    <div class="grid-wrap">
+      <div class="grid-title">The disease+ column, visualized</div>
+      <div class="grid-subtitle">Green = test caught it &middot; Red = test missed (FN)</div>
+      <div class="patient-grid" id="patient-grid"></div>
+      <div class="grid-counts">
+        <div class="grid-count-card caught">
+          <div class="grid-count-num" id="grid-caught">70</div>
+          <div class="grid-count-label">Caught (TP)</div>
+        </div>
+        <div class="grid-count-card missed">
+          <div class="grid-count-num" id="grid-missed">30</div>
+          <div class="grid-count-label">Missed (FN)</div>
+        </div>
+      </div>
+    </div>
+
+    <table class="contingency">
+      <thead>
+        <tr>
+          <th></th>
+          <th>PCR positive</th>
+          <th>PCR negative</th>
+          <th>Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="row-label">Antigen positive</td>
+          <td class="cell-tp highlight" id="cell-tp">70</td>
+          <td class="cell-fp" id="cell-fp">8</td>
+          <td class="group-total" id="row-pos-total">78</td>
+        </tr>
+        <tr>
+          <td class="row-label">Antigen negative</td>
+          <td class="cell-fn highlight" id="cell-fn">30</td>
+          <td class="cell-tn" id="cell-tn">392</td>
+          <td class="group-total" id="row-neg-total">422</td>
+        </tr>
+        <tr>
+          <td class="row-label" style="background:#172940;">Total</td>
+          <td class="group-total">100</td>
+          <td class="group-total">400</td>
+          <td class="group-total" style="background:#FFC857;color:#172940;">500</td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="table-caption">Sn uses only the disease+ column (highlighted in green)</p>
+
+    <div class="sliders locked" id="sliders-box">
+      <div class="lock-overlay">&#128274; Unlocks at Step 6</div>
+      <div class="sliders-header">
+        <span class="s-title">Live exploration</span>
+        <button class="reset-btn" onclick="resetSliders()">Reset to FN = 30</button>
+      </div>
+      <div class="slider-row">
+        <span class="s-label fn">FN (missed cases)</span>
+        <input type="range" id="slider-fn" min="0" max="100" value="30" step="1" oninput="onSliderChange()">
+        <span class="s-value" id="slider-fn-val">30</span>
+      </div>
+
+      <div class="live-stats">
+        <div class="live-stats-title">Recomputed live</div>
+        <div class="live-stats-grid">
+          <div class="live-stat sn">
+            <div class="ls-label">Sensitivity</div>
+            <div class="ls-value" id="live-sn">0.70</div>
+          </div>
+          <div class="live-stat acc">
+            <div class="ls-label">Accuracy</div>
+            <div class="ls-value" id="live-acc">0.92</div>
+          </div>
+        </div>
+        <div class="live-stats-fixed">
+          <strong>Fixed:</strong> Sp = 0.98 &mdash; FP and TN don't move when you slide FN
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-section-label">Calculated statistic</div>
+    <div id="sn-card" class="stat-card locked" onclick="revealSn()">
+      <div class="label">Sensitivity (Sn)</div>
+      <div class="value" id="sn-value">? . ? ?</div>
+      <div class="ci" id="sn-ci">95% CI not yet revealed</div>
+      <div class="hint">&#9656; Click to reveal the value</div>
+      <div class="formula" id="sn-formula">Sn = 70 / (70 + 30) = 0.70</div>
+    </div>
+
+    <div class="sn-scale-wrap" id="sn-scale-wrap" style="display:none;">
+      <div class="sn-scale-title">Where this Sn lands</div>
+      <div class="sn-scale-outer">
+        <div class="sn-scale">
+          <div class="sn-tick-70"></div>
+          <div class="sn-tick-70-pill">70% threshold</div>
+          <div class="sn-marker-group" id="sn-marker-panel" style="left: 70%;">
+            <div class="sn-marker-pill" id="sn-marker-pill-panel">0.70</div>
+            <div class="sn-marker-dot"></div>
+          </div>
+        </div>
+        <div class="sn-axis-labels">
+          <span>0%</span><span>50%</span><span>70%</span><span>100%</span>
+        </div>
+      </div>
+      <div class="sn-readout-bar borderline" id="sn-readout-bar-panel">
+        Right at the 70% threshold &mdash; useful for rule-out, but borderline.
+      </div>
+    </div>
+
+  </aside>
+
+  <section class="right-panel">
+
+    <div class="step" style="border-left-color:#FFC857; background: #172940;">
+      <div class="step-header">
+        <div class="step-number" style="background:#FFC857; color:#172940;">&#9733;</div>
+        <div class="step-title" style="color: white;">Orientation</div>
+      </div>
+      <div class="step-body" style="color: #F0F3F5;">
+        <p><strong style="color:#6FCF97;">Sensitivity</strong> answers one question: <em>of all the patients who truly have the disease, what fraction does the test catch?</em> It's the test's batting average against actual cases.</p>
+        <div style="background: rgba(111,207,151,0.12); border-left: 3px solid #6FCF97; padding: 14px 18px; border-radius: 6px; margin: 14px 0; font-size: 16px;">
+          A high-sensitivity test rarely misses true cases &mdash; so when it comes back negative, you can trust that negative. <strong style="color:#FFC857;">That's why sensitivity is the rule-out engine.</strong>
+        </div>
+        <p>The article reports Sn = 0.70, which sits right at the threshold where a test starts being clinically useful for ruling out. Let's see what that means for the patients on the receiving end.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">1</div>
+        <div class="step-title">Find the key pieces in the article</div>
+      </div>
+      <div class="step-body">
+        <p>The article reports sensitivity in the standard way. Click each button to spotlight a piece.</p>
+        <div class="article-excerpt">
+          <div class="article-meta">From the Results section</div>
+          The rapid antigen test detected <span class="hi-target" id="hi-1">70 of 100 PCR-positive patients</span>, yielding a <span class="hi-target" id="hi-2">sensitivity of 0.70</span> <span class="hi-target" id="hi-3">(95% CI [0.61, 0.78])</span>.
+        </div>
+        <div class="reveal-row">
+          <button class="reveal-btn" id="hi-btn-1" onclick="highlight(1)">&#9312; Spotlight the count</button>
+          <button class="reveal-btn" id="hi-btn-2" onclick="highlight(2)">&#9313; Spotlight the value</button>
+          <button class="reveal-btn" id="hi-btn-3" onclick="highlight(3)">&#9314; Spotlight the CI</button>
+        </div>
+        <div class="annot-line" id="annot-1"><span class="a-tag">The count</span>The denominator (100) is everyone who truly had COVID by PCR. The numerator (70) is how many of those the antigen test correctly flagged. The other 30 walked away with a negative result &mdash; even though they had the disease. Those are false negatives.</div>
+        <div class="annot-line" id="annot-2"><span class="a-tag">Sn = 0.70</span>70% of truly infected patients were caught. 30% were missed. That value is right at the 70% threshold of clinical utility &mdash; useful enough to trust a negative most of the time, but with substantial leak.</div>
+        <div class="annot-line" id="annot-3"><span class="a-tag">CI [0.61, 0.78]</span>Wider than the accuracy CI from Part 2 (which used the full n = 500). Sensitivity uses only the disease+ column &mdash; just 100 patients &mdash; so the estimate has more sampling uncertainty. The true Sn is plausibly anywhere from 61% to 78%.</div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">2</div>
+        <div class="step-title">What 30 missed cases actually look like</div>
+      </div>
+      <div class="step-body">
+        <p>On the left panel, you can see a 10 &times; 10 grid &mdash; this represents 100 patients who have COVID as confirmed by a positive result on the PCR gold standard.</p>
+        <ul style="padding-left: 22px; margin: 10px 0 14px; line-height: 1.7;">
+          <li><strong>Green squares</strong> are patients who received a positive result on the antigen test, matching the PCR test result and representing a true positive (TP).</li>
+          <li><strong>Red squares</strong> are patients who received a negative result on the antigen test, resulting in a false negative (FN).</li>
+        </ul>
+        <p>Right now the grid shows the article's value: Sn = 0.70, so 70 caught and 30 missed (per 100 truly infected).</p>
+
+        <div class="snnout-wrap">
+          <div class="sn-letters"><span class="underline">Sn</span>N&#x2009;Out</div>
+          <p class="sn-explain">A useful memory aid for what sensitivity is for: when <strong>Sn</strong> is high and the test comes back <strong>N</strong>egative, you can rule the disease <strong>Out</strong>. In other words, a high-sensitivity test rarely produces false negatives &mdash; so a negative result really does mean negative.</p>
+          <div class="snnout-reveal-row">
+            <button class="reveal-btn" id="snnout-btn" onclick="revealSnnout()">&#9656; What does that mean clinically?</button>
+          </div>
+          <div class="snnout-reveal-msg" id="snnout-msg">
+            This means that, if you're trying to confidently rule a condition out in your patient, you would use a highly sensitive test. <strong>For example, the article's Sn = 0.70 is only borderline.</strong> 30 of every 100 truly infected patients get a falsely reassuring negative &mdash; so a negative antigen result rules COVID out only modestly, and symptomatic patients often need PCR follow-up.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">3</div>
+        <div class="step-title">Compute it from the table, then click the card</div>
+      </div>
+      <div class="step-body">
+        <p>The formula uses just the two cells from the disease+ column: TP and FN. That's it.</p>
+
+        <div class="calc-box">
+          <div class="calc-step">
+            Sn = TP / (TP + FN)
+          </div>
+          <div class="calc-step" style="margin-top:10px;">
+            Sn = 70 / (70 + 30) = 70 / 100 = <span class="calc-result" id="calc-result">0.70</span><span class="calc-cursor" id="calc-cursor">|</span>
+          </div>
+          <div class="calc-action">
+            <button class="reveal-btn" id="calc-btn" onclick="showCalcResult()">&#9656; Show me the answer</button>
+          </div>
+        </div>
+
+        <p>Now <strong>click the dashed Sensitivity card on the left side</strong> to confirm the value and see the 95% CI.</p>
+
+        <div style="margin-top: 14px; text-align: center;">
+          <button class="reveal-btn" id="sowhat-btn" onclick="revealSoWhat()">&#9733; Reveal: So what does Sn = 0.70 mean?</button>
+        </div>
+        <div class="so-what" id="sowhat-box" style="display:none;">
+          <div class="sw-label">&#9733; So what does Sn = 0.70 mean?</div>
+          <p>Of every 100 patients who truly have COVID, this test catches 70 and misses 30. <strong>If you're using a negative result to rule COVID out, you'll be wrong about 3 times in every 10 truly infected patients.</strong> That's the trade-off baked into a 70% sensitivity. Whether that's acceptable depends on what the missed cases cost &mdash; for COVID in symptomatic patients, missing 30% is a significant clinical concern, which is why most clinicians treat antigen tests as a screening tool rather than a definitive rule-out.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-header">
+        <div class="step-number">4</div>
+        <div class="step-title">Four rules for reading sensitivity in any paper</div>
+      </div>
+      <div class="step-body">
+        <p>Sensitivity is reported on essentially every diagnostic accuracy paper. These four rules carry through whatever test you're reading about:</p>
+        <p style="padding-left: 14px;">
+          &bull; <strong>Sn = TP / (TP + FN).</strong> Just the disease+ column. The denominator is everyone who actually has the disease.<br>
+          &bull; <strong>SnNOut.</strong> High <strong>Sn</strong> + <strong>N</strong>egative result = disease ruled <strong>Out</strong>. The mnemonic clinicians use to remember what Sn is for.<br>
+          &bull; <strong>The 70% threshold.</strong> Below 70%, a negative result isn't trustworthy enough to rule out disease. Above 70%, it starts being useful. Above 90%, very useful. Sensitivity isn't a yes/no; it's a sliding scale of how much you can trust a negative.<br>
+          &bull; <strong>Sensitivity doesn't tell you what to do with a positive.</strong> A high-Sn test rules out when negative. To know whether to trust a positive result, you need specificity (Part 5) and PPV (Part 6).
+        </p>
+        <div style="margin-top: 14px; text-align: center;">
+          <button class="reveal-btn" id="habit-btn" onclick="revealHabit()">&#9656; Reveal the most important habit</button>
+        </div>
+        <div class="annot-line" id="habit-msg" style="border-left-color:#2D8659;">
+          <span class="a-tag">The most important habit</span>When you read "Sn = X.XX," translate it immediately to "out of every 100 people with the disease, this test catches X." That's the patient-level meaning.
+        </div>
+      </div>
+    </div>
+
+    <div class="step" id="step-6">
+      <div class="step-header">
+        <div class="step-number">5</div>
+        <div class="step-title">Now explore &mdash; drag the FN slider</div>
+      </div>
+      <div class="step-body">
+        <p>After you click the Sensitivity card in Step 3 and answer Q3 below, <strong>the FN slider on the left panel will unlock</strong>. As you drag it, the patient grid will recolor (caught vs. missed), the 2 &times; 2 cells will recalculate, and the live readout will show how Sn shifts. Sp won't move &mdash; we're not changing FP or TN.</p>
+        <p>Use the slider to answer Q4&ndash;Q6 below. The <strong>Reset</strong> button returns to the article's FN = 30 whenever you want.</p>
+      </div>
+    </div>
+
+    <div id="mc1-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q1.</span> A patient with COVID-like symptoms tested negative on the antigen test and asks: "Does that mean I don't have COVID?" Given Sn = 0.70, what's the cleanest answer?</div>
+      <div class="mc-options" id="mc1-options">
+        <button class="mc-option" onclick="answerMC(1, 'a', false)"><span class="marker">A.</span> "Essentially yes &mdash; the test is 70% accurate, so a negative basically rules it out."</button>
+        <button class="mc-option" onclick="answerMC(1, 'b', true)"><span class="marker">B.</span> "This test isn't great at catching every case of COVID. With only 70% sensitivity, it misses about 30 of every 100 people who actually have it (a false negative). If your symptoms persist or worsen, we should retest or use PCR."</button>
+        <button class="mc-option" onclick="answerMC(1, 'c', false)"><span class="marker">C.</span> "There's a 30% chance you have COVID right now based on this test alone."</button>
+        <button class="mc-option" onclick="answerMC(1, 'd', false)"><span class="marker">D.</span> "Sensitivity describes test populations, so it doesn't really apply to your individual negative result."</button>
+      </div>
+      <div class="mc-feedback" id="mc1-feedback"></div>
+    </div>
+
+    <div id="mc2-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q2.</span> The article reports Sn = 0.70 with 95% CI [0.61, 0.78]. Which interpretation is correct?</div>
+      <div class="mc-options" id="mc2-options">
+        <button class="mc-option" onclick="answerMC(2, 'a', true)"><span class="marker">A.</span> A 95% CI describes the range of plausible values for the population sensitivity.</button>
+        <button class="mc-option" onclick="answerMC(2, 'b', false)"><span class="marker">B.</span> 95% of patients had a sensitivity between 0.61 and 0.78.</button>
+        <button class="mc-option" onclick="answerMC(2, 'c', false)"><span class="marker">C.</span> Between 61% and 78% of all patients were correctly classified by the test.</button>
+        <button class="mc-option" onclick="answerMC(2, 'd', false)"><span class="marker">D.</span> The test will miss between 61% and 78% of cases.</button>
+      </div>
+      <div class="mc-feedback" id="mc2-feedback"></div>
+    </div>
+
+    <div id="mc3-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q3.</span> Which statement about sensitivity is true?</div>
+      <div class="mc-options" id="mc3-options">
+        <button class="mc-option" onclick="answerMC(3, 'a', false)"><span class="marker">A.</span> Sensitivity tells you the chance a positive result is correct.</button>
+        <button class="mc-option" onclick="answerMC(3, 'b', false)"><span class="marker">B.</span> Sensitivity changes with prevalence, just like NPV.</button>
+        <button class="mc-option" onclick="answerMC(3, 'c', false)"><span class="marker">C.</span> When specificity goes up, sensitivity always goes down by the same amount.</button>
+        <button class="mc-option" onclick="answerMC(3, 'd', true)"><span class="marker">D.</span> A highly sensitive test rarely produces false negatives, so a negative result helps rule out disease &mdash; the SnNOut rule.</button>
+      </div>
+      <div class="mc-feedback" id="mc3-feedback"></div>
+    </div>
+
+    <div id="mc4-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q4.</span> Use the slider to explore what happens when more cases are missed.</div>
+      <div class="explore-prompt">
+        <span class="e-label">&#9656; Try this on the left panel</span>
+        Drag the <strong>FN slider up to 50</strong>. Watch the patient grid recolor and the live Sn readout. <strong>What happened to Sn, and what does it mean for ruling out disease?</strong>
+      </div>
+      <div class="mc-options" id="mc4-options">
+        <button class="mc-option" onclick="answerMC(4, 'a', false)"><span class="marker">A.</span> Sn stayed at 0.70 because the disease&minus; column didn't change.</button>
+        <button class="mc-option" onclick="answerMC(4, 'b', false)"><span class="marker">B.</span> Sn went up because more patients tested negative.</button>
+        <button class="mc-option" onclick="answerMC(4, 'c', true)"><span class="marker">C.</span> Sn dropped to 0.50 &mdash; now half of truly infected patients (50 of every 100) get a false negative.</button>
+        <button class="mc-option" onclick="answerMC(4, 'd', false)"><span class="marker">D.</span> Sn dropped but Sp rose to compensate, keeping accuracy steady.</button>
+      </div>
+      <div class="mc-feedback" id="mc4-feedback"></div>
+    </div>
+
+    <div id="mc5-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q5.</span> Now slide FN the other way &mdash; toward zero.</div>
+      <div class="explore-prompt">
+        <span class="e-label">&#9656; Try this on the left panel</span>
+        Click <strong>Reset</strong>, then drag the <strong>FN slider down to 5</strong>. <strong>What happened to Sn, and what does it mean for clinical use?</strong>
+      </div>
+      <div class="mc-options" id="mc5-options">
+        <button class="mc-option" onclick="answerMC(5, 'a', false)"><span class="marker">A.</span> Sn dropped because there are fewer positive tests overall.</button>
+        <button class="mc-option" onclick="answerMC(5, 'b', true)"><span class="marker">B.</span> Sn climbed to 0.95 &mdash; with only 5 false negatives, the test now catches 95 of every 100 truly infected patients.</button>
+        <button class="mc-option" onclick="answerMC(5, 'c', false)"><span class="marker">C.</span> Sn stayed at 0.70 because the test architecture didn't change.</button>
+        <button class="mc-option" onclick="answerMC(5, 'd', false)"><span class="marker">D.</span> Sn became greater than 1.00 because there are so few misses.</button>
+      </div>
+      <div class="mc-feedback" id="mc5-feedback"></div>
+    </div>
+
+    <div id="mc6-block" class="mc-block">
+      <div class="mc-question"><span class="q-num">Q6.</span> The conceptual punchline &mdash; what's sensitivity actually for?</div>
+      <div class="explore-prompt">
+        <span class="e-label">&#9656; Try this on the left panel</span>
+        Slide FN between 5, 30, and 50, watching how the grid changes and how Sn moves. Notice that <strong>Sp stays at 0.98 the whole time</strong>. <strong>What's the clearest takeaway?</strong>
+      </div>
+      <div class="mc-options" id="mc6-options">
+        <button class="mc-option" onclick="answerMC(6, 'a', false)"><span class="marker">A.</span> Sensitivity and specificity are essentially the same statistic with different names.</button>
+        <button class="mc-option" onclick="answerMC(6, 'b', false)"><span class="marker">B.</span> A test should always have Sn = 1.00 to be considered useful.</button>
+        <button class="mc-option" onclick="answerMC(6, 'c', false)"><span class="marker">C.</span> Sensitivity matters only for screening tests, never for confirmatory ones.</button>
+        <button class="mc-option" onclick="answerMC(6, 'd', true)"><span class="marker">D.</span> Sn and Sp live in different columns of the 2&times;2 and don't impact one another. That is, Sn lives entirely in the disease+ column, which is why moving FN moves Sn but doesn't touch Sp.</button>
+      </div>
+      <div class="mc-feedback" id="mc6-feedback"></div>
+    </div>
+
+    <div class="takeaways" id="takeaways" style="display:none;">
+      <h3>Big takeaways</h3>
+      <h2>What sensitivity will tell you in any paper</h2>
+      <ul>
+        <li><strong>Sn = TP / (TP + FN).</strong> The fraction of truly diseased patients the test correctly identifies. Disease+ column only.</li>
+        <li><strong>SnNOut.</strong> High <strong>Sn</strong> + <strong>N</strong>egative result rules disease <strong>Out</strong>. That's what sensitivity is for.</li>
+        <li><strong>Translate Sn directly to people.</strong> Sn = 0.70 means &ldquo;out of every 100 people with the disease, this test catches 70 and misses 30.&rdquo; That's the patient-level read.</li>
+        <li><strong>Sn is independent of prevalence and Sp.</strong> Same disease+ column gives the same sensitivity whether prevalence is 1% or 50%, and changing FP or TN won't move Sn one bit.</li>
+        <li><strong>The 70% threshold is a useful floor, not a verdict.</strong> Above 70%, a negative starts being trustworthy; above 90%, very trustworthy; below 70%, a negative result can't safely rule out disease.</li>
+      </ul>
+    </div>
+
+    <div class="nav-bar">
+      <a href="part3.html" class="nav-btn secondary">&larr; Back to Part 3</a>
+      <span class="completion-msg" id="completion-msg"></span>
+      <a href="part5.html" class="nav-btn" id="next-btn" style="pointer-events:none; opacity:0.5;">Continue to Part 5 &rarr;</a>
+    </div>
+
+  </section>
+</main>
+
+<script>
+  var ORIG = { tp: 70, fn: 30, fp: 8, tn: 392, totalPos: 100, totalNeg: 400, totalAll: 500 };
+
+  var state = {
+    snRevealed: false,
+    calcShown: false,
+    snnoutRevealed: false,
+    answered: { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false },
+    correct:  { 1: false, 2: false, 3: false, 4: false, 5: false, 6: false },
+    highlighted: { 1: false, 2: false, 3: false }
+  };
+
+  function buildGrid() {
+    var grid = document.getElementById('patient-grid');
+    grid.innerHTML = '';
+    for (var i = 0; i < 100; i++) {
+      var cell = document.createElement('div');
+      cell.className = 'patient-cell';
+      cell.id = 'pcell-' + i;
+      grid.appendChild(cell);
+    }
+  }
+
+  function paintGrid(missed) {
+    for (var i = 0; i < 100; i++) {
+      var cell = document.getElementById('pcell-' + i);
+      if (i < missed) {
+        cell.classList.add('missed');
+      } else {
+        cell.classList.remove('missed');
+      }
+    }
+    document.getElementById('grid-caught').textContent = (100 - missed);
+    document.getElementById('grid-missed').textContent = missed;
+  }
+
+  function highlight(n) {
+    state.highlighted[n] = true;
+    var cls = n === 1 ? 'on' : (n === 2 ? 'on-2' : 'on-3');
+    document.getElementById('hi-' + n).classList.add(cls);
+    document.getElementById('annot-' + n).classList.add('show');
+    var btn = document.getElementById('hi-btn-' + n);
+    btn.classList.add('done');
+    btn.disabled = true;
+    updateStepCounter();
+  }
+
+  function revealSoWhat() {
+    var btn = document.getElementById('sowhat-btn');
+    if (btn.classList.contains('done')) return;
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '✓ Revealed';
+    var box = document.getElementById('sowhat-box');
+    box.style.display = 'block';
+    box.style.animation = 'fadeIn 0.4s ease-out';
+  }
+
+  function revealHabit() {
+    var btn = document.getElementById('habit-btn');
+    if (btn.classList.contains('done')) return;
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '✓ Revealed';
+    document.getElementById('habit-msg').classList.add('show');
+  }
+
+  function revealSnnout() {
+    if (state.snnoutRevealed) return;
+    state.snnoutRevealed = true;
+    var btn = document.getElementById('snnout-btn');
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '\u2713 Revealed';
+    document.getElementById('snnout-msg').classList.add('show');
+    updateStepCounter();
+  }
+
+  function showCalcResult() {
+    if (state.calcShown) return;
+    state.calcShown = true;
+    document.getElementById('calc-result').classList.add('show');
+    document.getElementById('calc-cursor').style.display = 'none';
+    var btn = document.getElementById('calc-btn');
+    btn.classList.add('done');
+    btn.disabled = true;
+    btn.textContent = '\u2713 Shown';
+    updateStepCounter();
+  }
+
+  function revealSn() {
+    if (state.snRevealed) return;
+    state.snRevealed = true;
+    var card = document.getElementById('sn-card');
+    card.classList.remove('locked');
+    card.classList.add('revealed');
+    document.getElementById('sn-value').textContent = '0.70';
+    document.getElementById('sn-ci').textContent = '95% CI [0.61, 0.78]';
+    document.getElementById('sn-scale-wrap').style.display = 'block';
+    updateSnScale(0.70);
+    updateStepCounter();
+    unlockMC(1);
+  }
+
+  function unlockSliders() {
+    document.getElementById('sliders-box').classList.remove('locked');
+  }
+
+  function onSliderChange() {
+    var fn = parseInt(document.getElementById('slider-fn').value, 10);
+    document.getElementById('slider-fn-val').textContent = fn;
+
+    var tp = ORIG.totalPos - fn;
+    var fp = ORIG.fp;
+    var tn = ORIG.tn;
+    if (tp < 0) tp = 0;
+
+    document.getElementById('cell-tp').textContent = tp;
+    document.getElementById('cell-fn').textContent = fn;
+    document.getElementById('cell-fp').textContent = fp;
+    document.getElementById('cell-tn').textContent = tn;
+    document.getElementById('row-pos-total').textContent = tp + fp;
+    document.getElementById('row-neg-total').textContent = fn + tn;
+
+    paintGrid(fn);
+
+    var sn = ORIG.totalPos > 0 ? tp / ORIG.totalPos : 0;
+    var acc = (tp + tn) / ORIG.totalAll;
+
+    document.getElementById('live-sn').textContent = sn.toFixed(2);
+    document.getElementById('live-acc').textContent = acc.toFixed(2);
+
+    document.getElementById('sn-value').textContent = sn.toFixed(2);
+    document.getElementById('sn-formula').textContent = 'Sn = ' + tp + ' / (' + tp + ' + ' + fn + ') = ' + sn.toFixed(2);
+
+    if (fn === ORIG.fn) {
+      document.getElementById('sn-ci').textContent = '95% CI [0.61, 0.78]';
+    } else {
+      document.getElementById('sn-ci').textContent = '(exploration mode \u2014 CI applies to article values)';
+    }
+
+    if (state.snRevealed) updateSnScale(sn);
+  }
+
+  function updateSnScale(sn) {
+    var pct = sn * 100;
+    if (pct < 0) pct = 0;
+    if (pct > 100) pct = 100;
+    document.getElementById('sn-marker-panel').style.left = pct + '%';
+    document.getElementById('sn-marker-pill-panel').textContent = sn.toFixed(2);
+
+    var readout = document.getElementById('sn-readout-bar-panel');
+    readout.classList.remove('high', 'borderline', 'low');
+    if (sn >= 0.90) {
+      readout.classList.add('high');
+      readout.innerHTML = 'Strong rule-out test &mdash; a negative result is highly trustworthy.';
+    } else if (sn >= 0.70) {
+      readout.classList.add('borderline');
+      readout.innerHTML = 'At or above the 70% threshold &mdash; useful for rule-out, but with substantial leak.';
+    } else {
+      readout.classList.add('low');
+      readout.innerHTML = 'Below the 70% threshold &mdash; a negative result cannot reliably rule out disease.';
+    }
+  }
+
+  function resetSliders() {
+    document.getElementById('slider-fn').value = ORIG.fn;
+    onSliderChange();
+  }
+
+  var feedbackText = {
+    1: {
+      correct: "<strong>Correct.</strong> That's the cleanest patient-friendly translation of Sn = 0.70. A moderate-sensitivity test misses a meaningful fraction of true cases, so a negative carries some risk &mdash; especially in symptomatic patients. The patient deserves to know the test isn't a perfect rule-out, and that follow-up testing is reasonable if symptoms persist or worsen.",
+      a: "<strong>Not quite.</strong> Sensitivity isn't the same thing as overall accuracy, and 70% is actually fairly modest for ruling something out. Sn = 0.70 means the test misses about 3 out of every 10 people who actually have COVID. Telling a symptomatic patient their negative basically rules COVID out overstates what the statistic actually says. <strong>The correct answer is B.</strong> A moderate-sensitivity test misses a meaningful fraction of true cases, so a negative carries some risk &mdash; especially in symptomatic patients. The patient deserves to know the test isn't a perfect rule-out, and that follow-up testing is reasonable if symptoms persist or worsen.",
+      c: "<strong>Not quite.</strong> Sensitivity isn't a per-patient probability that you have the disease. It's the proportion of truly infected people the test catches. To answer the question &ldquo;given my negative result, what's the chance I actually have COVID?&rdquo; you'd need NPV (Part 6), which also depends on how common the disease is in the population. <strong>The correct answer is B.</strong> A moderate-sensitivity test misses a meaningful fraction of true cases, so a negative carries some risk &mdash; especially in symptomatic patients. The patient deserves to know the test isn't a perfect rule-out, and that follow-up testing is reasonable if symptoms persist or worsen.",
+      d: "<strong>Not quite.</strong> Sensitivity actually applies very directly to individual patients. It tells us the rate at which the test produces falsely reassuring negatives among people who truly have the disease &mdash; exactly the information a symptomatic patient needs when deciding whether to retest. Brushing it off as &ldquo;not applicable&rdquo; leaves the patient without useful information. <strong>The correct answer is B.</strong> A moderate-sensitivity test misses a meaningful fraction of true cases, so a negative carries some risk &mdash; especially in symptomatic patients. The patient deserves to know the test isn't a perfect rule-out, and that follow-up testing is reasonable if symptoms persist or worsen."
+    },
+    2: {
+      correct: "<strong>Correct.</strong> A 95% CI describes the range of plausible values for the population sensitivity &mdash; here, the true Sn is plausibly between 0.61 and 0.78. Note that this CI is wider than the accuracy CI from Part 2 (0.90 to 0.94) because Sn uses only the disease+ column (n = 100), not the full sample (n = 500). Smaller denominator, more uncertainty.",
+      b: "<strong>Not quite.</strong> A confidence interval doesn't describe a range across patients. Each patient is either correctly classified by the test or not &mdash; individual patients don't have their own personal sensitivity values. The CI tells us how confident we are in the test's true sensitivity for the population as a whole. <strong>The correct answer is A.</strong> A 95% CI describes the range of plausible values for the population sensitivity &mdash; here, the true Sn is plausibly between 0.61 and 0.78. Note that this CI is wider than the accuracy CI from Part 2 because Sn uses only the disease+ column (n = 100), not the full sample (n = 500). Smaller denominator, more uncertainty.",
+      c: "<strong>Not quite.</strong> This is closer to a description of overall accuracy, not sensitivity. Sensitivity is restricted just to the patients who actually have the disease &mdash; in this study, the 100 PCR-positive patients. The CI describes uncertainty about that specific number, not the test's overall classification rate across everyone. <strong>The correct answer is A.</strong> A 95% CI describes the range of plausible values for the population sensitivity &mdash; here, the true Sn is plausibly between 0.61 and 0.78. Note that this CI is wider than the accuracy CI from Part 2 because Sn uses only the disease+ column (n = 100), not the full sample (n = 500). Smaller denominator, more uncertainty.",
+      d: "<strong>Not quite.</strong> The CI is for sensitivity (the proportion of disease+ patients correctly caught), not for the false-negative rate. The relationship is FNR = 1 &minus; Sn, so the false-negative rate would actually fall between 22% and 39%, not 61% and 78%. This answer flips the meaning. <strong>The correct answer is A.</strong> A 95% CI describes the range of plausible values for the population sensitivity &mdash; here, the true Sn is plausibly between 0.61 and 0.78. Note that this CI is wider than the accuracy CI from Part 2 because Sn uses only the disease+ column (n = 100), not the full sample (n = 500). Smaller denominator, more uncertainty."
+    },
+    3: {
+      correct: "<strong>Correct.</strong> SnNOut is the working clinician's mnemonic for what high sensitivity is for. Sensitivity is calculated only from the disease+ column (TP and FN) &mdash; the formula Sn = TP / (TP + FN) doesn't use FP or TN at all. That's why it's independent of prevalence and moves independently of Sp: changing FP or TN won't move Sn one bit. And like Sp, Sn is a property of the test mechanism, independent of how common the disease is.",
+      a: "<strong>Not quite.</strong> That's actually PPV (positive predictive value), which we cover in Part 6. Sensitivity is about negative results &mdash; specifically, how many truly diseased patients the test catches. The chance that a positive test result is correct is a separate question that also depends on how common the disease is in the population. <strong>The correct answer is D.</strong> SnNOut is the working clinician's mnemonic for what high sensitivity is for. Sensitivity is calculated only from the disease+ column (TP and FN) &mdash; the formula Sn = TP / (TP + FN) doesn't use FP or TN at all. That's why it's independent of prevalence and moves independently of Sp.",
+      b: "<strong>Not quite.</strong> Sn is independent of prevalence. The math for sensitivity uses only the disease+ column, so changing how common the disease is in the population doesn't shift Sn at all. PPV and NPV do depend on prevalence, but Sn and Sp do not &mdash; that's one of their most useful properties. <strong>The correct answer is D.</strong> SnNOut is the working clinician's mnemonic for what high sensitivity is for. Sensitivity is calculated only from the disease+ column (TP and FN) &mdash; the formula Sn = TP / (TP + FN) doesn't use FP or TN at all. That's why it's independent of prevalence and moves independently of Sp.",
+      c: "<strong>Not quite.</strong> Sn and Sp don't trade off one-for-one. Plenty of useful tests have very different Sn and Sp values without one rising as the other falls. Our antigen test is a clear example: Sn = 0.70 (moderate) and Sp = 0.98 (excellent). They live in different columns of the 2&times;2 and move independently. <strong>The correct answer is D.</strong> SnNOut is the working clinician's mnemonic for what high sensitivity is for. Sensitivity is calculated only from the disease+ column (TP and FN) &mdash; the formula Sn = TP / (TP + FN) doesn't use FP or TN at all. That's why it's independent of prevalence and moves independently of Sp."
+    },
+    4: {
+      correct: "<strong>Correct.</strong> When you increased FN to 50, you converted 20 true positives into false negatives: TP = 100 &minus; 50 = 50. Sn = 50 / 100 = 0.50. The grid is now half red. <strong>SnNOut breaks down here:</strong> a negative result is essentially a coin flip because half of all truly infected patients are walking out with falsely reassuring negatives.",
+      a: "<strong>Not quite.</strong> It's true that the disease&minus; column didn't change &mdash; but sensitivity doesn't use that column. Sn is calculated from the disease+ column, and you just changed it dramatically by raising FN to 50. So Sn definitely moved, and it dropped. <strong>The correct answer is C.</strong> When you increased FN to 50, you converted 20 true positives into false negatives: TP = 100 &minus; 50 = 50. Sn = 50 / 100 = 0.50. The grid is now half red. SnNOut breaks down here: a negative result is essentially a coin flip because half of all truly infected patients are walking out with falsely reassuring negatives.",
+      b: "<strong>Not quite.</strong> More false negatives mean MORE truly infected patients getting a wrongly reassuring negative result, which means LOWER sensitivity. Sensitivity counts how often the test correctly catches infected people, so growing the miss count pulls that number down, not up. <strong>The correct answer is C.</strong> When you increased FN to 50, you converted 20 true positives into false negatives: TP = 100 &minus; 50 = 50. Sn = 50 / 100 = 0.50. The grid is now half red. SnNOut breaks down here: a negative result is essentially a coin flip because half of all truly infected patients are walking out with falsely reassuring negatives.",
+      d: "<strong>Not quite.</strong> Sp is calculated entirely from the disease&minus; column (TN and FP), and you didn't change either. Sp stayed locked at 0.98 the whole time. That's the key property of Sn vs. Sp: they live in different columns and move independently &mdash; so accuracy didn't stay steady when only Sn changed. <strong>The correct answer is C.</strong> When you increased FN to 50, you converted 20 true positives into false negatives: TP = 100 &minus; 50 = 50. Sn = 50 / 100 = 0.50. The grid is now half red. SnNOut breaks down here: a negative result is essentially a coin flip because half of all truly infected patients are walking out with falsely reassuring negatives."
+    },
+    5: {
+      correct: "<strong>Correct.</strong> When FN dropped to 5, TP rose to 95. Sn = 95 / 100 = 0.95. The grid went almost entirely green. <strong>At Sn = 0.95, SnNOut works powerfully:</strong> if a patient tests negative, you can be very confident they don't have the disease, because the test misses only 5 of every 100 truly infected patients. This is the territory where rule-out tests become genuinely trustworthy.",
+      a: "<strong>Not quite.</strong> Fewer false negatives means MORE true positives, which raises sensitivity. When you reduced FN to 5, Sn climbed from 0.70 to 0.95 &mdash; it didn't drop. <strong>The correct answer is B.</strong> When FN dropped to 5, TP rose to 95. Sn = 95 / 100 = 0.95. The grid went almost entirely green. At Sn = 0.95, SnNOut works powerfully: if a patient tests negative, you can be very confident they don't have the disease, because the test misses only 5 of every 100 truly infected patients.",
+      c: "<strong>Not quite.</strong> The slider IS the test architecture in this view. By changing how many false negatives the test produces, you're directly changing how it behaves on infected patients. Sliding FN to 5 is the same as saying the test catches 95 of every 100 truly infected patients &mdash; that's a real change captured by Sn = 0.95. <strong>The correct answer is B.</strong> When FN dropped to 5, TP rose to 95. Sn = 95 / 100 = 0.95. The grid went almost entirely green. At Sn = 0.95, SnNOut works powerfully: if a patient tests negative, you can be very confident they don't have the disease, because the test misses only 5 of every 100 truly infected patients.",
+      d: "<strong>Not quite.</strong> Sn is bounded between 0 and 1 (or 0% and 100%). It can't go higher than 1.00, because that would mean catching more infected people than actually exist in the study. The maximum is 1.00, which means the test catches every truly infected patient. <strong>The correct answer is B.</strong> When FN dropped to 5, TP rose to 95. Sn = 95 / 100 = 0.95. The grid went almost entirely green. At Sn = 0.95, SnNOut works powerfully: if a patient tests negative, you can be very confident they don't have the disease, because the test misses only 5 of every 100 truly infected patients."
+    },
+    6: {
+      correct: "<strong>Correct.</strong> This is the central lesson of Part 4. Sensitivity is the rule-out engine &mdash; high Sn means few false negatives, which means a negative result can be trusted (SnNOut). Sn is calculated only from the disease+ column &mdash; what fraction of truly infected patients the test catches &mdash; while Sp lives in the disease&minus; column. That's why moving FN moves Sn directly while Sp stays locked. The article's Sn = 0.70 is borderline, so a negative antigen result here is only modestly trustworthy.",
+      a: "<strong>Not quite.</strong> They actually ask mirror-image questions about different patient groups. Sn looks at people who have the disease and asks &ldquo;how many did the test catch?&rdquo; Sp looks at people who don't have the disease and asks &ldquo;how many did the test correctly clear?&rdquo; Different denominators, different columns, different clinical jobs &mdash; not the same statistic with different names. <strong>The correct answer is D.</strong> Sensitivity is the rule-out engine &mdash; high Sn means few false negatives, which means a negative result can be trusted (SnNOut). Sn is calculated only from the disease+ column, while Sp lives in the disease&minus; column. That's why moving FN moves Sn directly while Sp stays locked.",
+      b: "<strong>Not quite.</strong> Sn = 1.00 is a ceiling, but it's not a requirement for a useful test. A test with Sn = 0.85 or 0.90 is genuinely useful for ruling out disease. The 70% threshold is the floor where rule-out starts being trustworthy; above 90% is very trustworthy. Demanding 1.00 would rule out almost every useful test in clinical practice. <strong>The correct answer is D.</strong> Sensitivity is the rule-out engine &mdash; high Sn means few false negatives, which means a negative result can be trusted (SnNOut). Sn is calculated only from the disease+ column, while Sp lives in the disease&minus; column. That's why moving FN moves Sn directly while Sp stays locked.",
+      c: "<strong>Not quite.</strong> Sn matters whenever a negative result triggers an action &mdash; that includes screening (where a negative reassures the patient), diagnostic confirmation, follow-up testing, and surveillance. Anywhere a negative result has consequences, you want to know how trustworthy that negative is, and that's exactly what Sn tells you. <strong>The correct answer is D.</strong> Sensitivity is the rule-out engine &mdash; high Sn means few false negatives, which means a negative result can be trusted (SnNOut). Sn is calculated only from the disease+ column, while Sp lives in the disease&minus; column. That's why moving FN moves Sn directly while Sp stays locked."
+    }
+  };
+
+  function answerMC(qNum, choice, isCorrect) {
+    if (state.answered[qNum]) return;
+    state.answered[qNum] = true;
+    state.correct[qNum] = isCorrect;
+
+    var buttons = document.querySelectorAll('#mc' + qNum + '-options .mc-option');
+    buttons.forEach(function(btn) { btn.disabled = true; });
+
+    var chosenBtn = Array.prototype.find.call(buttons, function(btn) {
+      return btn.getAttribute('onclick').indexOf("'" + choice + "'") !== -1;
+    });
+    if (chosenBtn) chosenBtn.classList.add(isCorrect ? 'selected-correct' : 'selected-wrong');
+    if (!isCorrect) {
+      buttons.forEach(function(btn) {
+        var onClick = btn.getAttribute('onclick');
+        if (onClick.indexOf('true') !== -1) btn.classList.add('show-correct');
+      });
+    }
+
+    var fb = document.getElementById('mc' + qNum + '-feedback');
+    fb.classList.remove('correct', 'incorrect');
+    fb.classList.add(isCorrect ? 'correct' : 'incorrect');
+    fb.innerHTML = isCorrect ? feedbackText[qNum].correct : feedbackText[qNum][choice];
+
+    if (qNum < 6) {
+      unlockMC(qNum + 1);
+      if (qNum === 3) unlockSliders();
+    } else {
+      finalize();
+    }
+    updateStepCounter();
+  }
+
+  function unlockMC(qNum) {
+    var block = document.getElementById('mc' + qNum + '-block');
+    if (block) block.classList.add('unlocked');
+  }
+
+  function finalize() {
+    var allCorrect = state.correct[1] && state.correct[2] && state.correct[3] && state.correct[4] && state.correct[5] && state.correct[6];
+    var msg = document.getElementById('completion-msg');
+    msg.textContent = allCorrect ? '\u2713 All six correct \u2014 excellent work.' : '\u2713 Section complete. Review feedback as needed.';
+    document.getElementById('takeaways').style.display = 'block';
+    var nextBtn = document.getElementById('next-btn');
+    nextBtn.style.pointerEvents = 'auto';
+    nextBtn.style.opacity = '1';
+    try { localStorage.setItem('unit8_part4_done', '1'); } catch (e) {}
+  }
+
+  function updateStepCounter() {
+    var step = 1;
+    if (state.highlighted[1] || state.highlighted[2] || state.highlighted[3]) step = 2;
+    if (state.snnoutRevealed) step = 3;
+    if (state.calcShown) step = 4;
+    if (state.snRevealed) step = 5;
+    if (state.answered[3]) step = 6;
+    document.getElementById('step-counter').textContent = step;
+  }
+
+  buildGrid();
+  resetSliders();
+</script>
+</body>
+</html>
