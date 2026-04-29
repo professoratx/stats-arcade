@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Parametric vs. Non-Parametric Test Selector — Stats Arcade</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:Calibri,'Segoe UI',system-ui,sans-serif;background:#F0F3F5;color:#333;padding:20px 16px;min-height:100vh;}
+  .wrap{max-width:1280px;margin:0 auto;background:#fff;border-radius:12px;padding:28px 28px;box-shadow:0 2px 12px rgba(0,0,0,0.08);}
+
+  h1{font-size:24px;font-weight:700;color:#172940;margin-bottom:6px;letter-spacing:-0.3px;}
+  .subtitle{font-size:14px;color:#616467;margin-bottom:18px;line-height:1.5;}
+
+  .instructions{background:#E6F1FB;border-left:4px solid #3D7FA9;border-radius:6px;padding:14px 18px;margin-bottom:20px;font-size:13px;color:#0C447C;line-height:1.6;}
+  .instructions strong{color:#172940;}
+
+  /* Split layout */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:24px;align-items:start;}
+  @media (max-width:1000px){.split{grid-template-columns:1fr;}}
+
+  /* LEFT: Sticky flowchart */
+  .flowchart-col{position:sticky;top:20px;}
+  @media (max-width:1000px){.flowchart-col{position:static;}}
+
+  .canvas-wrap{background:#FAFBFC;border:1px solid #E1E5E8;border-radius:10px;padding:18px 14px 12px;}
+  .canvas-title{font-size:12px;font-weight:700;color:#616467;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;text-align:center;}
+  canvas{width:100%;display:block;}
+
+  .legend{display:flex;justify-content:center;gap:18px;margin-top:10px;flex-wrap:wrap;font-size:12px;color:#616467;}
+  .legend-item{display:flex;align-items:center;gap:6px;}
+  .legend-swatch{width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,0.1);}
+  .legend-blue{background:#3D7FA9;}
+  .legend-red{background:#C0504D;}
+  .legend-grey{background:#D0D5DA;}
+
+  /* RIGHT: Question stages */
+  .stages-col{min-width:0;}
+
+  .stage{border:1px solid #E1E5E8;border-radius:10px;padding:18px 20px;margin-bottom:14px;transition:all 0.25s;background:#fff;position:relative;}
+  .stage.locked{opacity:0.4;pointer-events:none;background:#FAFBFC;}
+  .stage.active{border-color:#3D7FA9;box-shadow:0 2px 10px rgba(61,127,169,0.12);}
+  .stage.complete{background:#FAFBFC;border-color:#D8DCE0;}
+
+  .stage-header{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+  .stage-num{width:28px;height:28px;border-radius:50%;background:#3D7FA9;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+  .stage.locked .stage-num{background:#B8BEC4;}
+  .stage.complete .stage-num{background:#5A8C5A;}
+  .stage-title{font-size:15px;font-weight:700;color:#172940;flex:1;}
+  .stage-status{font-size:11.5px;color:#616467;font-style:italic;}
+
+  .q-section{margin-bottom:14px;}
+  .q-section:last-child{margin-bottom:0;}
+  .q-title{font-size:13.5px;font-weight:600;color:#172940;margin-bottom:9px;line-height:1.4;}
+  .q-hint{font-size:12px;color:#8B9098;font-weight:400;font-style:italic;margin-top:2px;}
+  .q-options{display:flex;gap:10px;flex-wrap:wrap;}
+  .q-label{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;color:#333;padding:9px 14px;border:1px solid #D0D5DA;border-radius:6px;transition:all 0.15s;background:#fff;flex:1;min-width:160px;justify-content:center;}
+  .q-label:hover{background:#F0F3F5;border-color:#3D7FA9;}
+  .q-label input{cursor:pointer;}
+  .q-label.selected-blue{border-color:#3D7FA9;background:rgba(61,127,169,0.10);}
+  .q-label.selected-red{border-color:#C0504D;background:rgba(192,80,77,0.10);}
+  .q-label.selected-green{border-color:#5A8C5A;background:rgba(90,140,90,0.10);}
+
+  .interim{margin-top:10px;padding:11px 14px;border-radius:6px;font-size:13px;line-height:1.5;display:none;}
+  .interim.show{display:block;}
+  .interim-blue{background:#D6E8F4;color:#0C447C;border-left:4px solid #3D7FA9;}
+  .interim-red{background:#F0D4D2;color:#791F1F;border-left:4px solid #C0504D;}
+  .interim strong{font-weight:700;}
+  .interim-redirect{font-size:12px;color:#444;margin-top:4px;font-style:italic;}
+
+  .final{margin-top:8px;padding:20px;border-radius:8px;border:2px solid;display:none;}
+  .final.show{display:block;}
+  .final-parametric{background:linear-gradient(135deg,#E6F1FB 0%,#D6E8F4 100%);border-color:#3D7FA9;}
+  .final-nonparametric{background:linear-gradient(135deg,#FBE9E8 0%,#F0D4D2 100%);border-color:#C0504D;}
+  .final-label{font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;}
+  .final-parametric .final-label{color:#3D7FA9;}
+  .final-nonparametric .final-label{color:#C0504D;}
+  .final-test{font-size:22px;font-weight:700;color:#172940;margin-bottom:8px;letter-spacing:-0.3px;}
+  .final-reason{font-size:13px;color:#333;line-height:1.55;}
+  .final-reason strong{color:#172940;}
+  .final-posthoc{margin-top:8px;padding:9px 12px;background:rgba(255,255,255,0.65);border-radius:6px;font-size:12px;color:#444;border-left:3px solid #C8862E;}
+
+  .path-trace{margin-top:12px;padding:12px 14px;background:#F0F3F5;border-radius:8px;}
+  .path-trace-title{font-size:11px;font-weight:700;color:#616467;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px;}
+  .path-step{display:flex;align-items:flex-start;gap:8px;font-size:12.5px;color:#333;line-height:1.45;margin-bottom:5px;}
+  .path-step:last-child{margin-bottom:0;}
+  .path-bullet{color:#3D7FA9;font-weight:700;flex-shrink:0;}
+
+  .btn-row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  .btn{padding:8px 16px;font-size:13px;font-family:inherit;cursor:pointer;border:1px solid #D0D5DA;border-radius:6px;background:#fff;color:#333;transition:all 0.15s;font-weight:600;}
+  .btn:hover{background:#F0F3F5;border-color:#3D7FA9;}
+  .btn-primary{background:#3D7FA9;color:#fff;border-color:#3D7FA9;}
+  .btn-primary:hover{background:#2E6A8F;border-color:#2E6A8F;color:#fff;}
+
+  .footer{font-size:11.5px;color:#8B9098;text-align:center;margin-top:24px;padding-top:14px;border-top:1px solid #E1E5E8;}
+
+  @media (max-width:600px){
+    .wrap{padding:22px 16px;}
+    .q-options{flex-direction:column;}
+    .q-label{min-width:0;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Parametric vs. non-parametric test selector</h1>
+  <p class="subtitle">Watch the flowchart eliminate options as you walk through the four stages.</p>
+
+  <div class="instructions">
+    <strong>How to use:</strong> Answer the questions on the right in order. The flowchart on the left will update in real time — branches will eliminate as your study design and data narrow the choices, and your final test will be highlighted at the end.
+  </div>
+
+  <div class="split">
+    <!-- LEFT: Sticky flowchart -->
+    <div class="flowchart-col">
+      <div class="canvas-wrap">
+        <div class="canvas-title">Test selection flowchart</div>
+        <canvas id="flowchart"></canvas>
+        <div class="legend">
+          <div class="legend-item"><div class="legend-swatch legend-blue"></div>Parametric path</div>
+          <div class="legend-item"><div class="legend-swatch legend-red"></div>Non-parametric path</div>
+          <div class="legend-item"><div class="legend-swatch legend-grey"></div>Eliminated</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Stages -->
+    <div class="stages-col">
+      <div class="stage active" id="stage-1">
+        <div class="stage-header">
+          <div class="stage-num">1</div>
+          <div class="stage-title">Identify your study design</div>
+        </div>
+        <div class="q-section">
+          <div class="q-title">How many groups? <span class="q-hint">Same people across conditions, or different people in each group?</span></div>
+          <div class="q-options">
+            <label class="q-label" id="lbl-s1q1-one"><input type="radio" name="s1q1" value="one" id="s1q1-one" /> One group (same people)</label>
+            <label class="q-label" id="lbl-s1q1-multi"><input type="radio" name="s1q1" value="multi" id="s1q1-multi" /> Multiple groups (different people)</label>
+          </div>
+        </div>
+        <div class="q-section" id="s1q2-wrap" style="display:none;">
+          <div class="q-title" id="s1q2-label">How many groups or conditions?</div>
+          <div class="q-options">
+            <label class="q-label" id="lbl-s1q2-two"><input type="radio" name="s1q2" value="two" id="s1q2-two" /> Two</label>
+            <label class="q-label" id="lbl-s1q2-three"><input type="radio" name="s1q2" value="three" id="s1q2-three" /> Three or more</label>
+          </div>
+        </div>
+        <div class="interim" id="stage1-result"></div>
+      </div>
+
+      <div class="stage locked" id="stage-2">
+        <div class="stage-header">
+          <div class="stage-num">2</div>
+          <div class="stage-title">Check the prerequisites</div>
+          <div class="stage-status">Required before checking assumptions</div>
+        </div>
+        <div class="q-section">
+          <div class="q-title">What type of data is your outcome variable? <span class="q-hint">This is checked first — it overrides everything else.</span></div>
+          <div class="q-options">
+            <label class="q-label" id="lbl-s2q1-interval"><input type="radio" name="s2q1" value="interval" id="s2q1-interval" /> Interval / ratio (continuous)</label>
+            <label class="q-label" id="lbl-s2q1-ordinal"><input type="radio" name="s2q1" value="ordinal" id="s2q1-ordinal" /> Ordinal (ranks, Likert)</label>
+          </div>
+        </div>
+        <div class="q-section" id="s2q2-wrap" style="display:none;">
+          <div class="q-title" id="s2q2-label">Is your sample size at least 20 per group or condition?</div>
+          <div class="q-options">
+            <label class="q-label" id="lbl-s2q2-yes"><input type="radio" name="s2q2" value="yes" id="s2q2-yes" /> Yes (n ≥ 20 per group)</label>
+            <label class="q-label" id="lbl-s2q2-no"><input type="radio" name="s2q2" value="no" id="s2q2-no" /> No (n &lt; 20 per group)</label>
+          </div>
+        </div>
+        <div class="interim" id="stage2-result"></div>
+      </div>
+
+      <div class="stage locked" id="stage-3">
+        <div class="stage-header">
+          <div class="stage-num">3</div>
+          <div class="stage-title">Check the statistical assumptions</div>
+          <div class="stage-status">The final checkpoints</div>
+        </div>
+        <div class="q-section">
+          <div class="q-title" id="s3q1-label">Is the normality assumption met? <span class="q-hint">Shapiro-Wilk test on the relevant data</span></div>
+          <div class="q-options">
+            <label class="q-label" id="lbl-s3q1-met"><input type="radio" name="s3q1" value="met" id="s3q1-met" /> Met (Shapiro-Wilk p &gt; .05)</label>
+            <label class="q-label" id="lbl-s3q1-violated"><input type="radio" name="s3q1" value="violated" id="s3q1-violated" /> Violated (Shapiro-Wilk p ≤ .05)</label>
+          </div>
+        </div>
+        <div class="q-section" id="s3q2-wrap" style="display:none;">
+          <div class="q-title" id="s3q2-label">Is the homogeneity of variance assumption met? <span class="q-hint">Levene's test compares variability across groups</span></div>
+          <div class="q-options">
+            <label class="q-label" id="lbl-s3q2-met"><input type="radio" name="s3q2" value="met" id="s3q2-met" /> Met (Levene's p &gt; .05)</label>
+            <label class="q-label" id="lbl-s3q2-violated"><input type="radio" name="s3q2" value="violated" id="s3q2-violated" /> Violated (Levene's p ≤ .05)</label>
+          </div>
+        </div>
+        <div class="q-section" id="s3q3-wrap" style="display:none;">
+          <div class="q-title" id="s3q3-label">Is the sphericity assumption met? <span class="q-hint">Mauchly's test, required only for repeated-measures designs with 3+ conditions</span></div>
+          <div class="q-options">
+            <label class="q-label" id="lbl-s3q3-met"><input type="radio" name="s3q3" value="met" id="s3q3-met" /> Met (Mauchly's p &gt; .05)</label>
+            <label class="q-label" id="lbl-s3q3-violated"><input type="radio" name="s3q3" value="violated" id="s3q3-violated" /> Violated (Mauchly's p ≤ .05)</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="stage locked" id="stage-4">
+        <div class="stage-header">
+          <div class="stage-num">4</div>
+          <div class="stage-title">Your recommended test</div>
+        </div>
+        <div class="final" id="final-result"></div>
+        <div class="path-trace" id="path-trace" style="display:none;">
+          <div class="path-trace-title">Your decision path</div>
+          <div id="path-trace-steps"></div>
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-reset">Start over</button>
+        <button class="btn" id="btn-back" style="display:none;">Back one step</button>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer">ASHS 6400: Methods of Data Analysis &bull; A.T. Still University &bull; Stats Arcade</p>
+</div>
+
+<script>
+var state = {s1q1:null,s1q2:null,s2q1:null,s2q2:null,s3q1:null,s3q2:null,s3q3:null};
+var stepHistory = [];
+
+var paramTests = {
+  'one-two':'Dependent t-test','one-three':'Repeated-measures ANOVA',
+  'multi-two':'Independent samples t-test','multi-three':'One-way ANOVA'
+};
+var nonparamTests = {
+  'one-two':'Wilcoxon signed-rank test','one-three':'Friedman test',
+  'multi-two':'Mann-Whitney U test','multi-three':'Kruskal-Wallis test'
+};
+// Shorter labels for display in flowchart boxes
+var paramTestsShort = {
+  'one-two':'Dependent\nt-test','one-three':'RMANOVA',
+  'multi-two':'Independent\nt-test','multi-three':'One-way\nANOVA'
+};
+var nonparamTestsShort = {
+  'one-two':'Wilcoxon\nsigned-rank','one-three':'Friedman',
+  'multi-two':'Mann-\nWhitney U','multi-three':'Kruskal-\nWallis'
+};
+var designLabels = {
+  'one-two':'One group, two conditions','one-three':'One group, three or more conditions',
+  'multi-two':'Two independent groups','multi-three':'Three or more independent groups'
+};
+
+if(!CanvasRenderingContext2D.prototype.roundRect){
+  CanvasRenderingContext2D.prototype.roundRect = function(x,y,w,h,r){
+    if(typeof r === 'number') r = [r,r,r,r];
+    this.beginPath();
+    this.moveTo(x+r[0],y);
+    this.lineTo(x+w-r[1],y);
+    this.quadraticCurveTo(x+w,y,x+w,y+r[1]);
+    this.lineTo(x+w,y+h-r[2]);
+    this.quadraticCurveTo(x+w,y+h,x+w-r[2],y+h);
+    this.lineTo(x+r[3],y+h);
+    this.quadraticCurveTo(x,y+h,x,y+h-r[3]);
+    this.lineTo(x,y+r[0]);
+    this.quadraticCurveTo(x,y,x+r[0],y);
+    this.closePath();
+    return this;
+  };
+}
+
+var cv = document.getElementById('flowchart');
+var cx = cv.getContext('2d');
+
+function rsz(){
+  var w = cv.parentElement.clientWidth - 28; // padding
+  var h = Math.max(580, w * 1.1); // taller aspect for vertical layout
+  cv.width = w * 2;
+  cv.height = h * 2;
+  cv.style.height = h + 'px';
+  cx.setTransform(2,0,0,2,0,0);
+  drawFlowchart();
+}
+window.addEventListener('resize', rsz);
+
+function drawMultilineText(text,x,y,lineHeight){
+  if(text.indexOf('\n') === -1){cx.fillText(text,x,y);return;}
+  var lines = text.split('\n');
+  var startY = y - ((lines.length-1) * lineHeight)/2;
+  for(var i=0;i<lines.length;i++) cx.fillText(lines[i], x, startY + i*lineHeight);
+}
+
+function drawBox(x,y,w,h,fill,textColor,label,fontSize,lineHeight){
+  cx.fillStyle = fill;
+  cx.beginPath();
+  cx.roundRect(x-w/2, y-h/2, w, h, 7);
+  cx.fill();
+  cx.fillStyle = textColor;
+  cx.font = 'bold ' + (fontSize||13) + 'px Calibri,system-ui,sans-serif';
+  cx.textAlign = 'center';
+  cx.textBaseline = 'middle';
+  drawMultilineText(label, x, y, lineHeight||15);
+}
+
+function drawConnector(x1,y1,x2,y2,active){
+  cx.strokeStyle = active ? '#555' : '#D8DCE0';
+  cx.lineWidth = active ? 2 : 1;
+  cx.beginPath();
+  cx.moveTo(x1,y1);
+  var midY = (y1 + y2) / 2;
+  cx.bezierCurveTo(x1, midY, x2, midY, x2, y2);
+  cx.stroke();
+}
+
+function drawHighlightRing(x,y,w,h,color){
+  cx.shadowColor = color;
+  cx.shadowBlur = 16;
+  cx.strokeStyle = color;
+  cx.lineWidth = 3.5;
+  cx.beginPath();
+  cx.roundRect(x-w/2-5, y-h/2-5, w+10, h+10, 10);
+  cx.stroke();
+  cx.shadowBlur = 0;
+}
+
+function drawFlowchart(){
+  var W = cv.width/2, H = cv.height/2;
+  cx.clearRect(0,0,W,H);
+
+  var navy='#172940', steel='#3D7FA9', red='#C0504D';
+  var grey='#D0D5DA', greyText='#9095A0', white='#FFFFFF';
+  var mutedSteel='#9CB8CC', mutedRed='#D49996';
+
+  var midX = W/2;
+  var leftX = W * 0.27;
+  var rightX = W * 0.73;
+  var spread = W * 0.20;
+
+  // Box dimensions — bigger for readability
+  var rootW = Math.min(240, W * 0.55), rootH = 42;
+  var designW = Math.min(165, W * 0.34), designH = 38;
+  var countW = Math.min(155, W * 0.32), countH = 38;
+  var paramW = Math.min(130, W * 0.26), paramH = 50;
+  var outcomeW = Math.min(150, W * 0.30), outcomeH = 52;
+
+  // Vertical positions — generous spacing
+  var rootY = 22;
+  var designY = rootY + rootH + 42;
+  var countY = designY + designH + 42;
+  var paramY = countY + countH + 50;
+  var outcomeY = paramY + paramH + 80;
+
+  var s1 = state.s1q1, s2 = state.s1q2;
+  var leftActive = (s1 === 'one' || s1 === null);
+  var rightActive = (s1 === 'multi' || s1 === null);
+
+  var leftTwoActive = (s1 === null || (s1 === 'one' && (s2 === 'two' || s2 === null)));
+  var leftThreeActive = (s1 === null || (s1 === 'one' && (s2 === 'three' || s2 === null)));
+  var rightTwoActive = (s1 === null || (s1 === 'multi' && (s2 === 'two' || s2 === null)));
+  var rightThreeActive = (s1 === null || (s1 === 'multi' && (s2 === 'three' || s2 === null)));
+
+  var selectedKey = (s1 && s2) ? (s1 + '-' + s2) : null;
+  var showOutcome = selectedKey !== null;
+
+  var finalIsParam = null, finalDecided = false;
+  if(state.s2q1 === 'ordinal'){finalIsParam=false; finalDecided=true;}
+  else if(state.s2q2 === 'no'){finalIsParam=false; finalDecided=true;}
+  else if(state.s3q1 === 'violated'){finalIsParam=false; finalDecided=true;}
+  else if(state.s3q2 === 'violated'){finalIsParam=false; finalDecided=true;}
+  else if(state.s3q3 === 'violated'){finalIsParam=false; finalDecided=true;}
+  else if(selectedKey){
+    if(selectedKey === 'one-two' && state.s3q1 === 'met'){finalIsParam=true; finalDecided=true;}
+    else if((selectedKey === 'multi-two' || selectedKey === 'multi-three') && state.s3q1 === 'met' && state.s3q2 === 'met'){finalIsParam=true; finalDecided=true;}
+    else if(selectedKey === 'one-three' && state.s3q1 === 'met' && state.s3q3 === 'met'){finalIsParam=true; finalDecided=true;}
+  }
+
+  // ROW 1: Root
+  drawBox(midX, rootY + rootH/2, rootW, rootH, navy, white, 'How many groups?', 14);
+
+  // ROW 2: Design
+  drawConnector(midX-30, rootY+rootH, leftX, designY, leftActive);
+  drawConnector(midX+30, rootY+rootH, rightX, designY, rightActive);
+  drawBox(leftX, designY+designH/2, designW, designH,
+    leftActive ? steel : grey, leftActive ? white : greyText, 'One group', 13.5);
+  drawBox(rightX, designY+designH/2, designW, designH,
+    rightActive ? red : grey, rightActive ? white : greyText, 'Multiple groups', 13.5);
+
+  // ROW 3: Count
+  drawConnector(leftX, designY+designH, leftX, countY, leftActive);
+  drawConnector(rightX, designY+designH, rightX, countY, rightActive);
+  drawBox(leftX, countY+countH/2, countW, countH,
+    leftActive ? '#D6E8F4' : grey, leftActive ? '#0C447C' : greyText,
+    'How many\nconditions?', 12.5, 14);
+  drawBox(rightX, countY+countH/2, countW, countH,
+    rightActive ? '#F0D4D2' : grey, rightActive ? '#791F1F' : greyText,
+    'How many\ngroups?', 12.5, 14);
+
+  // ROW 4: Parametric tests
+  drawConnector(leftX-25, countY+countH, leftX-spread/2, paramY, leftTwoActive);
+  drawConnector(leftX+25, countY+countH, leftX+spread/2, paramY, leftThreeActive);
+  drawConnector(rightX-25, countY+countH, rightX-spread/2, paramY, rightTwoActive);
+  drawConnector(rightX+25, countY+countH, rightX+spread/2, paramY, rightThreeActive);
+
+  cx.font = 'italic 11.5px Calibri,system-ui,sans-serif';
+  cx.fillStyle = '#666';
+  cx.textAlign = 'center';
+  cx.fillText('Two', leftX-spread/2, paramY-paramH/2-9);
+  cx.fillText('3 or more', leftX+spread/2, paramY-paramH/2-9);
+  cx.fillText('Two', rightX-spread/2, paramY-paramH/2-9);
+  cx.fillText('3 or more', rightX+spread/2, paramY-paramH/2-9);
+
+  function pFill(active, sel){return !active ? grey : (sel ? steel : mutedSteel);}
+  function pRedFill(active, sel){return !active ? grey : (sel ? red : mutedRed);}
+
+  var k_ot = selectedKey === 'one-two';
+  var k_ott = selectedKey === 'one-three';
+  var k_mt = selectedKey === 'multi-two';
+  var k_mtt = selectedKey === 'multi-three';
+
+  drawBox(leftX-spread/2, paramY+paramH/2, paramW, paramH,
+    pFill(leftTwoActive, k_ot),
+    leftTwoActive ? white : greyText,
+    'Dependent\nt-test', 12.5, 15);
+  drawBox(leftX+spread/2, paramY+paramH/2, paramW, paramH,
+    pFill(leftThreeActive, k_ott),
+    leftThreeActive ? white : greyText,
+    'RMANOVA', 12.5, 15);
+  drawBox(rightX-spread/2, paramY+paramH/2, paramW, paramH,
+    pRedFill(rightTwoActive, k_mt),
+    rightTwoActive ? white : greyText,
+    'Independent\nt-test', 12.5, 15);
+  drawBox(rightX+spread/2, paramY+paramH/2, paramW, paramH,
+    pRedFill(rightThreeActive, k_mtt),
+    rightThreeActive ? white : greyText,
+    'One-way\nANOVA', 12.5, 15);
+
+  // ROW 5: Outcome — param vs non-param
+  if(showOutcome){
+    var pTestName = paramTestsShort[selectedKey];
+    var npTestName = nonparamTestsShort[selectedKey];
+
+    var selX;
+    if(k_ot) selX = leftX - spread/2;
+    else if(k_ott) selX = leftX + spread/2;
+    else if(k_mt) selX = rightX - spread/2;
+    else selX = rightX + spread/2;
+
+    var halfGap = outcomeW/2 + 16;
+    var paramX = selX - halfGap;
+    var nonparamX = selX + halfGap;
+
+    // Keep boxes inside the canvas
+    var minX = outcomeW/2 + 10;
+    var maxX = W - outcomeW/2 - 10;
+    if(paramX < minX){
+      var shift = minX - paramX;
+      paramX += shift;
+      nonparamX += shift;
+    }
+    if(nonparamX > maxX){
+      var shift2 = nonparamX - maxX;
+      paramX -= shift2;
+      nonparamX -= shift2;
+    }
+
+    drawConnector(selX-8, paramY+paramH, paramX, outcomeY, true);
+    drawConnector(selX+8, paramY+paramH, nonparamX, outcomeY, true);
+
+    cx.font = 'italic 11px Calibri,system-ui,sans-serif';
+    cx.fillStyle = '#555';
+    cx.textAlign = 'center';
+    cx.fillText('All checks pass', paramX, outcomeY-outcomeH/2-9);
+    cx.fillText('Any check fails', nonparamX, outcomeY-outcomeH/2-9);
+
+    var pBoxFill, pBoxText, npBoxFill, npBoxText;
+    if(finalDecided){
+      if(finalIsParam){
+        pBoxFill = steel; pBoxText = white;
+        npBoxFill = grey; npBoxText = greyText;
+      } else {
+        pBoxFill = grey; pBoxText = greyText;
+        npBoxFill = red; npBoxText = white;
+      }
+    } else {
+      pBoxFill = mutedSteel; pBoxText = white;
+      npBoxFill = mutedRed; npBoxText = white;
+    }
+
+    drawBox(paramX, outcomeY+outcomeH/2, outcomeW, outcomeH,
+      pBoxFill, pBoxText, pTestName, 12.5, 15);
+    drawBox(nonparamX, outcomeY+outcomeH/2, outcomeW, outcomeH,
+      npBoxFill, npBoxText, npTestName, 12.5, 15);
+
+    if(finalDecided){
+      var hlX = finalIsParam ? paramX : nonparamX;
+      var hlColor = finalIsParam ? steel : red;
+      drawHighlightRing(hlX, outcomeY+outcomeH/2, outcomeW, outcomeH, hlColor);
+    }
+  }
+}
+
+function $(id){return document.getElementById(id);}
+function getKey(){return state.s1q1 + '-' + state.s1q2;}
+function isBetweenGroups(){return state.s1q1 === 'multi';}
+function isRepeatedThreePlus(){return state.s1q1 === 'one' && state.s1q2 === 'three';}
+
+function clearLabelGroup(prefix){
+  document.querySelectorAll('[id^="lbl-' + prefix + '"]').forEach(function(el){
+    el.classList.remove('selected-blue','selected-red','selected-green');
+  });
+}
+function setLabel(id, color){
+  var el = $(id);
+  el.classList.remove('selected-blue','selected-red','selected-green');
+  if(color) el.classList.add('selected-' + color);
+}
+function setStageState(stageNum, stateName){
+  var s = $('stage-' + stageNum);
+  s.classList.remove('locked','active','complete');
+  s.classList.add(stateName);
+}
+
+function handleS1Q1(val){
+  stepHistory.push({stage:1, action:'s1q1'});
+  state.s1q1 = val; state.s1q2 = null;
+  $('s1q2-two').checked = false; $('s1q2-three').checked = false;
+  clearLabelGroup('s1q2');
+  $('s1q2-wrap').style.display = 'block';
+  $('s1q2-label').innerHTML = (val === 'one')
+    ? 'How many test conditions? <span class="q-hint">The same patients are measured across how many conditions or time points?</span>'
+    : 'How many groups? <span class="q-hint">How many independent groups are being compared?</span>';
+  setLabel('lbl-s1q1-' + val, val === 'one' ? 'blue' : 'red');
+  setLabel('lbl-s1q1-' + (val === 'one' ? 'multi' : 'one'), null);
+  hideStage1Result();
+  lockStagesFrom(2);
+  drawFlowchart();
+  updateBackBtn();
+}
+
+function handleS1Q2(val){
+  stepHistory.push({stage:1, action:'s1q2'});
+  state.s1q2 = val;
+  setLabel('lbl-s1q2-' + val, state.s1q1 === 'one' ? 'blue' : 'red');
+  setLabel('lbl-s1q2-' + (val === 'two' ? 'three' : 'two'), null);
+  showStage1Result();
+  unlockStage(2);
+  setStageState(1,'complete');
+  setStageState(2,'active');
+  resetStage2();
+  lockStagesFrom(3);
+  drawFlowchart();
+  updateBackBtn();
+}
+
+function showStage1Result(){
+  var key = getKey();
+  var box = $('stage1-result');
+  var color = isBetweenGroups() ? 'red' : 'blue';
+  box.className = 'interim show interim-' + color;
+  box.innerHTML =
+    '<div><strong>Design identified:</strong> ' + designLabels[key] + '</div>' +
+    '<div style="margin-top:4px;">If all prerequisites and assumptions are met, the parametric test would be: <strong>' + paramTests[key] + '</strong></div>' +
+    '<div class="interim-redirect">Continue to Stage 2 to check the prerequisites.</div>';
+}
+function hideStage1Result(){$('stage1-result').classList.remove('show');}
+
+function resetStage2(){
+  state.s2q1 = null; state.s2q2 = null;
+  $('s2q1-interval').checked = false; $('s2q1-ordinal').checked = false;
+  $('s2q2-yes').checked = false; $('s2q2-no').checked = false;
+  clearLabelGroup('s2q1'); clearLabelGroup('s2q2');
+  $('s2q2-wrap').style.display = 'none';
+  $('stage2-result').classList.remove('show');
+}
+
+function handleS2Q1(val){
+  stepHistory.push({stage:2, action:'s2q1'});
+  state.s2q1 = val;
+  setLabel('lbl-s2q1-' + val, val === 'interval' ? 'green' : 'red');
+  setLabel('lbl-s2q1-' + (val === 'interval' ? 'ordinal' : 'interval'), null);
+  if(val === 'ordinal'){
+    $('s2q2-wrap').style.display = 'none';
+    showStage2EarlyExit();
+    unlockStage(4);
+    setStageState(2,'complete'); setStageState(3,'locked'); setStageState(4,'active');
+    showFinalResult('measurement');
+  } else {
+    $('s2q2-wrap').style.display = 'block';
+    $('stage2-result').classList.remove('show');
+    lockStagesFrom(3);
+  }
+  drawFlowchart();
+  updateBackBtn();
+}
+
+function showStage2EarlyExit(){
+  var box = $('stage2-result');
+  box.className = 'interim show interim-red';
+  box.innerHTML = '<div><strong>Prerequisite not met: ordinal data.</strong></div>' +
+    '<div style="margin-top:4px;">Measurement level is checked <strong>before</strong> any distributional assumptions. Ordinal data cannot be analyzed with parametric tests, regardless of sample size, normality, or variance equality.</div>' +
+    '<div class="interim-redirect">Skip directly to Stage 4 — non-parametric test required.</div>';
+}
+
+function handleS2Q2(val){
+  stepHistory.push({stage:2, action:'s2q2'});
+  state.s2q2 = val;
+  setLabel('lbl-s2q2-' + val, val === 'yes' ? 'green' : 'red');
+  setLabel('lbl-s2q2-' + (val === 'yes' ? 'no' : 'yes'), null);
+  if(val === 'no'){
+    showStage2SampleSizeExit();
+    unlockStage(4);
+    setStageState(2,'complete'); setStageState(3,'locked'); setStageState(4,'active');
+    showFinalResult('samplesize');
+  } else {
+    showStage2Pass();
+    unlockStage(3);
+    setStageState(2,'complete'); setStageState(3,'active');
+    resetStage3();
+  }
+  drawFlowchart();
+  updateBackBtn();
+}
+
+function showStage2SampleSizeExit(){
+  var box = $('stage2-result');
+  box.className = 'interim show interim-red';
+  box.innerHTML = '<div><strong>Prerequisite not met: insufficient sample size.</strong></div>' +
+    '<div style="margin-top:4px;">With fewer than 20 patients per group, the sample is too small to reliably support a parametric test. The non-parametric alternative is needed.</div>' +
+    '<div class="interim-redirect">Skip to Stage 4 — non-parametric test required.</div>';
+}
+
+function showStage2Pass(){
+  var box = $('stage2-result');
+  box.className = 'interim show interim-blue';
+  box.innerHTML = '<div><strong>Prerequisites met.</strong></div>' +
+    '<div style="margin-top:4px;">Continuous outcome data and adequate sample size. Continue to Stage 3 to check the statistical assumptions.</div>';
+}
+
+function resetStage3(){
+  state.s3q1 = null; state.s3q2 = null; state.s3q3 = null;
+  $('s3q1-met').checked = false; $('s3q1-violated').checked = false;
+  $('s3q2-met').checked = false; $('s3q2-violated').checked = false;
+  $('s3q3-met').checked = false; $('s3q3-violated').checked = false;
+  clearLabelGroup('s3q1'); clearLabelGroup('s3q2'); clearLabelGroup('s3q3');
+  $('s3q2-wrap').style.display = 'none';
+  $('s3q3-wrap').style.display = 'none';
+
+  if(state.s1q1 === 'one' && state.s1q2 === 'two'){
+    $('s3q1-label').innerHTML = 'Is the normality assumption met? <span class="q-hint">For paired designs, Shapiro-Wilk is run on the difference scores</span>';
+  } else if(isRepeatedThreePlus()){
+    $('s3q1-label').innerHTML = 'Is the normality assumption met? <span class="q-hint">Shapiro-Wilk on the outcome at each time point</span>';
+  } else {
+    $('s3q1-label').innerHTML = 'Is the normality assumption met? <span class="q-hint">Shapiro-Wilk on the outcome in each group</span>';
+  }
+}
+
+function handleS3Q1(val){
+  stepHistory.push({stage:3, action:'s3q1'});
+  state.s3q1 = val;
+  setLabel('lbl-s3q1-' + val, val === 'met' ? 'green' : 'red');
+  setLabel('lbl-s3q1-' + (val === 'met' ? 'violated' : 'met'), null);
+  if(val === 'violated'){
+    $('s3q2-wrap').style.display = 'none';
+    $('s3q3-wrap').style.display = 'none';
+    unlockStage(4);
+    setStageState(3,'complete'); setStageState(4,'active');
+    showFinalResult('normality');
+  } else {
+    if(isBetweenGroups()){
+      $('s3q2-wrap').style.display = 'block';
+      $('s3q3-wrap').style.display = 'none';
+    } else if(isRepeatedThreePlus()){
+      $('s3q2-wrap').style.display = 'none';
+      $('s3q3-wrap').style.display = 'block';
+    } else {
+      unlockStage(4);
+      setStageState(3,'complete'); setStageState(4,'active');
+      showFinalResult('allmet');
+    }
+  }
+  drawFlowchart();
+  updateBackBtn();
+}
+
+function handleS3Q2(val){
+  stepHistory.push({stage:3, action:'s3q2'});
+  state.s3q2 = val;
+  setLabel('lbl-s3q2-' + val, val === 'met' ? 'green' : 'red');
+  setLabel('lbl-s3q2-' + (val === 'met' ? 'violated' : 'met'), null);
+  unlockStage(4);
+  setStageState(3,'complete'); setStageState(4,'active');
+  showFinalResult(val === 'met' ? 'allmet' : 'homogeneity');
+  drawFlowchart();
+  updateBackBtn();
+}
+
+function handleS3Q3(val){
+  stepHistory.push({stage:3, action:'s3q3'});
+  state.s3q3 = val;
+  setLabel('lbl-s3q3-' + val, val === 'met' ? 'green' : 'red');
+  setLabel('lbl-s3q3-' + (val === 'met' ? 'violated' : 'met'), null);
+  unlockStage(4);
+  setStageState(3,'complete'); setStageState(4,'active');
+  showFinalResult(val === 'met' ? 'allmet' : 'sphericity');
+  drawFlowchart();
+  updateBackBtn();
+}
+
+function showFinalResult(reason){
+  var key = getKey();
+  var paramTest = paramTests[key];
+  var nonparamTest = nonparamTests[key];
+  var box = $('final-result');
+  var posthoc = '';
+  var goesParametric = (reason === 'allmet');
+
+  if(goesParametric && (key === 'one-three' || key === 'multi-three')){
+    posthoc = 'If the omnibus test is significant, run post-hoc multiple comparisons with a Bonferroni-adjusted alpha level.';
+  } else if(!goesParametric && (key === 'one-three' || key === 'multi-three')){
+    posthoc = 'If the ' + nonparamTest + ' is significant, run post-hoc pairwise comparisons (e.g., pairwise Wilcoxon or Mann-Whitney) with a Bonferroni-adjusted alpha level.';
+  }
+
+  if(goesParametric){
+    box.className = 'final show final-parametric';
+    box.innerHTML = '<div class="final-label">Parametric test</div>' +
+      '<div class="final-test">Use the ' + paramTest + '</div>' +
+      '<div class="final-reason"><strong>All prerequisites and assumptions are met.</strong> When parametric requirements are satisfied, the parametric test is preferred because it has greater statistical power to detect a real difference.</div>' +
+      (posthoc ? '<div class="final-posthoc"><strong>Post-hoc:</strong> ' + posthoc + '</div>' : '');
+  } else {
+    box.className = 'final show final-nonparametric';
+    box.innerHTML = '<div class="final-label">Non-parametric test</div>' +
+      '<div class="final-test">Use the ' + nonparamTest + '</div>' +
+      '<div class="final-reason">' + buildNonparamReason(reason, paramTest) + '</div>' +
+      (posthoc ? '<div class="final-posthoc"><strong>Post-hoc:</strong> ' + posthoc + '</div>' : '');
+  }
+  buildPathTrace(reason);
+}
+
+function buildNonparamReason(reason, paramName){
+  if(reason === 'measurement') return '<strong>Measurement level prerequisite not met.</strong> Ordinal data cannot be analyzed with the ' + paramName + ' regardless of any other test results. The non-parametric alternative does not require interval/ratio measurement.';
+  if(reason === 'samplesize') return '<strong>Sample size prerequisite not met.</strong> With fewer than 20 per group, the sample is too small to support the ' + paramName + '. The non-parametric alternative is more appropriate.';
+  if(reason === 'normality') return '<strong>Normality assumption violated.</strong> A significant Shapiro-Wilk test means the data are not normally distributed, so the ' + paramName + ' is not appropriate. The non-parametric alternative does not assume normality.';
+  if(reason === 'homogeneity') return '<strong>Homogeneity of variance assumption violated.</strong> A significant Levene\'s test means the variability differs significantly across groups, so the ' + paramName + ' is not appropriate. The non-parametric alternative is recommended.';
+  if(reason === 'sphericity') return '<strong>Sphericity assumption violated.</strong> A significant Mauchly\'s test means the variances of the differences between conditions are not equal. We move to the non-parametric alternative.';
+  return '';
+}
+
+function buildPathTrace(reason){
+  var key = getKey();
+  var steps = [];
+  steps.push('<strong>Stage 1 — Design:</strong> ' + designLabels[key] + ' → tentative test: ' + paramTests[key]);
+
+  if(reason === 'measurement'){
+    steps.push('<strong>Stage 2 — Prerequisites:</strong> Ordinal data → measurement level prerequisite not met');
+    steps.push('<strong>Stage 4 — Decision:</strong> Switch to non-parametric (assumptions not evaluated; measurement level overrides them)');
+  } else if(reason === 'samplesize'){
+    steps.push('<strong>Stage 2 — Prerequisites:</strong> Continuous data ✓, but n &lt; 20 per group → sample size prerequisite not met');
+    steps.push('<strong>Stage 4 — Decision:</strong> Switch to non-parametric');
+  } else {
+    steps.push('<strong>Stage 2 — Prerequisites:</strong> Continuous data ✓, n ≥ 20 per group ✓');
+    if(reason === 'normality') steps.push('<strong>Stage 3 — Assumptions:</strong> Normality violated → switch to non-parametric');
+    else if(reason === 'homogeneity') steps.push('<strong>Stage 3 — Assumptions:</strong> Normality met ✓, homogeneity of variance violated → switch to non-parametric');
+    else if(reason === 'sphericity') steps.push('<strong>Stage 3 — Assumptions:</strong> Normality met ✓, sphericity violated → switch to non-parametric');
+    else if(reason === 'allmet'){
+      var assumpStr = 'Normality met ✓';
+      if(isBetweenGroups()) assumpStr += ', homogeneity of variance met ✓';
+      if(isRepeatedThreePlus()) assumpStr += ', sphericity met ✓';
+      steps.push('<strong>Stage 3 — Assumptions:</strong> ' + assumpStr);
+      steps.push('<strong>Stage 4 — Decision:</strong> All criteria met → use parametric test');
+    }
+  }
+
+  $('path-trace-steps').innerHTML = steps.map(function(s){
+    return '<div class="path-step"><span class="path-bullet">›</span><span>' + s + '</span></div>';
+  }).join('');
+  $('path-trace').style.display = 'block';
+}
+
+function unlockStage(n){$('stage-' + n).classList.remove('locked');}
+function lockStagesFrom(n){
+  for(var i = n; i <= 4; i++){
+    var s = $('stage-' + i);
+    s.classList.add('locked');
+    s.classList.remove('active','complete');
+  }
+  $('final-result').classList.remove('show');
+  $('path-trace').style.display = 'none';
+}
+
+function resetAll(){
+  state = {s1q1:null,s1q2:null,s2q1:null,s2q2:null,s3q1:null,s3q2:null,s3q3:null};
+  stepHistory = [];
+  document.querySelectorAll('input[type=radio]').forEach(function(r){r.checked = false;});
+  document.querySelectorAll('.q-label').forEach(function(l){
+    l.classList.remove('selected-blue','selected-red','selected-green');
+  });
+  $('s1q2-wrap').style.display = 'none';
+  $('s2q2-wrap').style.display = 'none';
+  $('s3q2-wrap').style.display = 'none';
+  $('s3q3-wrap').style.display = 'none';
+  hideStage1Result();
+  $('stage2-result').classList.remove('show');
+  $('final-result').classList.remove('show');
+  $('path-trace').style.display = 'none';
+  setStageState(1,'active');
+  for(var i = 2; i <= 4; i++) setStageState(i,'locked');
+  $('btn-back').style.display = 'none';
+  drawFlowchart();
+}
+
+function updateBackBtn(){
+  $('btn-back').style.display = stepHistory.length > 0 ? 'inline-block' : 'none';
+}
+
+function backOneStep(){
+  if(stepHistory.length === 0) return;
+  stepHistory.pop();
+  var savedHistory = stepHistory.slice();
+  var savedState = JSON.parse(JSON.stringify(state));
+  resetAll();
+  stepHistory = [];
+  savedHistory.forEach(function(h){
+    if(h.action === 's1q1' && savedState.s1q1){$('s1q1-' + savedState.s1q1).checked = true; handleS1Q1(savedState.s1q1);}
+    else if(h.action === 's1q2' && savedState.s1q2){$('s1q2-' + savedState.s1q2).checked = true; handleS1Q2(savedState.s1q2);}
+    else if(h.action === 's2q1' && savedState.s2q1){$('s2q1-' + savedState.s2q1).checked = true; handleS2Q1(savedState.s2q1);}
+    else if(h.action === 's2q2' && savedState.s2q2){$('s2q2-' + savedState.s2q2).checked = true; handleS2Q2(savedState.s2q2);}
+    else if(h.action === 's3q1' && savedState.s3q1){$('s3q1-' + savedState.s3q1).checked = true; handleS3Q1(savedState.s3q1);}
+    else if(h.action === 's3q2' && savedState.s3q2){$('s3q2-' + savedState.s3q2).checked = true; handleS3Q2(savedState.s3q2);}
+    else if(h.action === 's3q3' && savedState.s3q3){$('s3q3-' + savedState.s3q3).checked = true; handleS3Q3(savedState.s3q3);}
+  });
+  updateBackBtn();
+}
+
+$('s1q1-one').addEventListener('change', function(){handleS1Q1('one');});
+$('s1q1-multi').addEventListener('change', function(){handleS1Q1('multi');});
+$('s1q2-two').addEventListener('change', function(){handleS1Q2('two');});
+$('s1q2-three').addEventListener('change', function(){handleS1Q2('three');});
+$('s2q1-interval').addEventListener('change', function(){handleS2Q1('interval');});
+$('s2q1-ordinal').addEventListener('change', function(){handleS2Q1('ordinal');});
+$('s2q2-yes').addEventListener('change', function(){handleS2Q2('yes');});
+$('s2q2-no').addEventListener('change', function(){handleS2Q2('no');});
+$('s3q1-met').addEventListener('change', function(){handleS3Q1('met');});
+$('s3q1-violated').addEventListener('change', function(){handleS3Q1('violated');});
+$('s3q2-met').addEventListener('change', function(){handleS3Q2('met');});
+$('s3q2-violated').addEventListener('change', function(){handleS3Q2('violated');});
+$('s3q3-met').addEventListener('change', function(){handleS3Q3('met');});
+$('s3q3-violated').addEventListener('change', function(){handleS3Q3('violated');});
+$('btn-reset').addEventListener('click', resetAll);
+$('btn-back').addEventListener('click', backOneStep);
+
+rsz();
+</script>
+</body>
+</html>
